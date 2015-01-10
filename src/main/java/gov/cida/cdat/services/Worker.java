@@ -1,10 +1,7 @@
 package gov.cida.cdat.services;
 
-import java.io.IOException;
-import java.io.OutputStream;
 
-
-public abstract class Worker { //extends OutputStream {
+public abstract class Worker { 
 
 	// connect, configure, etc
 	public void begin() throws Exception { // TODO use framework exceptions
@@ -18,11 +15,5 @@ public abstract class Worker { //extends OutputStream {
 	public void end() {
 		System.out.println("Worker end.");
 	}
-	
-//	@Override
-//	public void write(byte[] b) throws IOException {
-//		process(b);
-//		
-//	}
 	
 }

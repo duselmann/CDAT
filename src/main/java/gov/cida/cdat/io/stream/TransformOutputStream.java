@@ -1,5 +1,7 @@
 package gov.cida.cdat.io.stream;
 
+import gov.cida.cdat.transform.Transformer;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
