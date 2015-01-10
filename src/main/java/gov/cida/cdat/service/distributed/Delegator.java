@@ -1,9 +1,7 @@
-package gov.cida.cdat.services;
+package gov.cida.cdat.service.distributed;
 
 import gov.cida.cdat.control.Control;
 
-import java.io.BufferedOutputStream;
-import java.io.OutputStream;
 import java.util.Map;
 
 import scala.Option;
@@ -13,16 +11,8 @@ public class Delegator extends UntypedActor {
 
 	final Worker worker;
 	
-	private OutputStream stream;
-	
-	
 	public Delegator(Worker worker) {
 		this.worker = worker;
-	}
-	
-	
-	public void joinTo(OutputStream out) {
-		stream = new BufferedOutputStream(out);
 	}
 	
 	
@@ -47,28 +37,28 @@ public class Delegator extends UntypedActor {
 		}
 	}
 
-	
-	private void process() {
 
-	}
 	
-
 	@Override
 	public void preStart() throws Exception {
 		super.preStart();
-		worker.begin();
+		//worker.begin();
 	}
+	@Override
+	public void postStop() throws Exception {
+		worker.end();
+		super.postStop();
+	}
+
 	
 	@Override
 	public void preRestart(Throwable reason, Option<Object> message) throws Exception {
 		super.preRestart(reason, message);
 		// TODO
 	}
-	
 	@Override
-	public void postStop() throws Exception {
-		worker.end();
-		super.postStop();
+	public void postRestart(Throwable reason) throws Exception {
+		// TODO Auto-generated method stub
+		super.postRestart(reason);
 	}
-	
 }

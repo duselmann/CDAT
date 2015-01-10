@@ -1,5 +1,7 @@
 package gov.cida.cdat.control;
 
+import gov.cida.cdat.exception.DupicateNameException;
+
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -20,11 +22,20 @@ public class Registry {
 	}
 	
 	public void put(String name, ActorRef actor) {
+		if (actors.containsKey(name)) {
+			throw new DupicateNameException("Actor service names must be unique.");
+		}
 		actors.put(name, actor);
 	}
 
 	public String createName(String name) {
-		return name+ (count++);
+		String newName = name + (count++);
+		
+		while (actors.containsKey(newName)) {
+			newName = name + (count++);
+		}
+		
+		return newName;
 	}
 
 	public int size() {

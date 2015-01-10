@@ -1,6 +1,7 @@
 package gov.cida.cdat.io.stream;
 
 import gov.cida.cdat.exception.StreamInitException;
+import gov.cida.cdat.io.stream.api.AbstractStream;
 
 import java.io.Closeable;
 

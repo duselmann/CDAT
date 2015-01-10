@@ -1,6 +1,8 @@
 package gov.cida.cdat.io.stream;
 
 import gov.cida.cdat.exception.StreamInitException;
+import gov.cida.cdat.io.stream.api.AbstractStream;
+import gov.cida.cdat.io.stream.api.StreamProducer;
 
 import java.io.IOException;
 import java.io.InputStream;

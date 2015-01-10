@@ -2,7 +2,7 @@ package gov.cida.cdat.control;
 
 import java.util.Map;
 
-import gov.cida.cdat.services.Service;
+import gov.cida.cdat.io.stream.PipeStream;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -38,7 +38,17 @@ public class Controller {
 	}	
 	public String addService(String serviceName) {
         // Create the service actor
-        final ActorRef actor = context().actorOf(Props.create(Service.class, new Object[0]), serviceName);
+        final ActorRef actor = context().actorOf(Props.create(
+        		gov.cida.cdat.service.distributed.Service.class, new Object[0]), serviceName);
+        
+        actors.put(serviceName, actor);
+        
+		return serviceName;
+	}
+	public String addService(String serviceName, PipeStream pipe) {
+        // Create the service actor
+        final ActorRef actor = context().actorOf(Props.create(
+        		gov.cida.cdat.service.combined.Service.class, pipe), serviceName);
         
         actors.put(serviceName, actor);
         

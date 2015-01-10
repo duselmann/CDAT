@@ -1,4 +1,4 @@
-package gov.cida.cdat.services;
+package gov.cida.cdat.service.distributed;
 
 import gov.cida.cdat.control.AddWorker;
 import gov.cida.cdat.control.Control;
@@ -87,7 +87,7 @@ public class Service extends UntypedActor {
 		sendControl(AddWorker.Type.Producer.toString(), Message.create(Control.Start));
 	}
 	private void stop(String force) {
-		sendControl(AddWorker.Type.Producer.toString(), Message.create(Control.Stop));
+//		sendControl(AddWorker.Type.Producer.toString(), Message.create(Control.Stop));
 		context().stop(getSelf());
 	}
 

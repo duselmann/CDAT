@@ -1,6 +1,6 @@
 package gov.cida.cdat.control;
 
-import gov.cida.cdat.services.Worker;
+import gov.cida.cdat.service.distributed.Worker;
 
 import java.io.Serializable;
 

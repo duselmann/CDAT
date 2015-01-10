@@ -1,22 +1,23 @@
-package gov.cida.cdat.io.stream;
+package gov.cida.cdat;
 
-import gov.cida.cdat.exception.StreamInitException;
+
+import gov.cida.cdat.control.Control;
+import gov.cida.cdat.control.Controller;
+import gov.cida.cdat.control.Message;
+import gov.cida.cdat.io.stream.PipeStream;
+import gov.cida.cdat.io.stream.SimpleStream;
+import gov.cida.cdat.io.stream.UrlStream;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.URL;
 
-public class TestStreams {
+
+public class TestControlCombined {
 
 	public static void main(String[] args) throws Exception {
-		urlPipedStream();
-		
-	}
-	
-	public static void urlPipedStream() throws Exception {
-		
-		System.out.println("pipe build");
-		
+		Controller control = Controller.get();
+
 		// consumer
 		ByteArrayOutputStream      target = new ByteArrayOutputStream(1024*10);
 		SimpleStream<OutputStream> out  = new SimpleStream<OutputStream>(target);
@@ -26,24 +27,18 @@ public class TestStreams {
 		UrlStream google = new UrlStream(url);
 		
 		// pipe
-		final PipeStream pipe = new PipeStream(google, out);
+		final PipeStream pipe = new PipeStream(google, out);		
 		
-		new Thread() {
-			@Override
-			public void run() {
-				System.out.println("pipe open");
-				try {
-					pipe.open();
-				} catch (StreamInitException e) {
-					e.printStackTrace();
-				}
-			}
-		}.start();
+		String serviceName = control.addService("google", pipe);
 		
-		System.out.println("main waithing for pipe...");
+		control.sendControl(serviceName, Message.create("Message", "Test"));
+		control.sendControl(serviceName, Message.create(Control.Start));
+
 		Thread.sleep(1000);
-		System.out.println("pipe close");
-		pipe.close();
+		control.sendControl(serviceName, Message.create(Control.Stop));
+		
+		Thread.sleep(1000);
+		control.shutdown();
 		
 		System.out.println("pipe results");
 		System.out.println( target.size() );
@@ -54,7 +49,9 @@ public class TestStreams {
 			msg = "Google Found";
 		}
 		System.out.println();
-		System.out.println(msg);
+		System.out.println(msg);		
 	}
+	
+	
 
 }

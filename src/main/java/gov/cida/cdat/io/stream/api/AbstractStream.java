@@ -1,4 +1,4 @@
-package gov.cida.cdat.io.stream;
+package gov.cida.cdat.io.stream.api;
 
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.Closer;
@@ -29,6 +29,7 @@ public abstract class AbstractStream<S extends Closeable> implements Stream<S> {
 		} catch (Exception e) {
 			// does not matter, if flush not available then do not do it
 		}
+		System.out.println("Close called.");
 		Closer.close( getStream() );
 	}
 
@@ -42,5 +43,10 @@ public abstract class AbstractStream<S extends Closeable> implements Stream<S> {
 			this.stream = stream;
 		}
 		return getStream();
+	}
+	
+	
+	public boolean isOpen() {
+		return stream != null;//  &&  stream.isOpen();
 	}
 }

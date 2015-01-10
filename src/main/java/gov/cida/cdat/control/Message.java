@@ -3,6 +3,7 @@ package gov.cida.cdat.control;
 import java.util.HashMap;
 
 
+// standard message map
 public class Message extends HashMap<String, String> {
 	private static final long serialVersionUID = 1L;
 
@@ -16,5 +17,5 @@ public class Message extends HashMap<String, String> {
 		Message msg = create();
 		msg.put(name.toString(), value);
 		return msg;
-	}	
+	}
 }
