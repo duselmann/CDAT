@@ -34,10 +34,10 @@ public class TestControlCombined {
 		control.sendControl(serviceName, Message.create("Message", "Test"));
 		control.sendControl(serviceName, Message.create(Control.Start));
 
-		Thread.sleep(1000);
+		Thread.sleep(500);
 		control.sendControl(serviceName, Message.create(Control.Stop));
 		
-		Thread.sleep(1000);
+		Thread.sleep(500);
 		control.shutdown();
 		
 		System.out.println("pipe results");

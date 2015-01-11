@@ -49,7 +49,7 @@ public class TestStreamTransform {
 		}.start();
 		
 		System.out.println("main waithing for pipe...");
-		Thread.sleep(1000);
+		Thread.sleep(500);
 		System.out.println("pipe close");
 		pipe.close();
 		

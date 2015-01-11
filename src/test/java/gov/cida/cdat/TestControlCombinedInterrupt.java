@@ -4,50 +4,39 @@ package gov.cida.cdat;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Controller;
 import gov.cida.cdat.control.Message;
+import gov.cida.cdat.io.stream.FileStream;
 import gov.cida.cdat.io.stream.PipeStream;
 import gov.cida.cdat.io.stream.SimpleStream;
-import gov.cida.cdat.io.stream.UrlStream;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.OutputStream;
-import java.net.URL;
 
 
-public class TestControlCombinedStop {
+public class TestControlCombinedInterrupt {
 
 	public static void main(String[] args) throws Exception {
 		Controller control = Controller.get();
 
 		// consumer
-		ByteArrayOutputStream      target = new ByteArrayOutputStream(1024*10);
-		SimpleStream<OutputStream> out  = new SimpleStream<OutputStream>(target);
+		ByteArrayOutputStream      target   = new ByteArrayOutputStream(1024*10);
+		SimpleStream<OutputStream> consumer = new SimpleStream<OutputStream>(target);
 		
 		// producer
-		URL url = new URL("http://www.google.com");
-		UrlStream google = new UrlStream(url);
+		File file = new File("lib/akka/scalatest_2.11-2.1.3.jar");
+		FileStream producer = new FileStream(file);
 		
 		// pipe
-		final PipeStream pipe = new PipeStream(google, out);		
+		final PipeStream pipe = new PipeStream(producer, consumer);		
 		
 		String serviceName = control.addService("google", pipe);
 		
 		control.sendControl(serviceName, Message.create("Message", "Test"));
 		control.sendControl(serviceName, Message.create(Control.Start));
-//		Thread.sleep(500);
+		Thread.sleep(8);
 		control.sendControl(serviceName, Message.create(Control.Stop));
 		control.shutdown();
 		
-		System.out.println("pipe results");
-		System.out.println( target.size() );
-		
-		String msg = "Google Not Found";
-		if ( new String(target.toByteArray()).contains("Google") ) {
-			msg = "Google Found";
-		}
-		System.out.println();
-		System.out.println(msg);		
+		System.out.println("pipe results: loaded " +target.size()+ " of a total 6920622 before interrupt");
 	}
-	
-	
-
 }
