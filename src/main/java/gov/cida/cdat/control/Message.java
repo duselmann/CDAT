@@ -14,6 +14,9 @@ public class Message extends HashMap<String, String> {
 		return create(name, null);
 	}
 	public static Message create(Object name, String value) {
+		if (name == null || "".equals(name)) {
+			throw new NullPointerException("Message name is required.");
+		}
 		Message msg = create();
 		msg.put(name.toString(), value);
 		return msg;

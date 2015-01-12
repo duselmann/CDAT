@@ -31,10 +31,10 @@ public class TestControlCombinedInterrupt {
 		
 		String serviceName = control.addService("google", pipe);
 		
-		control.sendControl(serviceName, Message.create("Message", "Test"));
-		control.sendControl(serviceName, Message.create(Control.Start));
+		control.send(serviceName, Message.create("Message", "Test"));
+		control.send(serviceName, Message.create(Control.Start));
 		Thread.sleep(8);
-		control.sendControl(serviceName, Message.create(Control.Stop));
+		control.send(serviceName, Message.create(Control.Stop));
 		control.shutdown();
 		
 		System.out.println("pipe results: loaded " +target.size()+ " of a total 6920622 before interrupt");

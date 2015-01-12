@@ -31,11 +31,11 @@ public class TestControlCombined {
 		
 		String serviceName = control.addService("google", pipe);
 		
-		control.sendControl(serviceName, Message.create("Message", "Test"));
-		control.sendControl(serviceName, Message.create(Control.Start));
+		control.send(serviceName, Message.create("Message", "Test"));
+		control.send(serviceName, Control.Start);
 
 		Thread.sleep(500);
-		control.sendControl(serviceName, Message.create(Control.Stop));
+		control.send(serviceName, Control.Stop);
 		
 		Thread.sleep(500);
 		control.shutdown();

@@ -1,8 +1,9 @@
 package gov.cida.cdat.control;
 
+import gov.cida.cdat.io.stream.PipeStream;
+
 import java.util.Map;
 
-import gov.cida.cdat.io.stream.PipeStream;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -56,7 +57,7 @@ public class Controller {
 	}
 	
 	
-	private boolean sendControl(String serviceName, Object msg) {
+	private boolean send(String serviceName, Object msg) {
         // send a message
 		ActorRef actor = actors.get(serviceName);		
 		if (actor == null) {
@@ -64,16 +65,44 @@ public class Controller {
 		}
 		
 		actor.tell(msg, ActorRef.noSender());
-		
-		return true;
+	    
+		return true; // TODO possibly return a Future
 	}
 	
-	public boolean sendControl(String serviceName, Map<String,String> msg) {
-		return sendControl(serviceName, (Object)msg);
+	/**
+	 * Enumerated control message
+	 * @param serviceName
+	 * @param ctrl
+	 * @return
+	 */
+	public boolean send(String serviceName, Control ctrl) {
+		Object msg = Message.create(ctrl);
+		return send(serviceName, msg);
 	}
-		
-	public boolean sendControl(String serviceName, AddWorker msg) {
-		return sendControl(serviceName, (Object)msg);
+	/**
+	 * Enumerated status message
+	 * @param serviceName
+	 * @param ctrl
+	 * @return
+	 */
+	public boolean send(String serviceName, Status status) {
+		Object msg = Message.create(status);
+		return send(serviceName, msg);
+	}
+	/**
+	 * Custom Status or Control message
+	 * @param serviceName
+	 * @param msg
+	 * @return
+	 */
+	public boolean send(String serviceName, Map<String,String> msg) {
+		return send(serviceName, (Object)msg);
+	}
+	
+	
+	//TODO this is for the distributed approach if it could work
+	public boolean send(String serviceName, AddWorker msg) {
+		return send(serviceName, (Object)msg);
 	}
 	
 	

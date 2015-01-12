@@ -60,7 +60,7 @@ public class Service extends UntypedActor {
 	}
 
 	
-	public boolean sendControl(String serviceName, Map<String,String> msg) {
+	public boolean send(String serviceName, Map<String,String> msg) {
         // send a message
 		ActorRef actor = workers.get(serviceName);		
 		if (actor == null) {
@@ -84,10 +84,10 @@ public class Service extends UntypedActor {
 		if ( ! isJoined ) {
 			throw new RuntimeException("unjoined service");
 		}
-		sendControl(AddWorker.Type.Producer.toString(), Message.create(Control.Start));
+		send(AddWorker.Type.Producer.toString(), Message.create(Control.Start));
 	}
 	private void stop(String force) {
-//		sendControl(AddWorker.Type.Producer.toString(), Message.create(Control.Stop));
+//		send(AddWorker.Type.Producer.toString(), Message.create(Control.Stop));
 		context().stop(getSelf());
 	}
 

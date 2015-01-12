@@ -31,10 +31,10 @@ public class TestControlCombinedStop {
 		
 		String serviceName = control.addService("google", pipe);
 		
-		control.sendControl(serviceName, Message.create("Message", "Test"));
-		control.sendControl(serviceName, Message.create(Control.Start));
+		control.send(serviceName, Message.create("Message", "Test"));
+		control.send(serviceName, Message.create(Control.Start));
 //		Thread.sleep(500);
-		control.sendControl(serviceName, Message.create(Control.Stop));
+		control.send(serviceName, Message.create(Control.Stop));
 		control.shutdown();
 		
 		System.out.println("pipe results");
