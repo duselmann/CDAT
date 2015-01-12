@@ -49,20 +49,21 @@ public class TestStreamTransform {
 		}.start();
 		
 		System.out.println("main waithing for pipe...");
-		Thread.sleep(500);
+		Thread.sleep(1000);
 		System.out.println("pipe close");
 		pipe.close();
 		
 		System.out.println("pipe results");
-		System.out.println( target.size() );
-		System.out.println( new String(target.toByteArray(), 0, 100) );
+		System.out.println("total size: " +target.size() );
+		int length = target.size()>100 ?100 :target.size();
+		System.out.println("first 100:" +new String(target.toByteArray(), 0, length) );
 		
 		String msg = "div not found, ";
 		if ( new String(target.toByteArray()).toLowerCase().contains("span") ) {
-			msg = "span ";
+			msg += "span ";
 		}
 		if ( new String(target.toByteArray()).toLowerCase().contains("div") ) {
-			msg += " & div ";
+			msg = "oops! div ";
 		}
 		
 		System.out.println();

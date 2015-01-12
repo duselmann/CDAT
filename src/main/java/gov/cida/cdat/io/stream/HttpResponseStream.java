@@ -17,12 +17,28 @@ public class HttpResponseStream extends AbstractStream<OutputStream> implements 
 		this.response = response;
 	}
 	
+	/**
+	 *  implementations should define response header and content-type
+	 */
+	public void apply() {
+	}
+	
+	/**
+	 *  implementations should define response header and content-type in
+	 *  the apply method and also have the option to override the init
+	 */
 	@Override
-	public OutputStream open() throws StreamInitException {
+	public OutputStream init() throws StreamInitException {
 		try {
-			return setStream( response.getOutputStream() );
+			apply();
+			return response.getOutputStream();
 		} catch (IOException e) {
 			throw new  StreamInitException("Failed to open http request stream", e);
 		}
+	}
+
+	@Override
+	protected final String getName() {
+		return getClass().getName();
 	}
 }

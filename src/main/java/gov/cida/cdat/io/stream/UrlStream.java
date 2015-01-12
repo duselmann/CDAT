@@ -17,11 +17,16 @@ public class UrlStream extends AbstractStream<InputStream> implements StreamProd
 	}
 
 	@Override
-	public InputStream open() throws StreamInitException {
+	public InputStream init() throws StreamInitException {
 		try {
-			return setStream( url.openStream() );
+			return url.openStream();
 		} catch (IOException e) {
 			throw new  StreamInitException("Failed to open URL stream", e);
 		}
+	}
+	
+	@Override
+	protected String getName() {
+		return getClass().getName();
 	}
 }

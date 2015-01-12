@@ -18,11 +18,16 @@ public class FileStream extends AbstractStream<InputStream> implements StreamPro
 	}
 
 	@Override
-	public InputStream open() throws StreamInitException {
+	public InputStream init() throws StreamInitException {
 		try {
-			return setStream( new FileInputStream(file) );
+			return new FileInputStream(file);
 		} catch (IOException e) {
 			throw new  StreamInitException("Failed to open URL stream", e);
 		}
+	}
+
+	@Override
+	protected String getName() {
+		return getClass().getName();
 	}
 }

@@ -18,15 +18,17 @@ public class TestStreams {
 		System.out.println("pipe build");
 		
 		// consumer
-		ByteArrayOutputStream      target = new ByteArrayOutputStream(1024*10);
-		SimpleStream<OutputStream> out  = new SimpleStream<OutputStream>(target);
+		ByteArrayOutputStream      target   = new ByteArrayOutputStream(1024*10);
+		SimpleStream<OutputStream> consumer = new SimpleStream<OutputStream>(target);
+
+		
 		
 		// producer
 		URL url = new URL("http://www.google.com");
 		UrlStream google = new UrlStream(url);
 		
 		// pipe
-		final PipeStream pipe = new PipeStream(google, out);
+		final PipeStream pipe = new PipeStream(google, consumer);
 		
 		new Thread() {
 			@Override
@@ -41,13 +43,14 @@ public class TestStreams {
 		}.start();
 		
 		System.out.println("main waithing for pipe...");
-		Thread.sleep(500);
-		System.out.println("pipe close");
+		Thread.sleep(1000);
+		System.out.println("main closing pipe");
 		pipe.close();
 		
 		System.out.println("pipe results");
-		System.out.println( target.size() );
-		System.out.println( new String(target.toByteArray(), 0, 100) );
+		System.out.println("total size: " +target.size() );
+		int length = target.size()>100 ?100 :target.size();
+		System.out.println("first 100:" +new String(target.toByteArray(), 0, length) );
 		
 		String msg = "Google Not Found";
 		if ( new String(target.toByteArray()).contains("Google") ) {
