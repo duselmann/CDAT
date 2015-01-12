@@ -5,13 +5,15 @@ import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.stream.PipeStream;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 import akka.actor.UntypedActor;
 
 public class Service extends UntypedActor {
 	
-	private PipeStream pipe;
+	private PipeStream  pipe;
+	private InputStream pipeStream;
 	
 	public Service(PipeStream pipe) {
 		this.pipe = pipe;
@@ -34,6 +36,23 @@ public class Service extends UntypedActor {
 			System.out.println("Service recieved message " + Control.Start);
 			start();
 		}
+		if (msg.containsKey(Control.onComplete.toString())) {
+			// TODO stops and other control should be tracked.
+			// TODO need a good means to track open/finished/closed streams
+			int count = 0;
+			while (pipeStream == null) {
+				Thread.sleep(100);
+				count++;
+			}
+			System.out.println("count of waits for complete: " + count);
+
+			System.out.println("available: " +
+					pipeStream.available() // TODO asdf
+			);
+			
+			msg.put(Control.onComplete.toString(), "True");
+			getSender().tell(msg, getSelf());
+		}
 	}
 
 	
@@ -45,7 +64,7 @@ public class Service extends UntypedActor {
 	
 	
 	private void start() throws StreamInitException {
-		pipe.open();
+		pipeStream = pipe.open();
 	}
 	private void stop(String force) throws IOException {
 		pipe.close();

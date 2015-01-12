@@ -3,10 +3,15 @@ package gov.cida.cdat.control;
 import gov.cida.cdat.io.stream.PipeStream;
 
 import java.util.Map;
+import java.util.concurrent.Callable;
 
+import scala.concurrent.Future;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import akka.dispatch.Futures;
+import akka.dispatch.OnComplete;
+import akka.pattern.Patterns;
 
 
 public class Controller {
@@ -57,16 +62,25 @@ public class Controller {
 	}
 	
 	
-	private boolean send(String serviceName, Object msg) {
+	private Future<Message> send(String serviceName, final Message msg) {
         // send a message
 		ActorRef actor = actors.get(serviceName);		
 		if (actor == null) {
-			return false; // TODO decide if this is appropriate and sufficient
+			return null; // TODO decide if this is appropriate and sufficient
 		}
 		
-		actor.tell(msg, ActorRef.noSender());
-	    
-		return true; // TODO possibly return a Future
+		
+		Future<Message> future = Futures.future(new Callable<Message>() {
+			@Override
+			public Message call() throws Exception {
+				return msg;
+			}
+		}, context().dispatcher());
+		
+		Patterns.pipe(future, context().dispatcher()).to(actor);
+		
+		return future;
+	    //return Patterns.ask(actor, msg, 1000);
 	}
 	
 	/**
@@ -75,8 +89,8 @@ public class Controller {
 	 * @param ctrl
 	 * @return
 	 */
-	public boolean send(String serviceName, Control ctrl) {
-		Object msg = Message.create(ctrl);
+	public Future<Message> send(String serviceName, Control ctrl) {
+		Message msg = Message.create(ctrl);
 		return send(serviceName, msg);
 	}
 	/**
@@ -85,8 +99,8 @@ public class Controller {
 	 * @param ctrl
 	 * @return
 	 */
-	public boolean send(String serviceName, Status status) {
-		Object msg = Message.create(status);
+	public Future<Message> send(String serviceName, Status status) {
+		Message msg = Message.create(status);
 		return send(serviceName, msg);
 	}
 	/**
@@ -95,18 +109,31 @@ public class Controller {
 	 * @param msg
 	 * @return
 	 */
-	public boolean send(String serviceName, Map<String,String> msg) {
-		return send(serviceName, (Object)msg);
+	public Future<Message> send(String serviceName, Map<String,String> msg) {
+		Message message = Message.create(msg);
+		return send(serviceName, message);
 	}
 	
 	
 	//TODO this is for the distributed approach if it could work
-	public boolean send(String serviceName, AddWorker msg) {
-		return send(serviceName, (Object)msg);
+	public void send(String serviceName, AddWorker msg) {
+		ActorRef actor = actors.get(serviceName);		
+		if (actor == null) {
+			return; // TODO decide if this is appropriate and sufficient
+		}
+
+		actor.tell(msg, ActorRef.noSender());
 	}
 	
 	
 	public void shutdown() {
 		context().shutdown();
+	}
+
+
+	public Future<Message> send(String serviceName, Control ctrl, final Callback onComplete) {
+		Future<Message> response = send(serviceName, Message.create(ctrl));
+	    response.onComplete(onComplete, context().dispatcher());
+		return response;
 	}
 }

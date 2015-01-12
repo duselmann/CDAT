@@ -1,6 +1,7 @@
 package gov.cida.cdat;
 
 
+import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Controller;
 import gov.cida.cdat.control.Message;
@@ -16,11 +17,11 @@ import java.net.URL;
 public class TestControlCombined {
 
 	public static void main(String[] args) throws Exception {
-		Controller control = Controller.get();
+		final Controller control = Controller.get();
 
 		// consumer
-		ByteArrayOutputStream      target = new ByteArrayOutputStream(1024*10);
-		SimpleStream<OutputStream> out  = new SimpleStream<OutputStream>(target);
+		final ByteArrayOutputStream target = new ByteArrayOutputStream(1024*10);
+		SimpleStream<OutputStream>     out = new SimpleStream<OutputStream>(target);
 		
 		// producer
 		URL url = new URL("http://www.google.com");
@@ -29,19 +30,30 @@ public class TestControlCombined {
 		// pipe
 		final PipeStream pipe = new PipeStream(google, out);		
 		
-		String serviceName = control.addService("google", pipe);
+		final String serviceName = control.addService("google", pipe);
 		
 		control.send(serviceName, Message.create("Message", "Test"));
 		control.send(serviceName, Control.Start);
-
-		Thread.sleep(500);
-		control.send(serviceName, Control.Stop);
+		control.send(serviceName, Control.onComplete, new Callback(){
+	        public void onComplete(Throwable t, Message repsonse){
+	            System.out.println("onComplete Response is " + repsonse);
+	            report(control, serviceName, target);		
+	        }
+	    });
+	}
+	
+	
+	private static void report(final Controller control,final String serviceName,
+			final ByteArrayOutputStream target) {
 		
-		Thread.sleep(500);
-		control.shutdown();
-		
+		control.send(serviceName, Control.Stop, new Callback() {
+			public void onComplete(Throwable t, Message repsonse) throws Throwable {
+				System.out.println("service shutdown");
+				control.shutdown();
+			}
+		});
 		System.out.println("pipe results");
-		System.out.println( target.size() );
+		System.out.println( "total bytes: " +target.size() );
 		System.out.println( new String(target.toByteArray(), 0, 100) );
 		
 		String msg = "Google Not Found";
@@ -49,9 +61,7 @@ public class TestControlCombined {
 			msg = "Google Found";
 		}
 		System.out.println();
-		System.out.println(msg);		
+		System.out.println(msg);
 	}
-	
-	
 
 }

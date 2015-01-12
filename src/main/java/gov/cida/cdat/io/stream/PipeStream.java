@@ -36,7 +36,7 @@ public class PipeStream implements Openable<InputStream>, Closeable {
 		} catch (IOException e) {
 			throw new  StreamInitException("Failed to pipe streams", e);
 		}
-		return null; //producer.getStream(); // TODO this might not be useful
+		return producer.getStream(); // TODO this might not be useful
 	}
 
 	@Override
