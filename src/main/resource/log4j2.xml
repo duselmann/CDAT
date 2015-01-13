@@ -6,9 +6,7 @@
     </Console>
   </Appenders>
   <Loggers>
-  	<Logger name="gov.cida" level="TRACE">
-      <AppenderRef ref="Console"/>
-    </Logger>
+  	<Logger name="gov.cida" level="TRACE"/>
     <Root level="error">
       <AppenderRef ref="Console"/>
     </Root>

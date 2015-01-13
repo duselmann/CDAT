@@ -57,13 +57,11 @@ public abstract class AbstractStream<S extends Closeable> implements Stream<S> {
 				logger.debug("Flush called: {} ", streamClass.getName());
 				flush.invoke(getStream());
 			}
-			
-			cleanup(); // TODO determine ideal calling location for this method
-			
-			Closer.close(stream);
-			closeStream();
 		} catch (Exception e) {
 			// does not matter, if flush not available then do not do it
+		} finally {
+			cleanup(); // TODO determine ideal calling location for this method
+			closeStream();
 		}
 	}
 	
@@ -89,11 +87,12 @@ public abstract class AbstractStream<S extends Closeable> implements Stream<S> {
 		return newStream;
 	}
 	private void closeStream() throws IOException {
-		// NPE protection
 		S oldStream = getStream();
+		if (oldStream != null) {
+			logger.debug("Close stream: {} ", oldStream.getClass().getName());
+		}
 		stream = null;
-
-		oldStream.close(); // chain call to ensure down stream can free resources
+		Closer.close(oldStream);
 	}
 	
 	

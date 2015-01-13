@@ -1,6 +1,7 @@
 package gov.cida.cdat.io.stream;
 
 import gov.cida.cdat.exception.StreamInitException;
+import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.StatusOutputStream;
 import gov.cida.cdat.io.stream.api.AbstractStream;
 import gov.cida.cdat.io.stream.api.Stream;
@@ -23,8 +24,13 @@ public class StatusStream extends AbstractStream<OutputStream> {
 
 	@Override
 	public StatusOutputStream init() throws StreamInitException {
-		status = new StatusOutputStream( target.init() );
+		status = new StatusOutputStream( target.open() );
 		return status;
+	}
+	
+	@Override
+	protected void cleanup() {
+		Closer.close(target);
 	}
 	
 	public StatusOutputStream getStatus() {

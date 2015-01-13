@@ -40,7 +40,9 @@ public class PipeStream implements Openable<InputStream>, Closeable {
 
 	@Override
 	public void close() throws IOException {
-		Closer.close(producer);
+		try {
+			Closer.close(producer);
+		} catch (Throwable t) {/* ensure next close is attempted */}
 		Closer.close(consumer);
 	}
 }
