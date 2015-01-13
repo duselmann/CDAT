@@ -2,6 +2,7 @@ package gov.cida.cdat.io.stream;
 
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.Closer;
+import gov.cida.cdat.io.IO;
 import gov.cida.cdat.io.Openable;
 import gov.cida.cdat.io.stream.api.Stream;
 
@@ -9,8 +10,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import com.google.common.io.ByteStreams;
 
 public class PipeStream implements Openable<InputStream>, Closeable {
 	
@@ -32,7 +31,7 @@ public class PipeStream implements Openable<InputStream>, Closeable {
 	@Override
 	public InputStream open() throws StreamInitException {
 		try {
-			ByteStreams.copy(producer.open(), consumer.open());
+			IO.copy(producer.open(), consumer.open());
 		} catch (IOException e) {
 			throw new  StreamInitException("Failed to pipe streams", e);
 		}
