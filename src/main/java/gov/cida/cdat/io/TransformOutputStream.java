@@ -1,16 +1,16 @@
-package gov.cida.cdat.io.stream;
+package gov.cida.cdat.io;
 
 import gov.cida.cdat.transform.Transformer;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class TransformOutputStream<T extends OutputStream> extends OutputStream {
+public class TransformOutputStream extends OutputStream {
 
-	private T target;
+	private OutputStream target;
 	private Transformer transform;
 	
-	public TransformOutputStream(T target, Transformer transform) {
+	public TransformOutputStream(OutputStream target, Transformer transform) {
 		this.target = target;
 		this.transform = transform;
 	}

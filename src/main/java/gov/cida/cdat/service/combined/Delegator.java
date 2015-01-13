@@ -4,10 +4,14 @@ import gov.cida.cdat.control.Control;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import scala.Option;
 import akka.actor.UntypedActor;
 
 public class Delegator extends UntypedActor {
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	final Worker worker;
 	
@@ -25,14 +29,14 @@ public class Delegator extends UntypedActor {
 	}
 	// CDAT framework specific messages
 	public void onReceive(Map<String,String> msg) throws Exception {
-		System.out.println("Service recieved message " + msg);
+		logger.trace("Service recieved message " + msg);
 		
 		if (msg.containsKey(Control.Start.toString())) {
-			System.out.println("Delegator recieved message " + Control.Start);
+			logger.trace("Delegator recieved message " + Control.Start);
 			worker.begin();
 		}
 		if (msg.containsKey(Control.Stop.toString())) {
-			System.out.println("Delegator recieved message " + Control.Stop);
+			logger.trace("Delegator recieved message " + Control.Stop);
 			context().stop(getSelf());
 		}
 	}

@@ -1,6 +1,7 @@
 package gov.cida.cdat.io.stream;
 
 import gov.cida.cdat.exception.StreamInitException;
+import gov.cida.cdat.io.TransformOutputStream;
 import gov.cida.cdat.transform.RegexTransformer;
 import gov.cida.cdat.transform.Transformer;
 
@@ -24,8 +25,7 @@ public class TestStreamTransform {
 
 		// Transformer
 		Transformer transform = new RegexTransformer("div","span");
-		TransformOutputStream<OutputStream> 
-			tout = new TransformOutputStream<OutputStream>(target, transform);
+		TransformOutputStream tout = new TransformOutputStream(target, transform);
 
 		SimpleStream<OutputStream> out  = new SimpleStream<OutputStream>(tout);
 

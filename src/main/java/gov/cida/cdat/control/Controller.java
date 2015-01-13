@@ -37,18 +37,6 @@ public class Controller {
         context = ActorSystem.create("CDAT");
 	}
 	
-	public String addService() {
-		return addService( actors.createName("service") );
-	}	
-	public String addService(String serviceName) {
-        // Create the service actor
-        final ActorRef actor = context().actorOf(Props.create(
-        		gov.cida.cdat.service.distributed.Service.class, new Object[0]), serviceName);
-        
-        actors.put(serviceName, actor);
-        
-		return serviceName;
-	}
 	public String addService(String serviceName, PipeStream pipe) {
         // Create the service actor
         final ActorRef actor = context().actorOf(Props.create(
@@ -100,11 +88,6 @@ public class Controller {
 		return send(serviceName, (Object)msg);
 	}
 	
-	
-	//TODO this is for the distributed approach if it could work
-	public Future<Object> send(String serviceName, AddWorker msg) {
-		return send(serviceName, (Object)msg);
-	}
 	
 	
 	public void shutdown() {

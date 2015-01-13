@@ -7,10 +7,14 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class AbstractStream<S extends Closeable> implements Stream<S> {
+
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
 	private S stream;
-	
 	
 	/**
 	 * This is used to identify the subclass in logging
@@ -25,7 +29,7 @@ public abstract class AbstractStream<S extends Closeable> implements Stream<S> {
 	 * @throws StreamInitException thrown if there was an error opening the stream
 	 */
 	//TODO the exception list will grow as impl is fleshed out. i.e. SourceNotFound...
-	abstract protected S init() throws StreamInitException; 
+	abstract public S init() throws StreamInitException; 
 	
 	
 	/**
@@ -33,7 +37,7 @@ public abstract class AbstractStream<S extends Closeable> implements Stream<S> {
 	 */
 	@Override
 	public final S open() throws StreamInitException {
-		System.out.println("Open called: " + getName());
+		logger.debug("Open called: {} ", getName());
 		// TODO test that this is correct, works, and sufficient
 		// TODO could be that we need a new boolean hasBeenOpened or like mechanism
 		if ( stream != null ) {
@@ -45,11 +49,12 @@ public abstract class AbstractStream<S extends Closeable> implements Stream<S> {
 	
 	@Override
 	public final void close() throws IOException {
-		System.out.println("Close called: " + getName());
+		logger.debug("Close called: {} ", getName());
 		try {
 			Method flush;
-			if ( null != ( flush = getStream().getClass().getMethod("flush") ) ) {
-				System.out.println("Flush called: " +getStream().getClass().getName());
+			Class<?> streamClass = getStream().getClass();
+			if ( null != ( flush = streamClass.getMethod("flush") ) ) {
+				logger.debug("Flush called: {} ", streamClass.getName());
 				flush.invoke(getStream());
 			}
 			

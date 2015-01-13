@@ -16,11 +16,16 @@ import java.net.URL;
 
 public class TestControlCombined {
 
+	private static ByteArrayOutputStream target;
+	private static String serviceName;
+	private static Controller controller;
+	
+	
 	public static void main(String[] args) throws Exception {
-		final Controller control = Controller.get();
+		controller = Controller.get();
 
 		// consumer
-		final ByteArrayOutputStream target = new ByteArrayOutputStream(1024*10);
+		target = new ByteArrayOutputStream(1024*10);
 		SimpleStream<OutputStream>     out = new SimpleStream<OutputStream>(target);
 		
 		// producer
@@ -28,28 +33,27 @@ public class TestControlCombined {
 		UrlStream google = new UrlStream(url);
 		
 		// pipe
-		final PipeStream pipe = new PipeStream(google, out);		
+		PipeStream pipe = new PipeStream(google, out);		
 		
-		final String serviceName = control.addService("google", pipe);
+		serviceName = controller.addService("google", pipe);
 		
-		control.send(serviceName, Message.create("Message", "Test"));
-		control.send(serviceName, Control.Start);
-		control.send(serviceName, Control.onComplete, new Callback(){
+		controller.send(serviceName, Message.create("Message", "Test"));
+		controller.send(serviceName, Control.Start);
+		controller.send(serviceName, Control.onComplete, new Callback(){
 	        public void onComplete(Throwable t, Message repsonse){
-	            System.out.println("onComplete Response is " + repsonse);
-	            report(control, serviceName, target);		
+	            report(repsonse);		
 	        }
 	    });
 	}
 	
 	
-	private static void report(final Controller control,final String serviceName,
-			final ByteArrayOutputStream target) {
+	private static void report(final Message repsonse) {
+        System.out.println("onComplete Response is " + repsonse);
 		
-		control.send(serviceName, Control.Stop, new Callback() {
+		controller.send(serviceName, Control.Stop, new Callback() {
 			public void onComplete(Throwable t, Message repsonse) throws Throwable {
 				System.out.println("service shutdown");
-				control.shutdown();
+				controller.shutdown();
 			}
 		});
 		System.out.println("pipe results");
