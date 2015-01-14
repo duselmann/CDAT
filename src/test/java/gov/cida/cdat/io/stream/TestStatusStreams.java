@@ -21,7 +21,17 @@ public class TestStatusStreams {
 		ByteArrayOutputStream      target   = new ByteArrayOutputStream(1024*10);
 		SimpleStream<OutputStream> consumer = new SimpleStream<OutputStream>(target);
 
+		// status chained stream
 		final StatusStream status = new StatusStream(consumer);
+		
+		// Anonymous class example
+//		final ChainedStream<StatusOutputStream> status = 
+//			new ChainedStream<StatusOutputStream>(consumer) {
+//				@Override
+//				protected StatusOutputStream chain(OutputStream stream) {
+//					return new StatusOutputStream(stream);
+//				}
+//			};
 		
 		// producer
 		URL url = new URL("http://www.google.com");
@@ -29,7 +39,7 @@ public class TestStatusStreams {
 		
 		// pipe
 		final PipeStream pipe = new PipeStream(google, status);
-		status(status.getStatus());
+		status(status.getChainedStream());
 		
 		new Thread() {
 			@Override
@@ -37,7 +47,7 @@ public class TestStatusStreams {
 				System.out.println("pipe open");
 				try {
 					pipe.open();
-					status(status.getStatus());					
+					status(status.getChainedStream());					
 				} catch (StreamInitException e) {
 					e.printStackTrace();
 				}
@@ -48,13 +58,13 @@ public class TestStatusStreams {
 			@Override
 			public void run() {
 				System.out.println("status thread");
-				while (status.getStatus() == null) {
-					status(status.getStatus());
+				while (status.getChainedStream() == null) {
+					status(status.getChainedStream());
 					try {Thread.sleep(50); } catch (InterruptedException e) {}
 				}
-				status(status.getStatus());
+				status(status.getChainedStream());
 				try {Thread.sleep(50); } catch (InterruptedException e) {}
-				status(status.getStatus());
+				status(status.getChainedStream());
 			}
 
 		}.start();
@@ -76,7 +86,7 @@ public class TestStatusStreams {
 		System.out.println();
 		System.out.println(msg);
 		
-		status(status.getStatus());		
+		status(status.getChainedStream());		
 	}
 	public static void status(StatusOutputStream status) {
 		if (status == null) {
