@@ -25,13 +25,12 @@ public class Service extends UntypedActor {
 		this.pipe = pipe;
 	}
 
-	@SuppressWarnings("unchecked")
 	public void onReceive(Object msg) throws Exception {
 		if (msg instanceof Map) {
-			onReceive((Map<String,String>)msg);
+			onReceive((Message)msg);
 		}
 	}
-	public void onReceive(Map<String,String> msg) throws Exception {
+	public void onReceive(Message msg) throws Exception {
 		logger.trace("Service recieved message {}", msg);
 		
 		if (msg.containsKey(Control.Stop.toString())) {
@@ -40,27 +39,35 @@ public class Service extends UntypedActor {
 		}
 		if (msg.containsKey(Control.Start.toString())) {
 			logger.trace("Service recieved message {}", Control.Start);
-			start();
+			getSender().tell(start(), getSelf());
 		}
 		if (msg.containsKey(Control.onComplete.toString())) {
-			// TODO stops and other control should be tracked.
-			// TODO need a good means to track open/finished/closed streams
-			int maxWait = Message.getInt(msg, "maxWait", 10000);
-			
-			int count = 0;
-			while (pipeStream == null  &&  (count*100 < maxWait  ||  maxWait > -1)) {
-				Thread.sleep(100);
-				count++;
-			}
-			if (pipeStream == null) {
-				throw new CdatException("onComplete timeout");
-			}
-			logger.trace("count of waits for complete: {}", count);
-			
-			// signal back to the future that we are completed
-			msg.put(Control.onComplete.toString(), "True");
-			getSender().tell(msg, getSelf());
+			onComplete(msg);
+			getSender().tell(onComplete(msg), getSelf());
 		}
+		
+		logger.debug("onReceive exit");
+	}
+
+	private Message onComplete(Message msg)
+			throws InterruptedException, CdatException {
+		// TODO stops and other control should be tracked.
+		// TODO need a good means to track open/finished/closed streams
+		int maxWait = Message.getInt(msg, "maxWait", 10000);
+		
+		int count = 0;
+		while (pipeStream == null  &&  (count*100 < maxWait  ||  maxWait > -1)) {
+			Thread.sleep(100);
+			count++;
+		}
+		if (pipeStream == null) {
+			throw new CdatException("onComplete timeout");
+		}
+		logger.trace("count of waits for complete: {}", count);
+		
+		// signal back to the future that we are completed
+		msg.put(Control.onComplete.toString(), "True");
+		return msg;
 	}
 
 	
@@ -71,8 +78,16 @@ public class Service extends UntypedActor {
 	}
 	
 	
-	private void start() throws StreamInitException {
-		pipeStream = pipe.open();
+	private Message start() throws StreamInitException {
+		Message msg;
+		try {
+			pipeStream = pipe.open();
+			msg = Message.create("Success", "True");
+		} catch (Exception e) {
+			logger.error("Exception opening pipe",e);
+			msg = Message.create("Success", "False");
+		}
+		return msg;
 	}
 	private void stop(String force) throws IOException {
 		pipe.close();

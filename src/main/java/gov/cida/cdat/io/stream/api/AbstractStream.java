@@ -88,11 +88,11 @@ public abstract class AbstractStream<S extends Closeable> implements Stream<S> {
 	}
 	private void closeStream() throws IOException {
 		S oldStream = getStream();
+		stream = null;
 		if (oldStream != null) {
 			logger.debug("Close stream: {} ", oldStream.getClass().getName());
+			Closer.close(oldStream);
 		}
-		stream = null;
-		Closer.close(oldStream);
 	}
 	
 	

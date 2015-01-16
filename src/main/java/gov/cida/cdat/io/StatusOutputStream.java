@@ -11,7 +11,7 @@ public class StatusOutputStream extends OutputStream {
 	private long    lastWriteTime;
 	private long	openTime;
 
-	private final OutputStream target;
+	private OutputStream target;
 	
 	public StatusOutputStream(OutputStream target) {
 		this.target = target;
@@ -110,6 +110,7 @@ public class StatusOutputStream extends OutputStream {
 		}
 		isOpen = false;
 		target.close();
+		target = null;
 	}
 	
 	@Override

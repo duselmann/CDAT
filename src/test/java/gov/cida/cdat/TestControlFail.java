@@ -3,7 +3,7 @@ package gov.cida.cdat;
 
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.Controller;
+import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.control.Message;
 import gov.cida.cdat.io.stream.PipeStream;
 import gov.cida.cdat.io.stream.SimpleStream;
@@ -14,26 +14,26 @@ import java.io.OutputStream;
 import java.net.URL;
 
 
-public class TestControlCombined {
+public class TestControlFail {
 
 	private static ByteArrayOutputStream target;
 	private static String serviceName;
-	private static Controller controller;
+	private static SCManager controller;
 	
 	
 	public static void main(String[] args) throws Exception {
-		controller = Controller.get();
+		controller = SCManager.get();
 
 		// consumer
 		target = new ByteArrayOutputStream(1024*10);
 		SimpleStream<OutputStream>     out = new SimpleStream<OutputStream>(target);
 		
 		// producer
-		URL url = new URL("http://www.google.com");
-		UrlStream google = new UrlStream(url);
+		URL url = new URL("http://www.asdfsdfasdf.com");
+		UrlStream in = new UrlStream(url);
 		
 		// pipe
-		PipeStream pipe = new PipeStream(google, out);		
+		PipeStream pipe = new PipeStream(in, out);		
 		
 		serviceName = controller.addService("google", pipe);
 		
@@ -58,7 +58,7 @@ public class TestControlCombined {
 		});
 		System.out.println("pipe results");
 		System.out.println( "total bytes: " +target.size() );
-		System.out.println( new String(target.toByteArray(), 0, 100) );
+		System.out.println( new String(target.toByteArray()) );
 		
 		String msg = "Google Not Found";
 		if ( new String(target.toByteArray()).contains("Google") ) {

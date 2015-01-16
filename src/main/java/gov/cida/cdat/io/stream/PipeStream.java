@@ -30,12 +30,29 @@ public class PipeStream implements Openable<InputStream>, Closeable {
 
 	@Override
 	public InputStream open() throws StreamInitException {
+		InputStream  in = null;
+		OutputStream out= null;
 		try {
-			IO.copy(producer.open(), consumer.open());
-		} catch (IOException e) {
-			throw new  StreamInitException("Failed to pipe streams", e);
+			try {
+				in = producer.open();
+			} catch (Exception e) {
+				throw new  StreamInitException("Failed open producer to pipe streams", e);
+			}
+			try {
+				out = consumer.open();
+			} catch (Exception e) {
+				throw new  StreamInitException("Failed open consumer to pipe streams", e);
+			}
+			try {
+				IO.copy(in, out);
+			} catch (Exception e) {
+				throw new  StreamInitException("Failed to copy pipe streams", e);
+			}
+			return producer.getStream(); // TODO this might not be useful
+		} finally {
+			Closer.close(producer);
+			Closer.close(consumer);
 		}
-		return producer.getStream(); // TODO this might not be useful
 	}
 
 	@Override

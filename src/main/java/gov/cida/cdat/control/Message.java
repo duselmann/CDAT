@@ -5,7 +5,7 @@ import java.util.Map;
 
 
 // standard message map
-public class Message extends HashMap<String, String> {
+public class Message extends HashMap<String, String> { // TODO maybe concurrent hashmap, read only map, message id
 	private static final long serialVersionUID = 1L;
 
 	public static Message create() {

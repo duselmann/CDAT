@@ -2,7 +2,7 @@ package gov.cida.cdat;
 
 
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.Controller;
+import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.control.Message;
 import gov.cida.cdat.io.stream.PipeStream;
 import gov.cida.cdat.io.stream.SimpleStream;
@@ -13,10 +13,10 @@ import java.io.OutputStream;
 import java.net.URL;
 
 
-public class TestControlCombinedStop {
+public class TestControlStop {
 
 	public static void main(String[] args) throws Exception {
-		Controller control = Controller.get();
+		SCManager control = SCManager.get();
 
 		// consumer
 		ByteArrayOutputStream      target = new ByteArrayOutputStream(1024*10);
