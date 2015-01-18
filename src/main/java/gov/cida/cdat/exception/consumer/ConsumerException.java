@@ -12,7 +12,7 @@ public class ConsumerException extends CdatException {
 
 	private static final long serialVersionUID = 1L;
 
-	public ConsumerException() {}
+	// Do not add other constructors. We want to ensure a message.
 	public ConsumerException(String msg) {super(msg);}
 	public ConsumerException(String msg, Throwable cause) {super(msg,cause);}
 	

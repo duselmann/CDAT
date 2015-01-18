@@ -10,7 +10,7 @@ public class ConnectionException extends ProducerException {
 
 	private static final long serialVersionUID = 1L;
 
-	public ConnectionException() {}
+	// Do not add other constructors. We want to ensure a message.
 	public ConnectionException(String msg) {super(msg);}
 	public ConnectionException(String msg, Throwable cause) {super(msg,cause);}
 	

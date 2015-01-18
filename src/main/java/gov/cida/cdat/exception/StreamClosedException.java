@@ -9,7 +9,7 @@ public class StreamClosedException extends CdatException {
 
 	private static final long serialVersionUID = 1L;
 
-	public StreamClosedException() {}
+	// Do not add other constructors. We want to ensure a message.
 	public StreamClosedException(String msg) {super(msg);}
 	public StreamClosedException(String msg, Throwable cause) {super(msg,cause);}
 	

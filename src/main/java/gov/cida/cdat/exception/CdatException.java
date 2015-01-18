@@ -10,8 +10,8 @@ public class CdatException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 
-	public CdatException() {}
+	// Do not add other constructors. We want to ensure a message.
 	public CdatException(String msg) {super(msg);}
 	public CdatException(String msg, Throwable cause) {super(msg,cause);}
-	
+		
 }

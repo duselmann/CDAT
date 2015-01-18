@@ -11,7 +11,7 @@ public class TerminationException extends ControlException {
 
 	private static final long serialVersionUID = 1L;
 
-	public TerminationException() {}
+	// Do not add other constructors. We want to ensure a message.
 	public TerminationException(String msg) {super(msg);}
 	public TerminationException(String msg, Throwable cause) {super(msg,cause);}
 	

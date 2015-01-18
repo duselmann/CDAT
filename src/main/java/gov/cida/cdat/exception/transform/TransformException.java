@@ -14,7 +14,7 @@ public class TransformException extends CdatException {
 
 	private static final long serialVersionUID = 1L;
 
-	public TransformException() {}
+	// Do not add other constructors. We want to ensure a message.
 	public TransformException(String msg) {super(msg);}
 	public TransformException(String msg, Throwable cause) {super(msg,cause);}
 	

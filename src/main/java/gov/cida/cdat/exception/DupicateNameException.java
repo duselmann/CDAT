@@ -9,7 +9,7 @@ public class DupicateNameException extends RuntimeException { // TODO RT or not
 
 	private static final long serialVersionUID = 1L;
 
-	public DupicateNameException() {}
+	// Do not add other constructors. We want to ensure a message.
 	public DupicateNameException(String msg) {super(msg);}
 	public DupicateNameException(String msg, Throwable cause) {super(msg,cause);}
 

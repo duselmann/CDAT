@@ -11,7 +11,7 @@ public class ControlException extends CdatException {
 
 	private static final long serialVersionUID = 1L;
 
-	public ControlException() {}
+	// Do not add other constructors. We want to ensure a message.
 	public ControlException(String msg) {super(msg);}
 	public ControlException(String msg, Throwable cause) {super(msg,cause);}
 	

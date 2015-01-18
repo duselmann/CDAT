@@ -16,7 +16,7 @@ public class InvalidParameterException extends CdatException {
 
 	private static final long serialVersionUID = 1L;
 
-	public InvalidParameterException() {}
+	// Do not add other constructors. We want to ensure a message.
 	public InvalidParameterException(String msg) {super(msg);}
 	public InvalidParameterException(String msg, Throwable cause) {super(msg,cause);}
 	

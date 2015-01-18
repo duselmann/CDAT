@@ -11,7 +11,7 @@ public class FilterException extends CdatException {
 
 	private static final long serialVersionUID = 1L;
 
-	public FilterException() {}
+	// Do not add other constructors. We want to ensure a message.
 	public FilterException(String msg) {super(msg);}
 	public FilterException(String msg, Throwable cause) {super(msg,cause);}
 	

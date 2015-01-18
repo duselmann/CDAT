@@ -9,7 +9,7 @@ public class ServiceNotFoundException extends ControlException {
 
 	private static final long serialVersionUID = 1L;
 
-	public ServiceNotFoundException() {}
+	// Do not add other constructors. We want to ensure a message.
 	public ServiceNotFoundException(String msg) {super(msg);}
 	public ServiceNotFoundException(String msg, Throwable cause) {super(msg,cause);}
 	

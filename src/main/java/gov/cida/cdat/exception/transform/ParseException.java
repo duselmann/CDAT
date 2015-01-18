@@ -10,7 +10,7 @@ public class ParseException extends TransformException {
 
 	private static final long serialVersionUID = 1L;
 
-	public ParseException() {}
+	// Do not add other constructors. We want to ensure a message.
 	public ParseException(String msg) {super(msg);}
 	public ParseException(String msg, Throwable cause) {super(msg,cause);}
 	
