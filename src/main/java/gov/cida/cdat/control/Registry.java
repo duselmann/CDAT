@@ -1,19 +1,18 @@
 package gov.cida.cdat.control;
 
-import gov.cida.cdat.exception.DupicateNameException;
 
 import java.util.Map;
 import java.util.WeakHashMap;
 
 import akka.actor.ActorRef;
 
+
 public class Registry {
 	
-	int count; // internal count auto-named entries
 	final Map<String,ActorRef> actors;
 	
 	public Registry() {
-		// when refs get cleaned up they will not be held in this registry
+		// when objects get GC'ed they will not be held in this registry
 		actors = new WeakHashMap<String, ActorRef>();
 	}
 	
@@ -21,24 +20,26 @@ public class Registry {
 		return actors.get(name);
 	}
 	
-	public void put(String name, ActorRef actor) {
-		if (actors.containsKey(name)) {
-			throw new DupicateNameException("Actor service names must be unique.");
-		}
-		actors.put(name, actor);
+	public String put(String name, ActorRef actor) {
+		String uniqueName = createUniqueName(name);
+		actors.put(uniqueName, actor);
+		return name;
 	}
 
-	public String createName(String name) {
-		String newName = name + (count++);
+	// protected for testing access
+	protected String createUniqueName(String name) {
+		int count = 0; // internal count auto-named entries
 		
-		while (actors.containsKey(newName)) {
-			newName = name + (count++);
+		String uniqueName = name;
+		
+		while ( actors.containsKey(uniqueName) ) {
+			uniqueName = name + (count++);
 		}
 		
-		return newName;
+		return uniqueName;
 	}
 
-	public int size() {
-		return actors.size();
-	}
+//	public int size() {
+//		return actors.size();
+//	}
 }
