@@ -17,12 +17,12 @@ import java.net.URL;
 public class TestControlFail {
 
 	private static ByteArrayOutputStream target;
-	private static String serviceName;
-	private static SCManager controller;
+	private static String workerName;
+	private static SCManager manager;
 	
 	
 	public static void main(String[] args) throws Exception {
-		controller = SCManager.get();
+		manager = SCManager.get();
 
 		// consumer
 		target = new ByteArrayOutputStream(1024*10);
@@ -35,11 +35,11 @@ public class TestControlFail {
 		// pipe
 		PipeStream pipe = new PipeStream(in, out);		
 		
-		serviceName = controller.addService("google", pipe);
+		workerName = manager.addWorker("google", pipe);
 		
-		controller.send(serviceName, Message.create("Message", "Test"));
-		controller.send(serviceName, Control.Start);
-		controller.send(serviceName, Control.onComplete, new Callback(){
+		manager.send(workerName, Message.create("Message", "Test"));
+		manager.send(workerName, Control.Start);
+		manager.send(workerName, Control.onComplete, new Callback(){
 	        public void onComplete(Throwable t, Message repsonse){
 	            report(repsonse);		
 	        }
@@ -50,10 +50,10 @@ public class TestControlFail {
 	private static void report(final Message repsonse) {
         System.out.println("onComplete Response is " + repsonse);
 		
-		controller.send(serviceName, Control.Stop, new Callback() {
+		manager.send(workerName, Control.Stop, new Callback() {
 			public void onComplete(Throwable t, Message repsonse) throws Throwable {
 				System.out.println("service shutdown");
-				controller.shutdown();
+				manager.shutdown();
 			}
 		});
 		System.out.println("pipe results");

@@ -16,7 +16,7 @@ import java.io.OutputStream;
 public class TestControlInterrupt {
 
 	public static void main(String[] args) throws Exception {
-		SCManager control = SCManager.get();
+		SCManager manager = SCManager.get();
 
 		// consumer
 		ByteArrayOutputStream      target   = new ByteArrayOutputStream(1024*10);
@@ -29,13 +29,13 @@ public class TestControlInterrupt {
 		// pipe
 		final PipeStream pipe = new PipeStream(producer, consumer);		
 		
-		String serviceName = control.addService("google", pipe);
+		String workerName = manager.addWorker("google", pipe);
 		
-		control.send(serviceName, Message.create("Message", "Test"));
-		control.send(serviceName, Message.create(Control.Start));
+		manager.send(workerName, Message.create("Message", "Test"));
+		manager.send(workerName, Message.create(Control.Start));
 		Thread.sleep(8);
-		control.send(serviceName, Message.create(Control.Stop));
-		control.shutdown();
+		manager.send(workerName, Message.create(Control.Stop));
+		manager.shutdown();
 		
 		System.out.println("pipe results: loaded " +target.size()+ " of a total 6920622 before interrupt");
 	}

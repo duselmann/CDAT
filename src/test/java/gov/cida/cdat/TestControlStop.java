@@ -16,7 +16,7 @@ import java.net.URL;
 public class TestControlStop {
 
 	public static void main(String[] args) throws Exception {
-		SCManager control = SCManager.get();
+		SCManager manager = SCManager.get();
 
 		// consumer
 		ByteArrayOutputStream      target = new ByteArrayOutputStream(1024*10);
@@ -29,13 +29,13 @@ public class TestControlStop {
 		// pipe
 		final PipeStream pipe = new PipeStream(google, out);		
 		
-		String serviceName = control.addService("google", pipe);
+		String workerName = manager.addWorker("google", pipe);
 		
-		control.send(serviceName, Message.create("Message", "Test"));
-		control.send(serviceName, Message.create(Control.Start));
+		manager.send(workerName, Message.create("Message", "Test"));
+		manager.send(workerName, Message.create(Control.Start));
 //		Thread.sleep(500);
-		control.send(serviceName, Message.create(Control.Stop));
-		control.shutdown();
+		manager.send(workerName, Message.create(Control.Stop));
+		manager.shutdown();
 		
 		System.out.println("pipe results");
 		System.out.println( target.size() );
