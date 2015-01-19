@@ -1,8 +1,7 @@
 package gov.cida.cdat.service.combined;
 
 import gov.cida.cdat.control.Control;
-
-import java.util.Map;
+import gov.cida.cdat.control.Message;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,15 +19,14 @@ public class Delegator extends UntypedActor {
 	}
 	
 	
-	@SuppressWarnings("unchecked")
 	// AKKA framework generic messages
 	public void onReceive(Object msg) throws Exception {
-		if (msg instanceof Map) {
-			onReceive((Map<String,String>)msg);
+		if (msg instanceof Message) {
+			onReceive((Message)msg);
 		}		
 	}
 	// CDAT framework specific messages
-	public void onReceive(Map<String,String> msg) throws Exception {
+	public void onReceive(Message msg) throws Exception {
 		logger.trace("Service recieved message " + msg);
 		
 		if (msg.containsKey(Control.Start.toString())) {

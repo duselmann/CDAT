@@ -8,7 +8,8 @@ import java.io.Closeable;
 public interface Stream<S> extends Closeable, Openable<S> {
 	// S should be an InputStream or OutputStream of some sort
 	S getStream();
-	// TODO do not like the public
-	// TODO will need to examine exception list
+	// TODO do not like the public, rename to StreamFactory?
+	// TODO will need to examine exception list, maybe just CdatException
+	// TODO do not like the init and open pattern - investigate a possible cleaner impl
 	S init() throws StreamInitException;
 }
