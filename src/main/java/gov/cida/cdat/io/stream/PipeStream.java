@@ -7,7 +7,6 @@ import gov.cida.cdat.io.Openable;
 import gov.cida.cdat.io.stream.api.Stream;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -50,16 +49,16 @@ public class PipeStream implements Openable<InputStream>, Closeable {
 			}
 			return producer.getStream(); // TODO this might not be useful
 		} finally {
-			Closer.close(producer);
-			Closer.close(consumer);
+			close(); // TODO should this auto close on complete?
 		}
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		try {
 			Closer.close(producer);
-		} catch (Throwable t) {/* ensure next close is attempted */}
-		Closer.close(consumer);
+		} finally {
+			Closer.close(consumer);
+		}
 	}
 }
