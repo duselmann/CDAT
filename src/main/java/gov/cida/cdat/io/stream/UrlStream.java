@@ -3,13 +3,13 @@ package gov.cida.cdat.io.stream;
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.exception.producer.SourceNotFoundException;
 import gov.cida.cdat.io.stream.api.AbstractStream;
-import gov.cida.cdat.io.stream.api.StreamProducer;
+import gov.cida.cdat.io.stream.api.Producer;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-public class UrlStream extends AbstractStream<InputStream> implements StreamProducer<InputStream> {
+public class UrlStream extends AbstractStream<InputStream> implements Producer<InputStream> {
 
 	private final URL url;
 	

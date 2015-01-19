@@ -2,14 +2,14 @@ package gov.cida.cdat.io.stream;
 
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.stream.api.AbstractStream;
-import gov.cida.cdat.io.stream.api.StreamProducer;
+import gov.cida.cdat.io.stream.api.Producer;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class FileStream extends AbstractStream<InputStream> implements StreamProducer<InputStream> {
+public class FileStream extends AbstractStream<InputStream> implements Producer<InputStream> {
 
 	private final File file;
 	
