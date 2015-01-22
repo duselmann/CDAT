@@ -38,7 +38,7 @@ public class SCManager {
 	static {
 		instance = new SCManager();
 	}
-	public static SCManager get() {
+	public static SCManager session() {
 		return instance;
 	}
 	// TODO one instance per application, then need a session level actor for user workers

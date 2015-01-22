@@ -16,7 +16,7 @@ import java.net.URL;
 public class TestControlStop {
 
 	public static void main(String[] args) throws Exception {
-		SCManager manager = SCManager.get();
+		SCManager manager = SCManager.session();
 
 		// consumer
 		ByteArrayOutputStream      target = new ByteArrayOutputStream(1024*10);

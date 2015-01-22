@@ -22,7 +22,7 @@ public class TestControlSuccess {
 	
 	
 	public static void main(String[] args) throws Exception {
-		manager = SCManager.get();
+		manager = SCManager.session();
 
 		// consumer
 		target = new ByteArrayOutputStream(1024*10);
