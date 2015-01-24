@@ -20,14 +20,6 @@ import akka.dispatch.OnComplete;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 
-// TODO better name?
-// TODO impl start/stop fail return true/false and the Actor supervisor
-
-
-// TODO better name?
-// TODO impl start/stop fail return true/false and the Actor supervisor
-
-
 
 /**
  * <p>This is the top level manager for all submitted ETL query workers. Under the covers it uses AKKA to ensure
@@ -39,6 +31,7 @@ import akka.util.Timeout;
  * @author duselman
  *
  */
+//TODO better name?
 public class SCManager {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	

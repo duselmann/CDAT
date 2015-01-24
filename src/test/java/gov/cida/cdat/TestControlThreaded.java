@@ -27,19 +27,24 @@ public class TestControlThreaded {
 	
 	public static void main(String[] args) throws Exception {
 		manager = SCManager.instance();
-
-		// no delay test
-		spawnThread("first");
-		spawnThread("second");
 		
-		// delayed test
-		Thread.sleep(2000);
-		spawnThread("third");
-		
-		Thread.sleep(2000);
-		spawnThread("forth");
-		
-		manager.shutdown();
+		try {
+			// no delay test
+			spawnThread("first");
+			spawnThread("second");
+			
+			// delayed test
+			Thread.sleep(2000);
+			spawnThread("third");
+			
+			Thread.sleep(2000);
+			spawnThread("forth");
+			
+			Thread.sleep(2000);
+		} finally {
+			System.out.println("shuttdown submitted");
+			manager.shutdown();
+		}
 	}
 
 
@@ -83,19 +88,12 @@ public class TestControlThreaded {
 	        }
 	    });
 		
-		manager.send(workerName, Control.Start);
+		manager.send(workerName, Control.Start);		
 	}
 	
 	
 	private static void report(String workerName, final Message response) {
         System.out.println("onComplete Response is " + response);
-		
-//		manager.send(workerName, Control.Stop, new Callback() {
-//			public void onComplete(Throwable t, Message response) {
-//				System.out.println("service shutdown scheduled");
-//				manager.shutdown();
-//			}
-//		});
 		
 		System.out.println("pipe results");
 		System.out.println( "total bytes: " +target.size() );

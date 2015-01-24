@@ -31,8 +31,10 @@ public class Session extends UntypedActor {
 	private final Registry delegates;
 	public Session() {
 		delegates = new Registry(); 
-	}	
+	}
 	
+	
+	// TODO impl start/stop fail return true/false and the Actor supervisor
 	private SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration 
 			Duration.create("1 minute"), // TODO check the proper duration
 			new Function<Throwable, Directive>() {

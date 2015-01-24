@@ -7,10 +7,12 @@ import akka.dispatch.OnComplete;
  * The callback for the message return onComplete. The motivation for this is to change
  * the AKKA Object response message to the CDAT Message class
  * 
+ * This has to be an abstract class because the super class is not an interface
+ * 
  * @author duselman
  *
  */
-abstract public class Callback extends OnComplete<Message>{
+public abstract class Callback extends OnComplete<Message>{
 
 	/**
 	 * Called after a worker is known to be completed.
