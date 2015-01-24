@@ -17,12 +17,7 @@ import java.net.URL;
 public class TestControlSuccess {
 
 	private static ByteArrayOutputStream target;
-	private static String workerName;
-<<<<<<< HEAD
 	private static SCManager manager;
-=======
-	private static SCManager controller;
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 	
 	
 	public static void main(String[] args) throws Exception {
@@ -39,46 +34,33 @@ public class TestControlSuccess {
 		// pipe
 		DataPipe pipe = new DataPipe(in, out);		
 		
-<<<<<<< HEAD
-		workerName = manager.addWorker("google", pipe);
+		final String workerName = manager.addWorker("google", pipe);
 		
 		manager.send(workerName, Message.create("Message", "Test"));
-		manager.send(workerName, Control.Start);
+		
+		// This is called with a null response if the Patterns.ask timeout expires
 		manager.send(workerName, Control.onComplete, new Callback(){
 	        public void onComplete(Throwable t, Message response){
-	            report(response);		
-=======
-		workerName = controller.addWorker("google", pipe);
-		
-		controller.send(workerName, Message.create("Message", "Test"));
-		controller.send(workerName, Control.Start);
-		controller.send(workerName, Control.onComplete, new Callback(){
-	        public void onComplete(Throwable t, Message repsonse){
-	            report(repsonse);		
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
+	            report(workerName, response);		
 	        }
 	    });
+		
+		manager.send(workerName, Control.Start);
+		
 	}
 	
 	
-	private static void report(final Message response) {
+	private static void report(String workerName, final Message response) {
         System.out.println("onComplete Response is " + response);
 		
-<<<<<<< HEAD
 		manager.send(workerName, Control.Stop, new Callback() {
 			public void onComplete(Throwable t, Message response) {
 				System.out.println("service shutdown scheduled");
 				manager.shutdown();
-=======
-		controller.send(workerName, Control.Stop, new Callback() {
-			public void onComplete(Throwable t, Message repsonse) throws Throwable {
-				System.out.println("service shutdown");
-				controller.shutdown();
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 			}
 		});
 		
-		System.out.println("pipe results");
+		System.out.println("pipe results: expect >15kb with Google found in the text");
 		System.out.println( "total bytes: " +target.size() );
 		if (target.size()>100) {
 			System.out.println( new String(target.toByteArray(), 0, 100) );

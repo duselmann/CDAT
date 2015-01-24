@@ -13,16 +13,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.URL;
 
-
+// TODO ensure that the fail is handled by the session strategy and that the worker is disposed
 public class TestControlFail {
 
 	private static ByteArrayOutputStream target;
 	private static String workerName;
-<<<<<<< HEAD
 	private static SCManager manager;
-=======
-	private static SCManager controller;
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 	
 	
 	public static void main(String[] args) throws Exception {
@@ -39,7 +35,6 @@ public class TestControlFail {
 		// pipe
 		DataPipe pipe = new DataPipe(in, out);		
 		
-<<<<<<< HEAD
 		workerName = manager.addWorker("google", pipe);
 		
 		manager.send(workerName, Message.create("Message", "Test"));
@@ -47,15 +42,6 @@ public class TestControlFail {
 		manager.send(workerName, Control.onComplete, new Callback(){
 	        public void onComplete(Throwable t, Message response){
 	            report(response);		
-=======
-		workerName = controller.addWorker("google", pipe);
-		
-		controller.send(workerName, Message.create("Message", "Test"));
-		controller.send(workerName, Control.Start);
-		controller.send(workerName, Control.onComplete, new Callback(){
-	        public void onComplete(Throwable t, Message repsonse){
-	            report(repsonse);		
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 	        }
 	    });
 	}
@@ -64,27 +50,19 @@ public class TestControlFail {
 	private static void report(final Message response) {
         System.out.println("onComplete Response is " + response);
 		
-<<<<<<< HEAD
 		manager.send(workerName, Control.Stop, new Callback() {
 			public void onComplete(Throwable t, Message response) {
-=======
-		controller.send(workerName, Control.Stop, new Callback() {
-			public void onComplete(Throwable t, Message repsonse) throws Throwable {
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 				System.out.println("service shutdown");
 				manager.shutdown();
 			}
 		});
-		System.out.println("pipe results");
+		System.out.println();
+		System.out.println("pipe results: expect zero length, handled by session, and pool system continue running");
 		System.out.println( "total bytes: " +target.size() );
 		System.out.println( new String(target.toByteArray()) );
 		
-		String msg = "Google Not Found";
-		if ( new String(target.toByteArray()).contains("Google") ) {
-			msg = "Google Found";
-		}
 		System.out.println();
-		System.out.println(msg);
+		System.out.println();
 	}
 
 }

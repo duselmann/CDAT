@@ -1,7 +1,8 @@
-package gov.cida.cdat.io.stream.api;
+package gov.cida.cdat.io.stream;
 
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.Closer;
+import gov.cida.cdat.io.Openable;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -11,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // TODO StreamContainer and remove the interface entirely
-public abstract class AbstractStream<S extends Closeable> implements StreamContainer<S> {
+public abstract class StreamContainer<S extends Closeable> implements Closeable, Openable<S> {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
@@ -76,7 +77,6 @@ public abstract class AbstractStream<S extends Closeable> implements StreamConta
 	}
 
 	
-	@Override
 	public final S getStream() {
 		return stream;
 	}	

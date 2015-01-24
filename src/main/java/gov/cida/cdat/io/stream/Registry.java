@@ -1,4 +1,4 @@
-package gov.cida.cdat.control;
+package gov.cida.cdat.io.stream;
 
 
 import java.util.Map;

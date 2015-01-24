@@ -24,12 +24,19 @@ public class TestControlInterrupt {
 		
 		// producer
 		File file = new File("lib/akka/scalatest_2.11-2.1.3.jar");
+		
+		if ( ! file.exists() ) {
+			System.out.println();
+			System.out.println("This test requires a large multi MB file.");
+			System.out.println(file.getAbsolutePath() + " was not found.");
+			System.exit(1);
+		}
+		
 		FileStream producer = new FileStream(file);
 		
 		// pipe
 		final DataPipe pipe = new DataPipe(producer, consumer);		
 		
-<<<<<<< HEAD
 		String workerName = manager.addWorker("google", pipe);
 		
 		manager.send(workerName, Message.create("Message", "Test"));
@@ -37,15 +44,6 @@ public class TestControlInterrupt {
 		Thread.sleep(8);
 		manager.send(workerName, Message.create(Control.Stop));
 		manager.shutdown();
-=======
-		String workerName = control.addWorker("google", pipe);
-		
-		control.send(workerName, Message.create("Message", "Test"));
-		control.send(workerName, Message.create(Control.Start));
-		Thread.sleep(8);
-		control.send(workerName, Message.create(Control.Stop));
-		control.shutdown();
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 		
 		System.out.println("pipe results: loaded " +target.size()+ " of a total 6920622 before interrupt");
 	}

@@ -4,7 +4,6 @@ import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.IO;
 import gov.cida.cdat.io.Openable;
-import gov.cida.cdat.io.stream.api.StreamContainer;
 
 import java.io.Closeable;
 import java.io.InputStream;

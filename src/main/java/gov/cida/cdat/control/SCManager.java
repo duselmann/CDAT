@@ -1,15 +1,11 @@
 package gov.cida.cdat.control;
 
-<<<<<<< HEAD
 import gov.cida.cdat.io.stream.DataPipe;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
 import gov.cida.cdat.service.Naming;
 import gov.cida.cdat.service.PipeWorker;
 import gov.cida.cdat.service.Session;
-=======
-import gov.cida.cdat.io.stream.PipeStream;
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +42,6 @@ import akka.util.Timeout;
 public class SCManager {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
-<<<<<<< HEAD
 	// TODO maybe these should be Durations rather than Timeout
 	public static final Timeout FAST = new Timeout(Duration.create(100, "milliseconds"));
 	public static final Timeout SLOW = new Timeout(Duration.create(1, "second"));
@@ -54,8 +49,6 @@ public class SCManager {
 	public static final Timeout LONG = new Timeout(Duration.create(1, "hour"));
 	public static final Timeout WAIT = new Timeout(Duration.create(1, "day"));	
 	
-=======
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 	/**
 	 *  singleton pattern, each user session will have a session worker
 	 */
@@ -70,7 +63,6 @@ public class SCManager {
 	// TODO session should be disposable and light weight
 	// TODO abandoned sessions and workers should be closed and disposed cleanly
 	
-<<<<<<< HEAD
 	// TODO is this container safe - does each session live on a thread?
 	// tests suggest it is safe, however there is no guarantee that subsequent tasks run on the same thread
 	private ThreadLocal<ActorRef> session = new ThreadLocal<ActorRef>();
@@ -97,17 +89,6 @@ public class SCManager {
         // TODO test that when in tomcat that it same instance or new instance - we need know
         naming = workerPool.actorOf( Props.create(Naming.class, new Object[0]), "Naming");
 	}
-=======
-	
-	/**
-	 *  like a thread pool but workers are not tied to a thread
-	 */
-	final ActorSystem workerPool;
-	/**
-	 *  something that does work like an ETL, Query, or Session
-	 */
-	final Registry workers;
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 
 	/**
 	 * This is the helper session accessor. However, since it has a side effect of creating
@@ -131,7 +112,6 @@ public class SCManager {
 	// TODO abandoned sessions and workers should be closed and disposed cleanly
 	
 	/**
-<<<<<<< HEAD
 	 * This helper method messages the Naming worker to ensure unique names.
 	 * 
 	 * It is package access for testing, would be private otherwise.
@@ -166,20 +146,6 @@ public class SCManager {
 	}
 	
 	
-=======
-	 *  private constructor for singleton
-	 *  because it is a thread pool system where 
-	 *  multiple instances is incongruous.
-	 */  
-	private SCManager() {
-		workers = new Registry();
-        // Create the 'CDAT' akka actor system
-        workerPool = ActorSystem.create("CDAT"); // TODO doc structure
-        // TODO test that container is same instance or new instance - we need know
-        // TODO need a session system for multiple users
-	}
-	
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 	/**
 	 * <p>submits a worker for an ETL stream (pipe), 
 	 * </p>
@@ -189,7 +155,6 @@ public class SCManager {
 	 * String workerName = manager.addWorker(NWIS_SEDIMENT, nwisRequest);<br>
 	 * <p> The name now equals "Fetch sediment from NWIS", or "Fetch 'data' from NWIS-01", etc.
 	 * </p>
-<<<<<<< HEAD
 	 * @param workerLabel String workerLabel - IMPORTANT: Names must be unique. This returns a name 
 	 * 					from the suggested label. Names are used to ensure thread worker isolation from the spawning code
 	 * 					Users MUST maintain a reference to the new name to submit actions to the worker.
@@ -249,24 +214,6 @@ public class SCManager {
 	}
 	
 	/**
-=======
-	 * @param workerName String name - IMPORTANT: Names must be unique this returns a new name 
-	 * 					if the is not then it return a new name that is unique.
-	 * 					you MUST maintain a reference to the new name to submit actions to your worker
-	 * @param pipe the full ETL flow from input stream producer (extractor) to the output stream consumer (loader).
-	 * 					transformers are stream that inject themselves in the consumer flow
-	 * @return the new unique string that is used to send messages to submitted pipe
-	 */
-	public String addWorker(String workerName, PipeStream pipe) { // TODO QueryWorker name change?
-        // Create the akka service actor
-        final ActorRef actor = workerPool.actorOf(Props.create(
-        		gov.cida.cdat.service.combined.Service.class, pipe), workerName);
-        // returns a unique name from the given name
-        return workers.put(workerName, actor); // TODO dispose of actor?
-	}
-	
-	/**
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 	 * <p>Sends a message to the given worker name and returns the future to obtain the results.
 	 * It returns a result of the message not the data returned by the pipe. The pipe is
 	 * constructed to send the data to the destination: the user http response, a database table, etc.
@@ -283,20 +230,10 @@ public class SCManager {
 	 * @return a future that contains a Message response from the worker upon completion or exception
 	 */
 	public Future<Object> send(String workerName, Message message) {
-<<<<<<< HEAD
 		message = Message.extend(message, Naming.WORKER_NAME, workerName);
 	    return Patterns.ask(session(), message, 50000);
 		// TODO should this one return a future
 	    // TODO config timeout and create a method sig for custom timeout
-=======
-        // send a message
-		ActorRef worker = workers.get(workerName);		
-		if (worker == null) {
-			return null; // TODO decide if this is appropriate and sufficient
-		}
-		
-	    return Patterns.ask(worker, message, 1000); // TODO config timeout , doc the logic
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 	}
 	
 	/**
@@ -343,7 +280,6 @@ public class SCManager {
 	 * </p>
 	 * @param workerName
 	 * @param ctrl
-<<<<<<< HEAD
 	 * @param callback
 	 * @return
 	 */
@@ -378,22 +314,6 @@ public class SCManager {
 	    response.onComplete(wrapper, workerPool.dispatcher());
 	}
 	
-=======
-	 * @param onComplete
-	 * @return
-	 */
-	public Future<Object> send(String workerName, Control ctrl, final Callback onComplete) {
-		Future<Object> response = send(workerName, ctrl);
-		OnComplete<Object> wrapper = new OnComplete<Object>() {
-			public void onComplete(Throwable t, Object repsonse) throws Throwable {
-				onComplete.onComplete(t, (Message)repsonse);
-			}
-		};
-	    response.onComplete(wrapper, workerPool.dispatcher());
-		return response;
-	}
-		
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 	/**
 	 * <p>Issues a shutdown on the AKKA concurrency framework. This should not be called from a user session.</p>
 	 * 
@@ -405,7 +325,6 @@ public class SCManager {
 	 * </p>
 	 */
 	public void shutdown() {
-<<<<<<< HEAD
 		workerPool.scheduler().scheduleOnce( MED.duration(),
 			new Runnable() {
 				@Override
@@ -417,15 +336,6 @@ public class SCManager {
 				    logger.info("awaitTermination {}", workerPool.isTerminated());
 				    workerPool.awaitTermination();
 				    logger.info("awaitTermination {}", workerPool.isTerminated());
-				    
-=======
-		workerPool.scheduler().scheduleOnce( FiniteDuration.create(20, "seconds"),
-			new Runnable() {
-				@Override
-				public void run() {
-				    logger.info("shutdown");
-				    workerPool.shutdown();
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
 				}
 		}, workerPool.dispatcher());		
 	}

@@ -24,7 +24,7 @@ public class TestStatusStreams {
 		// status chained stream
 		final StatusStream status = new StatusStream(consumer);
 		
-		// Anonymous class example
+		// chained container class example - it works
 //		final ChainedStream<StatusOutputStream> status = 
 //			new ChainedStream<StatusOutputStream>(consumer) {
 //				@Override
@@ -74,7 +74,7 @@ public class TestStatusStreams {
 		System.out.println("main closing pipe");
 		pipe.close();
 		
-		System.out.println("pipe results");
+		System.out.println("pipe results: expect a status of not open initially, then a progress report of Google page loaded");
 		System.out.println("total size: " +target.size() );
 		int length = target.size()>100 ?100 :target.size();
 		System.out.println("first 100:" +new String(target.toByteArray(), 0, length) );

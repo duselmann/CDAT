@@ -5,7 +5,7 @@ import static akka.actor.SupervisorStrategy.restart;
 import static akka.actor.SupervisorStrategy.resume;
 import static akka.actor.SupervisorStrategy.stop;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.Registry;
+import gov.cida.cdat.io.stream.Registry;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
 
@@ -140,7 +140,7 @@ public class Session extends UntypedActor {
 	 */
 	public String addWorker(AddWorkerMessage worker) { // TODO QueryWorker name change?
         // Create the AKKA service actor
-        ActorRef delegate = context().actorOf(Props.create(Delegator.class, worker.getWorker()), worker.getName());
+        ActorRef delegate = context().actorOf(Props.create(Delegator.class, worker), worker.getName());
         
         // TODO this is not isolated - need to refactor as a return message
         // returns a unique name from the given name

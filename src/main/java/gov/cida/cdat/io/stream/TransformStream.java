@@ -2,12 +2,11 @@ package gov.cida.cdat.io.stream;
 
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.TransformOutputStream;
-import gov.cida.cdat.io.stream.api.AbstractStream;
 import gov.cida.cdat.transform.Transformer;
 
 import java.io.OutputStream;
 
-public class TransformStream extends AbstractStream<TransformOutputStream> {
+public class TransformStream extends StreamContainer<TransformOutputStream> {
 
 	private OutputStream stream;
 	private Transformer transform;

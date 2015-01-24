@@ -1,15 +1,13 @@
 package gov.cida.cdat.io.stream;
 
 import gov.cida.cdat.exception.StreamInitException;
-import gov.cida.cdat.io.stream.api.AbstractStream;
-import gov.cida.cdat.io.stream.api.Producer;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 import javax.servlet.http.HttpServletRequest;
 
-public class HttpRequestStream extends AbstractStream<InputStream> implements Producer<InputStream> {
+public class HttpRequestStream extends StreamContainer<InputStream> {
 
 	private final HttpServletRequest request;
 	

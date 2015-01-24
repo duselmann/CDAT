@@ -2,6 +2,7 @@ package gov.cida.cdat.service;
 
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.exception.CdatException;
+import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
 
 import java.util.LinkedList;
@@ -49,6 +50,9 @@ public class Delegator extends UntypedActor {
 	public Delegator(String name, Worker worker) {
 		this.name   = name;
 		this.worker = worker;
+	}
+	public Delegator(AddWorkerMessage msg) {
+		this(msg.getName(), msg.getWorker());
 	}
 	
 	

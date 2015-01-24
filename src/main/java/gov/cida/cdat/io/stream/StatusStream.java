@@ -1,7 +1,6 @@
 package gov.cida.cdat.io.stream;
 
 import gov.cida.cdat.io.StatusOutputStream;
-import gov.cida.cdat.io.stream.api.StreamContainer;
 
 import java.io.OutputStream;
 

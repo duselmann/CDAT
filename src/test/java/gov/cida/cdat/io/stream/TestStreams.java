@@ -21,8 +21,6 @@ public class TestStreams {
 		ByteArrayOutputStream      target   = new ByteArrayOutputStream(1024*10);
 		SimpleStream<OutputStream> consumer = new SimpleStream<OutputStream>(target);
 
-		
-		
 		// producer
 		URL url = new URL("http://www.google.com");
 		UrlStream google = new UrlStream(url);
@@ -47,7 +45,7 @@ public class TestStreams {
 		System.out.println("main closing pipe");
 		pipe.close();
 		
-		System.out.println("pipe results");
+		System.out.println("pipe results: expect Google page loaded on separate thead, checking also that all levels are closed and flush called if found.");
 		System.out.println("total size: " +target.size() );
 		int length = target.size()>100 ?100 :target.size();
 		System.out.println("first 100:" +new String(target.toByteArray(), 0, length) );

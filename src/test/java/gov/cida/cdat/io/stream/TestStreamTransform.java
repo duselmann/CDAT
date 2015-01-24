@@ -53,7 +53,7 @@ public class TestStreamTransform {
 		System.out.println("pipe close");
 		pipe.close();
 		
-		System.out.println("pipe results");
+		System.out.println("pipe results: expect all div tags converted to span");
 		System.out.println("total size: " +target.size() );
 		int length = target.size()>100 ?100 :target.size();
 		System.out.println("first 100:" +new String(target.toByteArray(), 0, length) );

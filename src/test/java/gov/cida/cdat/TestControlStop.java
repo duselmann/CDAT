@@ -29,7 +29,6 @@ public class TestControlStop {
 		// pipe
 		final DataPipe pipe = new DataPipe(google, out);		
 		
-<<<<<<< HEAD
 		String workerName = manager.addWorker("google", pipe);
 		
 		manager.send(workerName, Message.create("Message", "Test"));
@@ -37,17 +36,9 @@ public class TestControlStop {
 //		Thread.sleep(500);
 		manager.send(workerName, Message.create(Control.Stop));
 		manager.shutdown();
-=======
-		String workerName = control.addWorker("google", pipe);
 		
-		control.send(workerName, Message.create("Message", "Test"));
-		control.send(workerName, Message.create(Control.Start));
-//		Thread.sleep(500);
-		control.send(workerName, Message.create(Control.Stop));
-		control.shutdown();
->>>>>>> 36bc3ee7287e36de047d009aa3525c808514e464
-		
-		System.out.println("pipe results");
+		System.out.println();
+		System.out.println("pipe results: expect zero length and no Google found");
 		System.out.println( target.size() );
 		
 		String msg = "Google Not Found";
@@ -55,7 +46,10 @@ public class TestControlStop {
 			msg = "Google Found";
 		}
 		System.out.println();
-		System.out.println(msg);		
+		System.out.println(msg);
+		System.out.println();
+		System.out.println();
+		
 	}
 	
 	
