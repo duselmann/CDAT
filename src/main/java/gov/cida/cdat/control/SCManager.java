@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -36,11 +37,11 @@ public class SCManager {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
 	// TODO maybe these should be Durations rather than Timeout
-	public static final Timeout FAST = new Timeout(Duration.create(100, "milliseconds"));
-	public static final Timeout SLOW = new Timeout(Duration.create(1, "second"));
-	public static final Timeout MED  = new Timeout(Duration.create(30,"seconds"));
-	public static final Timeout LONG = new Timeout(Duration.create(1, "hour"));
-	public static final Timeout WAIT = new Timeout(Duration.create(1, "day"));	
+	public static final FiniteDuration MILLIS    = Duration.create(100, "milliseconds");
+	public static final FiniteDuration SECOND    = Duration.create(  1, "second");
+	public static final FiniteDuration HALF_MIN  = Duration.create( 30, "seconds");
+	public static final FiniteDuration HOUR      = Duration.create(  1, "hour");
+	public static final FiniteDuration DAY       = Duration.create(  1, "day");	
 	
 	/**
 	 *  singleton pattern, each user session will have a session worker
@@ -123,10 +124,10 @@ public class SCManager {
 		String name = label;
 		
 		logger.trace("sending message to creating name from label '{}'", label);
-		Future<Object> future = Patterns.ask(naming, label, FAST);
+		Future<Object> future = Patterns.ask(naming, label, new Timeout(MILLIS));
 		try {
 			logger.trace("waiting for name from label '{}'", label);
-			Object result = Await.result(future, FAST.duration());
+			Object result = Await.result(future, MILLIS);
 			if (result instanceof Message) {
 				name = ((Message)result).get(Naming.WORKER_NAME);
 			}
@@ -318,7 +319,7 @@ public class SCManager {
 	 * </p>
 	 */
 	public void shutdown() {
-		workerPool.scheduler().scheduleOnce( MED.duration(),
+		workerPool.scheduler().scheduleOnce( HALF_MIN,
 			new Runnable() {
 				@Override
 				public void run() {
