@@ -34,7 +34,7 @@ public class TestStreamTransform {
 		UrlStream google = new UrlStream(url);
 		
 		// Pipe producer to consumer
-		final PipeStream pipe = new PipeStream(google, out);
+		final DataPipe pipe = new DataPipe(google, out);
 		
 		new Thread() {
 			@Override
@@ -58,7 +58,7 @@ public class TestStreamTransform {
 		int length = target.size()>100 ?100 :target.size();
 		System.out.println("first 100:" +new String(target.toByteArray(), 0, length) );
 		
-		String msg = "div not found, ";
+		String msg = "as desired, div not found, ";
 		if ( new String(target.toByteArray()).toLowerCase().contains("span") ) {
 			msg += "span ";
 		}

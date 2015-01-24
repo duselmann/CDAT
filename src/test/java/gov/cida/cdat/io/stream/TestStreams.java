@@ -28,7 +28,7 @@ public class TestStreams {
 		UrlStream google = new UrlStream(url);
 		
 		// pipe
-		final PipeStream pipe = new PipeStream(google, consumer);
+		final DataPipe pipe = new DataPipe(google, consumer);
 		
 		new Thread() {
 			@Override

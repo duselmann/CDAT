@@ -1,13 +1,13 @@
 package gov.cida.cdat.io.stream;
 
 import gov.cida.cdat.io.StatusOutputStream;
-import gov.cida.cdat.io.stream.api.Stream;
+import gov.cida.cdat.io.stream.api.StreamContainer;
 
 import java.io.OutputStream;
 
 public class StatusStream extends ChainedStream<StatusOutputStream> {
 
-	public StatusStream(Stream<OutputStream> target) {
+	public StatusStream(StreamContainer<OutputStream> target) {
 		super(target);
 	}
 

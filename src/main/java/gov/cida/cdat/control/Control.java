@@ -1,5 +1,8 @@
 package gov.cida.cdat.control;
 
+import gov.cida.cdat.message.Message;
+
+
 /**
  * This is the enumeration of standard CDAT control messages.
  * The user can submit custom messages via the Message class.

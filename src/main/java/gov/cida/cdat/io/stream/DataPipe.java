@@ -4,18 +4,19 @@ import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.IO;
 import gov.cida.cdat.io.Openable;
-import gov.cida.cdat.io.stream.api.Stream;
+import gov.cida.cdat.io.stream.api.StreamContainer;
 
 import java.io.Closeable;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class PipeStream implements Openable<InputStream>, Closeable {
+public class DataPipe implements Openable<InputStream>, Closeable {
 	
-	private final Stream<InputStream> producer;
-	private final Stream<OutputStream> consumer;
+	private final StreamContainer<InputStream> producer;
+	private final StreamContainer<OutputStream> consumer;
+	private boolean isComplete;
 	
-	public PipeStream(Stream<InputStream> ins, Stream<OutputStream> out) {
+	public DataPipe(StreamContainer<InputStream> ins, StreamContainer<OutputStream> out) {
 		this.producer = ins;
 		this.consumer = out;
 	}
@@ -55,10 +56,15 @@ public class PipeStream implements Openable<InputStream>, Closeable {
 
 	@Override
 	public void close() {
+		isComplete = true;
 		try {
 			Closer.close(producer);
 		} finally {
 			Closer.close(consumer);
 		}
+	}
+	
+	public boolean isComplete() {
+		return isComplete;
 	}
 }

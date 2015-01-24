@@ -1,60 +1,29 @@
-package gov.cida.cdat.service.combined;
+package gov.cida.cdat.service;
 
-import static akka.actor.SupervisorStrategy.escalate;
-import static akka.actor.SupervisorStrategy.restart;
-import static akka.actor.SupervisorStrategy.resume;
-import static akka.actor.SupervisorStrategy.stop;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.Message;
 import gov.cida.cdat.exception.CdatException;
-import gov.cida.cdat.io.stream.PipeStream;
+import gov.cida.cdat.io.stream.DataPipe;
+import gov.cida.cdat.message.Message;
 
 import java.io.InputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import scala.concurrent.duration.Duration;
-import akka.actor.OneForOneStrategy;
-import akka.actor.SupervisorStrategy;
-import akka.actor.SupervisorStrategy.Directive;
+import scala.Option;
 import akka.actor.UntypedActor;
-import akka.japi.Function;
 
 
 public class Service extends UntypedActor {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
-	private PipeStream  pipe;
+	private DataPipe  pipe;
 	private InputStream pipeStream;
 	
-	public Service(PipeStream pipe) {
+	public Service(DataPipe pipe) {
 		this.pipe = pipe;
 	}
 
-	
-	@Override
-	public SupervisorStrategy supervisorStrategy() {
-		return  new OneForOneStrategy(1, Duration.create("1 minute"),
-					new Function<Throwable, Directive>() {
-				@Override
-				public Directive apply(Throwable t) {
-					logger.warn("receved an exception");
-					
-					if (t instanceof Exception) {
-						// TODO proper handling
-						logger.warn("receved an exception, resuming");
-						return resume();
-					} else if (t instanceof NullPointerException) {
-						return restart();
-					} else if (t instanceof IllegalArgumentException) {
-						return stop();
-					} else {
-						return escalate();
-					}
-				}
-			});
-	}
 	
 	public void onReceive(Object msg) throws Exception {
 		if (msg instanceof Message) {
@@ -64,22 +33,22 @@ public class Service extends UntypedActor {
 //			onReceive(Message.create((Map<String, String>)msg));
 //		}
 		unhandled(msg);
-		sender().tell(Message.create("listens to Message class only"),self());
+		sender().tell(Message.create("listens for Message class only"),self());
 	}
 	public void onReceive(Message msg) throws Exception {
 		logger.trace("Service recieved message {}", msg);
 		
-		if (msg.containsKey(Control.Stop.toString())) {
+		if (msg.contains(Control.Stop)) {
 			logger.trace("Service recieved message {}", Control.Stop);
 			done(msg.get(Control.Stop.toString()));
 		}
-		if (msg.containsKey(Control.Start.toString())) {
+		if (msg.contains(Control.Start)) {
 			logger.trace("Service recieved message {}", Control.Start);
 			sender().tell(start(), self());
 		}
-		if (msg.containsKey(Control.onComplete.toString())) {
-			onComplete(msg);
-			sender().tell(onComplete(msg), self());
+		if (msg.contains(Control.onComplete)) {
+			Message response = onComplete(msg);
+			sender().tell(response, self());
 		}
 		
 		unhandled(msg);
@@ -108,17 +77,35 @@ public class Service extends UntypedActor {
 		logger.trace("count of waits for complete: {}", count);
 		
 		// signal back to the future that we are completed
-		msg.put(Control.onComplete.toString(), "True");
-		return msg;
+		Message response = Message.extend(msg, Control.onComplete, "True");
+		return response;
 	}
 
 	
 	@Override
 	public void preStart() throws Exception {
+		// TODO Auto-generated method stub
 		super.preStart();
-		
 	}
 	
+	@Override
+	public void preRestart(Throwable reason, Option<Object> message)
+			throws Exception {
+		// TODO Auto-generated method stub
+		super.preRestart(reason, message);
+	}
+	
+	@Override
+	public void postRestart(Throwable reason) throws Exception {
+		// TODO Auto-generated method stub
+		super.postRestart(reason);
+	}
+	
+	@Override
+	public void postStop() throws Exception {
+		// TODO Auto-generated method stub
+		super.postStop();
+	}
 	
 	private Message start() throws CdatException {
 		Message msg;

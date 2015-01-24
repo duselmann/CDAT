@@ -10,7 +10,8 @@ import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractStream<S extends Closeable> implements Stream<S> {
+// TODO StreamContainer and remove the interface entirely
+public abstract class AbstractStream<S extends Closeable> implements StreamContainer<S> {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	

@@ -3,16 +3,16 @@ package gov.cida.cdat.io.stream;
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.stream.api.AbstractStream;
-import gov.cida.cdat.io.stream.api.Stream;
+import gov.cida.cdat.io.stream.api.StreamContainer;
 
 import java.io.OutputStream;
 
 public abstract class ChainedStream<S extends OutputStream> extends AbstractStream<OutputStream> {
 
-	private Stream<OutputStream> target;
+	private StreamContainer<OutputStream> target;
 	private S stream;
 
-	public ChainedStream(Stream<OutputStream> target) {
+	public ChainedStream(StreamContainer<OutputStream> target) {
 		this.target = target;
 	}
 	

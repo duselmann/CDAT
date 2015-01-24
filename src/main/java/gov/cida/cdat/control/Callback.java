@@ -1,5 +1,6 @@
 package gov.cida.cdat.control;
 
+import gov.cida.cdat.message.Message;
 import akka.dispatch.OnComplete;
 
 /**
@@ -19,6 +20,6 @@ abstract public class Callback extends OnComplete<Message>{
 	 * TODO Implement other callback method types. AKKA has others like OnError and OnSuccess (I think)
 	 */
 	@Override
-	abstract public void onComplete(Throwable t, Message repsonse) throws Throwable;
+	abstract public void onComplete(Throwable t, Message response);
 
 }

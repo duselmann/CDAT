@@ -38,7 +38,7 @@ public class TestStatusStreams {
 		UrlStream google = new UrlStream(url);
 		
 		// pipe
-		final PipeStream pipe = new PipeStream(google, status);
+		final DataPipe pipe = new DataPipe(google, status);
 		status(status.getChainedStream());
 		
 		new Thread() {
@@ -92,6 +92,7 @@ public class TestStatusStreams {
 		if (status == null) {
 			System.out.println("  status is not init yet: " + status);
 		} else {
+			System.out.println();
 			System.out.println("  status is open: " + status.isOpen());
 			System.out.println("  status is done: " + status.isDone());
 			System.out.println("  status is byteCount: " + status.getByteCount());
