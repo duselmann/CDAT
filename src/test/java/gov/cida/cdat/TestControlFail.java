@@ -33,7 +33,7 @@ public class TestControlFail {
 		UrlStream in = new UrlStream(url);
 		
 		// pipe
-		DataPipe pipe = new DataPipe(in, out);		
+		DataPipe pipe = new DataPipe(in, out);
 		
 		workerName = manager.addWorker("google", pipe);
 		
@@ -41,7 +41,7 @@ public class TestControlFail {
 		manager.send(workerName, Control.Start);
 		manager.send(workerName, Control.onComplete, new Callback(){
 	        public void onComplete(Throwable t, Message response){
-	            report(response);		
+	            report(response);
 	        }
 	    });
 	}

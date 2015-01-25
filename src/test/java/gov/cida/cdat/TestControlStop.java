@@ -27,7 +27,7 @@ public class TestControlStop {
 		UrlStream google = new UrlStream(url);
 		
 		// pipe
-		final DataPipe pipe = new DataPipe(google, out);		
+		final DataPipe pipe = new DataPipe(google, out);
 		
 		String workerName = manager.addWorker("google", pipe);
 		

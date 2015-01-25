@@ -13,7 +13,7 @@ public final class IO {
 		return copy(source, target, DEFAULT_BUFFER_SIZE);
 	}
 
-	public static long copy(InputStream source, OutputStream target, int bufferSize) 
+	public static long copy(InputStream source, OutputStream target, int bufferSize)
 			throws IOException {
 		
 		byte[] buffer = new byte[bufferSize];

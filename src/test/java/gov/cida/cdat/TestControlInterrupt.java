@@ -35,7 +35,7 @@ public class TestControlInterrupt {
 		FileStream producer = new FileStream(file);
 		
 		// pipe
-		final DataPipe pipe = new DataPipe(producer, consumer);		
+		final DataPipe pipe = new DataPipe(producer, consumer);
 		
 		String workerName = manager.addWorker("google", pipe);
 		

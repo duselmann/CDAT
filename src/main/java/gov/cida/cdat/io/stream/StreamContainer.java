@@ -79,7 +79,7 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 	
 	public final S getStream() {
 		return stream;
-	}	
+	}
 	protected final S setStream(S newStream) {
 		// original stream protection
 		if ( this.stream == null ) {

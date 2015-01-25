@@ -30,12 +30,12 @@ public class Session extends UntypedActor {
 	 */
 	private final Registry delegates;
 	public Session() {
-		delegates = new Registry(); 
+		delegates = new Registry();
 	}
 	
 	
 	// TODO impl start/stop fail return true/false and the Actor supervisor
-	private SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration 
+	private SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration
 			Duration.create("1 minute"), // TODO check the proper duration
 			new Function<Throwable, Directive>() {
 		@Override
@@ -62,7 +62,7 @@ public class Session extends UntypedActor {
 	
 	
 	
-	// TODO session should have a dispose all delegates for when the session is done 
+	// TODO session should have a dispose all delegates for when the session is done
 	@Override
 	public void onReceive(Object msg) throws Exception {
 		if (msg instanceof AddWorkerMessage) {
@@ -143,7 +143,7 @@ public class Session extends UntypedActor {
 	public String addWorker(AddWorkerMessage worker) { // TODO QueryWorker name change?
         // Create the AKKA service actor
         ActorRef delegate = context().actorOf(Props.create(Delegator.class, worker), worker.getName());
-        
+		
         // TODO this is not isolated - need to refactor as a return message
         // returns a unique name from the given name
         return delegates.put(worker.getName(), delegate); // TODO dispose of actor?

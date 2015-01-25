@@ -41,7 +41,7 @@ public class SCManager {
 	public static final FiniteDuration SECOND    = Duration.create(  1, "second");
 	public static final FiniteDuration HALF_MIN  = Duration.create( 30, "seconds");
 	public static final FiniteDuration HOUR      = Duration.create(  1, "hour");
-	public static final FiniteDuration DAY       = Duration.create(  1, "day");	
+	public static final FiniteDuration DAY       = Duration.create(  1, "day");
 	
 	/**
 	 *  singleton pattern, each user session will have a session worker
@@ -156,7 +156,7 @@ public class SCManager {
 	 * 					transformers are stream that inject themselves in the consumer flow
 	 * @return the new unique name string that is used to send messages to submitted pipe
 	 */
-	public String addWorker(String workerLabel, DataPipe pipe) { 
+	public String addWorker(String workerLabel, DataPipe pipe) {
 		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, pipe);
 		session().tell(msg, ActorRef.noSender());
 		return msg.getName();
@@ -170,7 +170,7 @@ public class SCManager {
 	 * SCManager manager = SCManager.get();
 	 * Future&lt;Object&gt; future = manager.addWorker(NWIS_SEDIMENT, nwisRequest, new Callback(){
 	 *       public void onComplete(Throwable t, Message response) {
-	 *           doSomething(response);		
+	 *           doSomething(response);
 	 *       }
 	 *   });
 	 *   </pre>
@@ -186,7 +186,7 @@ public class SCManager {
 	 */
 	// TODO test that the onComplete message contains the worker.name
 	public Future<Object> addWorker(String workerLabel, DataPipe pipe, Callback onComplete) {
-		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, pipe);		
+		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, pipe);
 		Future<Object> response = Patterns.ask(session(), msg, 1000);
 		wrapCallback(response, onComplete);
 		return response;
@@ -277,7 +277,7 @@ public class SCManager {
 	 * @param callback
 	 * @return
 	 */
-	public Future<Object> send(String workerName, Control ctrl, final Callback callback) {		
+	public Future<Object> send(String workerName, Control ctrl, final Callback callback) {
 		Future<Object> response = send(workerName, ctrl);
 		wrapCallback(response, callback);
 		return response;
@@ -331,6 +331,6 @@ public class SCManager {
 				    workerPool.awaitTermination();
 				    logger.info("awaitTermination {}", workerPool.isTerminated());
 				}
-		}, workerPool.dispatcher());		
+		}, workerPool.dispatcher());
 	}
 }

@@ -75,7 +75,7 @@ public class TestControlThreaded {
 		UrlStream in = new UrlStream(url);
 		
 		// pipe
-		DataPipe pipe = new DataPipe(in, out);		
+		DataPipe pipe = new DataPipe(in, out);
 		
 		final String workerName = manager.addWorker(workerLabel, pipe);
 		
@@ -84,11 +84,11 @@ public class TestControlThreaded {
 		// This is called with a null response if the Patterns.ask timeout expires
 		manager.send(workerName, Control.onComplete, new Callback(){
 	        public void onComplete(Throwable t, Message response){
-	            report(workerName, response);		
+	            report(workerName, response);
 	        }
 	    });
 		
-		manager.send(workerName, Control.Start);		
+		manager.send(workerName, Control.Start);
 	}
 	
 	

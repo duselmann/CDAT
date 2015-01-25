@@ -50,7 +50,7 @@ public class Naming extends UntypedActor {
 	
 
 	void createNewName(String label) {
-		logger.trace("naming creating name from {}", label);		
+		logger.trace("naming creating name from {}", label);
 		
 		String name = createUniqueName(label);
 		
