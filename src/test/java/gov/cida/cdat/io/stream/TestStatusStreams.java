@@ -24,8 +24,8 @@ public class TestStatusStreams {
 		// status chained stream
 		final StatusStream status = new StatusStream(consumer);
 		
-		// chained container class example - it works
-//		final ChainedStream<StatusOutputStream> status = 
+		// chained container class example - it works too but the line above is more concise
+//		final ChainedStream<StatusOutputStream> status =
 //			new ChainedStream<StatusOutputStream>(consumer) {
 //				@Override
 //				protected StatusOutputStream chain(OutputStream stream) {
@@ -47,7 +47,7 @@ public class TestStatusStreams {
 				System.out.println("pipe open");
 				try {
 					pipe.open();
-					status(status.getChainedStream());					
+					status(status.getChainedStream());
 				} catch (StreamInitException e) {
 					e.printStackTrace();
 				}
@@ -86,7 +86,7 @@ public class TestStatusStreams {
 		System.out.println();
 		System.out.println(msg);
 		
-		status(status.getChainedStream());		
+		status(status.getChainedStream());
 	}
 	public static void status(StatusOutputStream status) {
 		if (status == null) {

@@ -117,7 +117,7 @@ public class SCManagerTests {
     	// this send the message that this worker is no longer needed
 		manager.send(workerName, Control.Stop);
 		
-		// lets just see the count 
+		// lets just see the count
 		System.out.println();
 		System.out.println("wait cycle count: " + count);
 		System.out.println();
@@ -199,5 +199,5 @@ public class SCManagerTests {
 		// now test that the consumer remains empty
 		assertEquals("Expect that the disposed worker does not execute", "", new String(consumer.toByteArray()) );
     }
-	
+	// TODO need to check why the callback has a different thread. it could be a junit thing
 }
