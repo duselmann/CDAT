@@ -107,7 +107,7 @@ public class Session extends UntypedActor {
 //		logger.trace("ActorRefs for worker '{}' are {} equal.", workerName, worker!=worker2?"NOT":"");
 		
 		if (worker == null) {
-			logger.warn("Failed to find worker named {}", workerName);
+			logger.warn("Failed to find worker named {} on session {}", workerName, self().path());
 			unhandled(msg);
 			return;
 		} else {
