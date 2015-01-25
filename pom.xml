@@ -115,13 +115,15 @@
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
 			<scope>test</scope>
-        	<exclusions>
+<!-- since when did they add this dependency - no sir, I don't like it.
+         	<exclusions>
         		<exclusion>
         			<artifactId>hamcrest-core</artifactId>
         			<groupId>org.hamcrest</groupId>
         		</exclusion>
         	</exclusions>
-		</dependency>
+ -->
+ 		</dependency>
 
 	</dependencies>
 
