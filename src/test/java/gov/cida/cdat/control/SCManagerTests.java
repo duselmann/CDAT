@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import gov.cida.cdat.io.stream.DataPipe;
 import gov.cida.cdat.io.stream.SimpleStream;
+import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
 import gov.cida.cdat.service.Naming;
 
@@ -12,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 
 import org.junit.Test;
 
@@ -77,6 +79,21 @@ public class SCManagerTests {
 		}
 		System.out.println();
 		System.out.println();
+	}
+
+
+	public static Object reflectValue(Object objToReflect, String fieldNameValueToFetch) {
+		// reflection access is a bit wonky - this is way many of my classes are package access
+		// cannot do it this time because the PipeWorker is a subclass of Worker which does not have a pipe member variable
+		try {
+			Field pipeField     = objToReflect.getClass().getDeclaredField(fieldNameValueToFetch);
+			pipeField.setAccessible(true);
+			Object reflectValue = pipeField.get(objToReflect);
+			return reflectValue;
+		} catch (Exception e) {
+			assertFalse("Failed to reflect "+fieldNameValueToFetch, true);
+		}
+		return null;
 	}
 	
 	
@@ -338,6 +355,27 @@ public class SCManagerTests {
 				EXPECT3, result3);
 	}
 	
+	@Test
+	public void testcreateAddWorkerMessage_simpleFactoryMethod_yaRight_ItsNeverSimple_soWeTest() throws Exception {
+		
+		// obtain an instance of the manager
+		SCManager  manager     = SCManager.instance();
+		
+		final String RAW_LABEL = "aaa";
+		final String EXPECT    = "aaa-1";
+		
+		final DataPipe pipe    = new DataPipe(null, null);
+		
+		AddWorkerMessage msg   = manager.createAddWorkerMessage(RAW_LABEL, pipe);
+				
+		assertEquals("we expect that an Add Worker Message name be related to the given label", EXPECT, msg.getName());
+
+		// reflection access is a bit wonky - this is way many of my classes are package access
+		// cannot do it this time because the PipeWorker is a subclass of Worker which does not have a pipe member variable
+		Object workerPipe      = reflectValue(msg.getWorker(), "pipe");
+		
+		assertEquals("we expect that an Add Worker Message pipe be the given pipe", pipe, workerPipe);
+	}
 	
 	
 	// TODO should the manager have an feature to auto start and stop workers?
