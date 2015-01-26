@@ -28,14 +28,14 @@ public class Session extends UntypedActor {
 	/**
 	 *  contains the lookup of something that does work like an ETL, Query, or Session
 	 */
-	private final Registry delegates;
+	final Registry delegates;
 	public Session() {
 		delegates = new Registry();
 	}
 	
 	
 	// TODO impl start/stop fail return true/false and the Actor supervisor
-	private SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration
+	SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration
 			Duration.create("1 minute"), // TODO check the proper duration
 			new Function<Throwable, Directive>() {
 		@Override
@@ -76,7 +76,7 @@ public class Session extends UntypedActor {
 		}
 		sender().tell(Message.create("listens for Message class only"),self());
 	}
-	public void onReceive(final Message msg) throws Exception {
+	void onReceive(final Message msg) throws Exception {
 		logger.trace("Session recieved message {}", msg);
 		
 		String workerName = msg.get(Naming.WORKER_NAME); // TODO smell
@@ -116,7 +116,7 @@ public class Session extends UntypedActor {
 			worker.tell(msg, self());
 		}
 	}
-	public void onReceive(AddWorkerMessage addWorker) throws Exception {
+	void onReceive(AddWorkerMessage addWorker) throws Exception {
 		logger.trace("Session recieved new worker {}", addWorker.getName());
 		String uniqueName = addWorker(addWorker);
 		Message msg = Message.create(Naming.WORKER_NAME,uniqueName);
@@ -140,8 +140,9 @@ public class Session extends UntypedActor {
 	 * 					transformers are stream that inject themselves in the consumer flow
 	 * @return the new unique string that is used to send messages to submitted pipe
 	 */
-	public String addWorker(AddWorkerMessage worker) { // TODO QueryWorker name change?
+	String addWorker(AddWorkerMessage worker) { // TODO QueryWorker name change?
         // Create the AKKA service actor
+		logger.trace("Adding a worker with name: {}", worker.getName());
         ActorRef delegate = context().actorOf(Props.create(Delegator.class, worker), worker.getName());
 		
         // TODO this is not isolated - need to refactor as a return message
