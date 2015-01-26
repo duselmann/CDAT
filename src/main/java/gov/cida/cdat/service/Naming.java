@@ -64,6 +64,9 @@ public class Naming extends UntypedActor {
 	String createUniqueName(String label) {
 		int count = 1; // internal count auto-named entries
 		
+		// spaces are not allowed in AKKA
+		label = label.replaceAll(" ", "_");
+		
 		String uniqueName = label +"-"+ (count++);
 		
 		while ( names.contains(uniqueName) ) {
