@@ -14,10 +14,23 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
 
+import scala.Function1;
+import scala.Option;
+import scala.PartialFunction;
+import scala.Tuple2;
+import scala.concurrent.Awaitable;
+import scala.concurrent.CanAwait;
+import scala.concurrent.ExecutionContext;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
+import scala.reflect.ClassTag;
+import scala.util.Try;
 import akka.actor.ActorRef;
+import akka.dispatch.OnComplete;
 
 
 public class SCManagerTests {
@@ -164,7 +177,7 @@ public class SCManagerTests {
 		assertEquals("we expect the worker name returned from addWorker", EXPECTED, workerName);
 		
 		// this is a holder to pass data between threads.
-		final Message response[] = new Message[1];
+		final Message[] response = new Message[1];
 		
 		// wait for worker to complete
 		manager.send(workerName, Control.onComplete, new Callback(){
@@ -215,7 +228,7 @@ public class SCManagerTests {
 		final String  workerName = manager.addWorker(TEST_STRING, testPipe.pipe);
 
 		// this is a holder to pass data between threads.
-		final Message response[] = new Message[1];
+		final Message[] response = new Message[1];
 		
 		// wait for worker to complete
 		manager.send(workerName, Control.onComplete, new Callback(){
@@ -262,7 +275,7 @@ public class SCManagerTests {
 		PipeTestObj testPipe = createTestPipe(TEST_STRING);
 		
 		// this is a holder to pass data between threads.
-		final Message response[] = new Message[1];
+		final Message[] response = new Message[1];
 		
 		// submit the pipe as a worker to the manager on the session
 		manager.addWorker(TEST_STRING, testPipe.pipe, new Callback(){
@@ -377,6 +390,81 @@ public class SCManagerTests {
 		assertEquals("we expect that an Add Worker Message pipe be the given pipe", pipe, workerPipe);
 	}
 	
+	@Test
+	public void testWrapCallback_onCompleteWrappingTest() throws Throwable {
+		
+		// set up the test responses
+		final boolean[] onCompleteCalled_callback = new boolean[1];
+		onCompleteCalled_callback[0] = false;
+		final boolean[] onCompleteCalled_future   = new boolean[1];
+		onCompleteCalled_future[0] = false;
+		@SuppressWarnings("unchecked") // generic array
+		final OnComplete<Object>[] onCompleteRef  = new OnComplete[1];
+		final ExecutionContext[]     contextRef   = new ExecutionContext[1];
+
+		
+		// a test callback that sets the result so we know it was called
+		Callback callback      = new Callback() {
+			@Override
+			public void onComplete(Throwable t, Message response) {
+				onCompleteCalled_callback[0] = true;
+			}
+		};
+		
+		// A test future holder to be assigned the test callback
+		// only the onComplete is implemented below as it is under test here
+		Future<Object> future  = new Future<Object>() {
+			
+			// need to cast because of the <U>
+			@SuppressWarnings("unchecked")
+			@Override
+			public <U> void onComplete(Function1<Try<Object>, U> onComplete,
+					ExecutionContext context) {
+				onCompleteCalled_future[0] = true;
+				onCompleteRef[0] = (OnComplete<Object>)onComplete;
+				contextRef[0]    = context;
+			}
+			
+			@Override public Awaitable<Object> ready(Duration arg0, CanAwait arg1) throws TimeoutException, InterruptedException {return null;}
+			@Override public Object result(Duration arg0, CanAwait arg1) throws Exception {return null;}
+			@Override public <U> Future<Object> andThen(PartialFunction<Try<Object>, U> arg0, ExecutionContext arg1) {return null;}
+			@Override public <S> Future<S> collect(PartialFunction<Object, S> arg0, ExecutionContext arg1) {return null;}
+			@Override public Future<Throwable> failed() {return null;}
+			@Override public <U> Future<U> fallbackTo(Future<U> arg0) {return null;}
+			@Override public Future<Object> filter(Function1<Object, Object> arg0, ExecutionContext arg1) {return null;}
+			@Override public <S> Future<S> flatMap(Function1<Object, Future<S>> arg0, ExecutionContext arg1) {return null;}
+			@Override public <U> void foreach(Function1<Object, U> arg0, ExecutionContext arg1) {}
+			@Override public boolean isCompleted() {return false;}
+			@Override public <S> Future<S> map(Function1<Object, S> arg0, ExecutionContext arg1) {return null;}
+			@Override public <S> Future<S> mapTo(ClassTag<S> arg0) {return null;}
+			@Override public <U> void onFailure(PartialFunction<Throwable, U> arg0, ExecutionContext arg1) {}
+			@Override public <U> void onSuccess(PartialFunction<Object, U> arg0, ExecutionContext arg1) {}
+			@Override public <U> Future<U> recover(PartialFunction<Throwable, U> arg0, ExecutionContext arg1) {return null;}
+			@Override public <U> Future<U> recoverWith(PartialFunction<Throwable, Future<U>> arg0, ExecutionContext arg1) {return null;}
+			@Override public <S> Future<S> transform(Function1<Object, S> arg0, Function1<Throwable, Throwable> arg1, ExecutionContext arg2) {return null;}
+			@Override public Option<Try<Object>> value() {return null;}
+			@Override public Future<Object> withFilter(Function1<Object, Object> arg0, ExecutionContext arg1) {return null;}
+			@Override public <U> Future<Tuple2<Object, U>> zip(Future<U> arg0) {return null;}
+		};
+		
+		
+		// obtain an instance of the manager
+		SCManager  manager     = SCManager.instance();
+
+		manager.wrapCallback(future, callback);
+
+		assertTrue("Callback should have been attached to the Future", onCompleteCalled_future[0]);
+		
+		assertTrue("An OnComplete function wrapper should have been passed into the OnComplete Future attachment", null != onCompleteRef[0]);
+		assertTrue("An AKKA context should have been passed into the OnComplete Future attachment", null != contextRef[0]);
+		
+		assertFalse("OnComplete should NOT have been called yet", onCompleteCalled_callback[0]);
+		onCompleteRef[0].onComplete(null, null);
+		// this tests that the Callback instance has been wrapped
+		assertTrue("OnComplete should HAVE been called", onCompleteCalled_callback[0]);
+	}
+	
+	// TODO should test the SCManager.shutdown method; however, it would invalidate other tests at this time. Need to isolate each test.
 	
 	// TODO should the manager have an feature to auto start and stop workers?
 	// TODO need to check why the callback has a different thread. it could be a junit thing
