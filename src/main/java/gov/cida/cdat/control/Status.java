@@ -13,5 +13,16 @@ import gov.cida.cdat.message.Message;
  * @see Control
  */
 public enum Status {
-	isAlive,isOpen,isStarted,isDone,config
+	isNew,isStarted,isAlive,isDone,isError,isDisposed,config,CurrentStatus;
+	
+	// cannot override equals
+	public boolean is(Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (other instanceof String) {
+			return toString().equalsIgnoreCase((String)other);
+		}
+		return super.equals(other);
+	}
 }
