@@ -1,5 +1,6 @@
 package gov.cida.cdat.io.stream;
 
+import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.IO;
@@ -11,7 +12,10 @@ import java.io.OutputStream;
 
 public class DataPipe implements Openable<InputStream>, Closeable {
 	
-	private final StreamContainer<InputStream> producer;
+	public static final int DEFAULT_DURATION = 5000;
+	public static final int FULL_DURATION    = -1;
+	
+	private final StreamContainer<InputStream>  producer;
 	private final StreamContainer<OutputStream> consumer;
 	private boolean isComplete;
 	
@@ -29,29 +33,36 @@ public class DataPipe implements Openable<InputStream>, Closeable {
 
 	@Override
 	public InputStream open() throws StreamInitException {
-		InputStream  in = null;
-		OutputStream out= null;
 		try {
-			try {
-				in = producer.open();
-			} catch (Exception e) {
-				throw new  StreamInitException("Failed open producer to pipe streams", e);
-			}
-			try {
-				out = consumer.open();
-			} catch (Exception e) {
-				throw new  StreamInitException("Failed open consumer to pipe streams", e);
-			}
-			try {
-				IO.copy(in, out);
-			} catch (Exception e) {
-				throw new  StreamInitException("Failed to copy pipe streams", e);
-			}
-			return producer.getStream(); // TODO this might not be useful
-		} finally {
-			close(); // TODO should this auto close on complete?
+			producer.open();
+		} catch (Exception e) {
+			throw new  StreamInitException("Failed open producer to pipe streams", e);
+		}
+		try {
+			consumer.open();
+		} catch (Exception e) {
+			Closer.close(producer);
+			throw new  StreamInitException("Failed open consumer to pipe streams", e);
+		}
+		return producer.getStream(); // TODO this might not be useful
+	}
+
+	
+	public boolean process(long milliseconds) throws CdatException{
+		try {
+			long bytes = IO.copy(producer.getStream(), consumer.getStream(), milliseconds);
+			return bytes >= 0;
+		} catch (Exception e) {
+			throw new  StreamInitException("Failed to copy pipe streams", e);
 		}
 	}
+	public boolean process() throws CdatException{
+		return process(DEFAULT_DURATION);
+	}
+	public boolean processAll() throws CdatException{
+		return process(-1);
+	}
+	
 
 	@Override
 	public void close() {
