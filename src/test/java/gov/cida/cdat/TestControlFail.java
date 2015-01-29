@@ -44,18 +44,19 @@ public class TestControlFail {
 	            report(response);
 	        }
 	    });
-	}
-	
-	
-	private static void report(final Message response) {
-        System.out.println("onComplete Response is " + response);
-		
+
 		manager.send(workerName, Control.Stop, new Callback() {
 			public void onComplete(Throwable t, Message response) {
 				System.out.println("service shutdown");
 				manager.shutdown();
 			}
 		});
+	}
+	
+	
+	private static void report(final Message response) {
+        System.out.println("onComplete Response is " + response);
+		
 		System.out.println();
 		System.out.println("pipe results: expect zero length, handled by session, and pool system continue running");
 		System.out.println( "total bytes: " +target.size() );

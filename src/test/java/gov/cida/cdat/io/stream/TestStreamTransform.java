@@ -1,6 +1,6 @@
 package gov.cida.cdat.io.stream;
 
-import gov.cida.cdat.exception.StreamInitException;
+import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.io.TransformOutputStream;
 import gov.cida.cdat.transform.RegexTransformer;
 import gov.cida.cdat.transform.Transformer;
@@ -42,7 +42,8 @@ public class TestStreamTransform {
 				System.out.println("pipe open");
 				try {
 					pipe.open();
-				} catch (StreamInitException e) {
+					pipe.processAll();
+				} catch (CdatException e) {
 					e.printStackTrace();
 				}
 			}

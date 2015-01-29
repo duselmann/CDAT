@@ -51,14 +51,14 @@ public class Session extends UntypedActor {
 		public Directive apply(Throwable t) {
 			logger.warn("session receved an exception");
 			
+			// TODO proper handling - this is to inspect how this API works
 			if (t instanceof Exception) {
-				// TODO proper handling
 				logger.warn("session receved an exception, resuming");
 				return resume();
-			} else if (t instanceof NullPointerException) {
-				return restart();
-			} else if (t instanceof IllegalArgumentException) {
+			} else if (t instanceof Throwable) {
 				return stop();
+			} else if (t instanceof IllegalArgumentException) {
+				return restart();
 			} else {
 				return escalate();
 			}
@@ -74,16 +74,29 @@ public class Session extends UntypedActor {
 	// TODO session should have a dispose all delegates for when the session is done
 	@Override
 	public void onReceive(Object msg) throws Exception {
+		if (msg == null) {
+			return;
+		}
+		
 		if (msg instanceof AddWorkerMessage) {
 			onReceive((AddWorkerMessage)msg);
 			return;
 		} else if (msg instanceof Message) {
 			onReceive((Message)msg);
 			return;
+		} else if (msg instanceof Terminated) {
+			Status status = Status.isDisposed;
+			Terminated ref = (Terminated)msg;
+//			if (false) { // TODO check for exception in delegate
+//				status = Status.isError;
+//			}
+			delegates.setStatus(ref.actor().path().name(), status);
+			return;
 		} else {
 			unhandled(msg);
 		}
-		sender().tell(Message.create("listens for Message class only"),self());
+		
+		sender().tell(Message.create("UnknowMessageType", msg.getClass().getName()),self());
 	}
 	void onReceive(final Message msg) throws Exception {
 		logger.trace("Session recieved message {}", msg);
@@ -98,35 +111,20 @@ public class Session extends UntypedActor {
 		if (worker != null) {
 			logger.trace( worker.path().toString() );
 		}
-		// handle the return message from the child that onComplete has triggered
-		if (msg.contains(Control.onComplete)) {
-			if ( !"done".equals( msg.get(Control.onComplete) ) ) {
-//				final ActorRef onCompleteSender = sender();
-//				Future<Object> response = Patterns.ask(worker, msg, 50000);
-//				OnComplete<Object> onCompleteWorker = new OnComplete<Object>() {
-//					public void onComplete(Throwable t, Object response) throws Throwable {
-//						logger.trace("Session recieved RESPONSE trigger for onComplete {}", msg);
-//						Message extended = Message.extend((Message)response, "ReturnFromSessionFuture", null);
-//						onCompleteSender.tell(extended, self());
-//					}
-//				};
-//			    response.onComplete(onCompleteWorker, context().dispatcher());
-				worker.forward(msg, context());
-			}
-		    return;
-		}
-		
-//		ActorRef worker2 = context().child(workerName).get();
-//		logger.trace("ActorRefs for worker '{}' are {} equal.", workerName, worker!=worker2?"NOT":"");
 		
 		if (worker == null) {
 			logger.warn("Failed to find worker named {} on session {}", workerName, self().path());
 			unhandled(msg);
 			return;
+			
 		} else {
 			// workers only read message keys that pertain to them
 			// it is okay to pass the original message along
-			worker.tell(msg, self());
+			// forward is better than telling in this case. worker.tell(msg, self());
+			if (msg.contains(Control.Start)) {
+				delegates.setStatus(workerName, Status.isStarted);
+			} 
+			worker.forward(msg, context());
 		}
 	}
 	void onReceive(AddWorkerMessage addWorker) throws Exception {
@@ -158,16 +156,40 @@ public class Session extends UntypedActor {
         // Create the AKKA service actor
 		logger.trace("Adding a worker with name: {}", worker.getName());
         ActorRef delegate = context().actorOf(Props.create(Delegator.class, worker), worker.getName());
-		
+        context().watch(delegate);
+        
         // TODO this is not isolated - need to refactor as a return message
         // returns a unique name from the given name
         return delegates.put(worker.getName(), delegate); // TODO dispose of actor?
 	}
 	
-	
+	/**
+	 * Place holder for potential implementation.
+	 * We will put any session specific cleanup here.
+	 */
 	@Override
-	public void postStop() throws Exception {
+	public void postStop() throws CdatException {
 		logger.trace("Session stopped.");
-		super.postStop();
+		try {
+			super.postStop();
+		} catch (Exception e) {
+			throw new CdatException("Error cleaning up session: " + self().path(), e);
+		}
+	}
+	
+	/**
+	 * Place holder (for the most part) for potential implementation.
+	 * We will put any session specific cleanup here pertaining to restart.
+	 * For now this is a sample implementation from AKKA documentation.
+	 */
+	@Override
+	public void preRestart(Throwable reason, Option<Object> message) 
+			throws CdatException {
+		
+		for (ActorRef child : getContext().getChildren()) {
+			context().unwatch(child); // stop watching all the children
+			context().stop(child);
+		}
+		postStop();
 	}
 }

@@ -1,6 +1,6 @@
 package gov.cida.cdat.io.stream;
 
-import gov.cida.cdat.exception.StreamInitException;
+import gov.cida.cdat.exception.CdatException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -34,7 +34,8 @@ public class TestStreams {
 				System.out.println("pipe open");
 				try {
 					pipe.open();
-				} catch (StreamInitException e) {
+					pipe.processAll();
+				} catch (CdatException e) {
 					e.printStackTrace();
 				}
 			}

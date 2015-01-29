@@ -47,23 +47,25 @@ public class TestControlSuccess {
 		
 		manager.send(workerName, Control.Start);
 		
-	}
-	
-	
-	private static void report(String workerName, final Message response) {
-        System.out.println("onComplete Response is " + response);
-		
 		manager.send(workerName, Control.Stop, new Callback() {
 			public void onComplete(Throwable t, Message response) {
 				System.out.println("service shutdown scheduled");
 				manager.shutdown();
 			}
 		});
+	}
+	
+	
+	private static void report(String workerName, final Message response) {
+        System.out.println("onComplete Response is " + response);
 		
 		System.out.println("pipe results: expect >15kb with Google found in the text");
 		System.out.println( "total bytes: " +target.size() );
 		if (target.size()>100) {
-			System.out.println( new String(target.toByteArray(), 0, 100) );
+			byte[] bytes = target.toByteArray();
+			System.out.println( new String(bytes, 0, 100) );
+			System.out.println("...");
+			System.out.println( new String(bytes, bytes.length-100, 100) );
 		} else {
 			System.out.println("ERROR: Received too little data.");
 		}
@@ -74,5 +76,4 @@ public class TestControlSuccess {
 		System.out.println();
 		System.out.println(msg);
 	}
-
 }
