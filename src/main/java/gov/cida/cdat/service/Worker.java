@@ -2,6 +2,7 @@ package gov.cida.cdat.service;
 
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Status;
+import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.message.Message;
 
 import org.slf4j.Logger;
@@ -17,9 +18,24 @@ public abstract class Worker {
 	private Callback onComplete;
 	private Throwable currentError;
 	
+	public Message onReceive(Message msg) {
+		logger.trace("Worker onReceive: {}  message {}", id, msg);
+		return Message.create("Not Handled");
+	}	
+	
 	// open, connect, configure, etc
-	public void begin() throws Exception { // TODO use framework exceptions
-		logger.trace("Worker begin: " + id);
+	public void begin() throws CdatException { // TODO use framework exceptions
+		logger.trace("Worker begin: {}", id);
+	}
+	
+	/**
+	 * Processes data and then returns if there is more to process
+	 * @return true if the is more to process and false when done
+	 * @throws CdatException
+	 */
+	public boolean process() throws CdatException {
+		logger.trace("Worker processing some data: {}", id);
+		return false; // there is never any data to process in the abstract
 	}
 
 	// close, disconnect, cleanup resources, etc
@@ -30,7 +46,7 @@ public abstract class Worker {
 		if (onComplete!=null) {
 			onComplete.onComplete(null, Message.create(Status.isDone));
 		}
-		logger.trace("Worker end: " + id);
+		logger.trace("Worker end: {}", id);
 	}
 	
 	public final boolean hasError() {

@@ -1,5 +1,6 @@
 package gov.cida.cdat.service;
 
+import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.io.stream.DataPipe;
 
 public class PipeWorker extends Worker {
@@ -11,9 +12,16 @@ public class PipeWorker extends Worker {
 	}
 	
 	@Override
-	public void begin() throws Exception {
+	public void begin() throws CdatException {
 		super.begin();
 		pipe.open();
+	}
+	
+	@Override
+	public boolean process() throws CdatException {
+		super.process();
+		boolean isMore = pipe.process(1000); // asdf TODO this need to be a real amount of time
+		return isMore;
 	}
 	
 	@Override
