@@ -167,22 +167,11 @@ public class Delegator extends UntypedActor {
 	 */
 	@Override
 	public void preStart() throws Exception {
-		super.preStart();
-	}
-	/**
-	 * AKKA method for future impl
-	 */
-	@Override
-	public void postRestart(Throwable reason) throws Exception {
-		super.postRestart(reason);
-	}
-	/**
-	 * AKKA method for future impl
-	 */
-	@Override
-	public void preRestart(Throwable reason, Option<Object> message)
-			throws Exception {
-		super.preRestart(reason, message);
+		super.preStart(); // TODO not sure if this is necessary
+		if (autoStart) {
+			logger.debug("Delegate AUTOSTART worker");
+			start();
+		}
 	}
 	/**
 	 * AKKA method called when stop is issued. 

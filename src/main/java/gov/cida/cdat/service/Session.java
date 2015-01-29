@@ -5,6 +5,8 @@ import static akka.actor.SupervisorStrategy.restart;
 import static akka.actor.SupervisorStrategy.resume;
 import static akka.actor.SupervisorStrategy.stop;
 import gov.cida.cdat.control.Control;
+import gov.cida.cdat.control.Status;
+import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.io.stream.Registry;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
@@ -12,18 +14,25 @@ import gov.cida.cdat.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import scala.Option;
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
 import akka.actor.OneForOneStrategy;
 import akka.actor.Props;
 import akka.actor.SupervisorStrategy;
 import akka.actor.SupervisorStrategy.Directive;
+import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.japi.Function;
 
 
 public class Session extends UntypedActor {
+	public static final Object AUTOSTART = "autostart";
+
 	private final Logger logger = LoggerFactory.getLogger(getClass());
+	
+
+	private boolean autoStart;
 	
 	/**
 	 *  contains the lookup of something that does work like an ETL, Query, or Session
@@ -79,7 +88,11 @@ public class Session extends UntypedActor {
 	void onReceive(final Message msg) throws Exception {
 		logger.trace("Session recieved message {}", msg);
 		
-		String workerName = msg.get(Naming.WORKER_NAME); // TODO smell
+		if (msg.contains(AUTOSTART)) {
+			autoStart = "true".equals( msg.get(AUTOSTART) );
+		}
+		
+		String workerName = msg.get(Naming.WORKER_NAME);
 		ActorRef worker = delegates.get(workerName);
 		
 		if (worker != null) {
@@ -117,6 +130,7 @@ public class Session extends UntypedActor {
 		}
 	}
 	void onReceive(AddWorkerMessage addWorker) throws Exception {
+		addWorker.setAutoStart(autoStart);
 		logger.trace("Session recieved new worker {}", addWorker.getName());
 		String uniqueName = addWorker(addWorker);
 		Message msg = Message.create(Naming.WORKER_NAME,uniqueName);

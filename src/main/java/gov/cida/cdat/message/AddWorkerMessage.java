@@ -29,11 +29,20 @@ public class AddWorkerMessage implements Serializable {
 	 * The worker to run on a delegate 'thread'
 	 */
 	private final Worker delegate;
+
+	/**
+	 * This worker should automatically start on submit
+	 */
+	private boolean autoStart;
 	
 	
 	private AddWorkerMessage(String name, Worker worker) {
-		this.name = name;
-		this.delegate = worker;
+		this(name,worker,false);
+	}
+	private AddWorkerMessage(String name, Worker worker, boolean autoStart) {
+		this.name      = name;
+		this.delegate  = worker;
+		this.autoStart = autoStart;
 	}
 	
 
@@ -51,4 +60,13 @@ public class AddWorkerMessage implements Serializable {
 	public Worker getWorker() {
 		return delegate;
 	}
+
+
+	public boolean isAutoStart() {
+		return autoStart;
+	}
+	public void setAutoStart(boolean autoStart) {
+		this.autoStart = autoStart;
+	}
+	
 }
