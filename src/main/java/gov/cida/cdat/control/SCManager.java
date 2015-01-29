@@ -3,6 +3,7 @@ package gov.cida.cdat.control;
 import gov.cida.cdat.io.stream.DataPipe;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
+import gov.cida.cdat.service.DeadLetterLogger;
 import gov.cida.cdat.service.Naming;
 import gov.cida.cdat.service.PipeWorker;
 import gov.cida.cdat.service.Session;
@@ -16,6 +17,7 @@ import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.DeadLetter;
 import akka.actor.Props;
 import akka.dispatch.OnComplete;
 import akka.pattern.Patterns;
@@ -35,6 +37,8 @@ import akka.util.Timeout;
 //TODO better name?
 public class SCManager {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
+	
+	private static final String SESSION = "session";
 	
 	// TODO maybe these should be Durations rather than Timeout
 	public static final FiniteDuration MILLIS    = Duration.create(100, "milliseconds");
@@ -71,6 +75,7 @@ public class SCManager {
 	 */
 	private final ActorRef naming;
 
+	private final ActorRef deadLetterLogger;
 	
 	/**
 	 *  private constructor for singleton pattern
@@ -82,6 +87,10 @@ public class SCManager {
         workerPool = ActorSystem.create("CDAT"); // TODO doc structure
         // TODO test that when in tomcat that it same instance or new instance - we need know
         naming = workerPool.actorOf( Props.create(Naming.class, new Object[0]), "Naming");
+
+        // listen to all dead letters for custom logging
+        deadLetterLogger = workerPool.actorOf( Props.create(DeadLetterLogger.class, new Object[0]), "DeadLetterLogger");
+        workerPool.eventStream().subscribe(deadLetterLogger, DeadLetter.class);
 	}
 
 	/**
@@ -95,7 +104,7 @@ public class SCManager {
 	// TODO is this thread safe? can there be a race condition within the if block
 	ActorRef session() {
 		if (session.get() == null) {
-			String sessionName = createNameFromLabel("session");
+			String sessionName = createNameFromLabel(SESSION);
 	        ActorRef sessionRef = workerPool.actorOf(
 	        		Props.create(Session.class, new Object[0]), sessionName);
 	        session.set(sessionRef);
@@ -104,6 +113,8 @@ public class SCManager {
 		return session.get();
 	}
 	// TODO abandoned sessions and workers should be closed and disposed cleanly
+	// TODO what I mean is that upon session exiting scope in the container it should dispose of its current workers
+	// TODO we should also reset autostart to what ever default we desire
 	
 	/**
 	 * This helper method messages the Naming worker to ensure unique names.
@@ -187,7 +198,7 @@ public class SCManager {
 	// TODO test that the onComplete message contains the worker.name
 	public Future<Object> addWorker(String workerLabel, DataPipe pipe, Callback onComplete) {
 		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, pipe);
-		Future<Object> response = Patterns.ask(session(), msg, 1000);
+		Future<Object> response = Patterns.ask(session(), msg, 1000); // TODO time
 		wrapCallback(response, onComplete);
 		return response;
 	}
@@ -225,7 +236,7 @@ public class SCManager {
 	 */
 	public Future<Object> send(String workerName, Message message) {
 		message = Message.extend(message, Naming.WORKER_NAME, workerName);
-	    return Patterns.ask(session(), message, 50000);
+	    return Patterns.ask(session(), message, 50000); // TODO use the duration constants
 		// TODO should this one return a future
 	    // TODO config timeout and create a method sig for custom timeout
 	}
@@ -332,5 +343,11 @@ public class SCManager {
 				    logger.info("awaitTermination {}", workerPool.isTerminated());
 				}
 		}, workerPool.dispatcher());
+	}
+	
+	
+	public void setAutoStart(boolean value) {
+		Message msg = Message.create(Session.AUTOSTART, value);
+		session().tell(msg, ActorRef.noSender());
 	}
 }
