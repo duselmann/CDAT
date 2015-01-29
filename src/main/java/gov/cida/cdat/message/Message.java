@@ -58,12 +58,17 @@ public class Message implements Serializable {
 	public static Message create(Object name) {
 		return create(name, null);
 	}
-	public static Message create(Object name, String value) {
+	public static Message create(Object name, Object value) {
 		if (name == null || "".equals(name)) {
 			throw new NullPointerException("Message name is required.");
 		}
 		Message msg = new Message();
-		msg.message.put(name.toString(), value);
+		
+		String stringValue = null;
+		if (value != null) {
+			stringValue = value.toString();
+		}
+		msg.message.put(name.toString(), stringValue);
 		return msg;
 	}
 	public static Message extend(Message original, Object name, String value) {
@@ -73,6 +78,9 @@ public class Message implements Serializable {
 		Message msg = create(original.message);
 		msg.message.put(name.toString(), value);
 		return msg;
+	}
+	public static Message create(Object name, boolean value) {
+		return create(name, ""+value);
 	}
 	
 
