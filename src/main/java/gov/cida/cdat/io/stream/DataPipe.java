@@ -50,8 +50,8 @@ public class DataPipe implements Openable<InputStream>, Closeable {
 	
 	public boolean process(long milliseconds) throws CdatException{
 		try {
-			long bytes = IO.copy(producer.getStream(), consumer.getStream(), milliseconds);
-			return bytes >= 0;
+			boolean isMore = IO.copy(producer.getStream(), consumer.getStream(), milliseconds);
+			return isMore;
 		} catch (Exception e) {
 			throw new  StreamInitException("Failed to copy pipe streams", e);
 		}
