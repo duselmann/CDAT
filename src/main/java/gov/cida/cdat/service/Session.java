@@ -129,6 +129,8 @@ public class Session extends UntypedActor {
 		addWorker.setAutoStart(autoStart);
 		logger.trace("Session recieved new worker {}", addWorker.getName());
 		addWorker(addWorker);
+        Message msg = Message.create(Naming.WORKER_NAME,addWorker.getName());
+        sender().tell(msg, self());
 	}
 	
 	
