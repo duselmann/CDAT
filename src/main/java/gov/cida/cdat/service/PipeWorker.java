@@ -20,7 +20,7 @@ public class PipeWorker extends Worker {
 	@Override
 	public boolean process() throws CdatException {
 		super.process();
-		boolean isMore = pipe.process(1000); // asdf TODO this need to be a real amount of time
+		boolean isMore = pipe.process(500); // asdf TODO this need to be a real amount of time
 		return isMore;
 	}
 	
