@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Messages are strongly typed key:value maps of type (string,string) where the value is used
@@ -24,7 +27,8 @@ import java.util.Map;
  */
 public class Message implements Serializable {
 	private static final long serialVersionUID = 1L;
-
+	private static final Logger logger = LoggerFactory.getLogger(Message.class);
+	
 	/**
 	 * the internal map containing the message.
 	 * A message is a possible composable item.
@@ -53,6 +57,7 @@ public class Message implements Serializable {
 	public static Message create(Map<String, String> map) {
 		Message msg = new Message();
 		msg.message.putAll(map);
+		trace(msg.message);
 		return msg;
 	}
 	public static Message create(Object name) {
@@ -69,6 +74,7 @@ public class Message implements Serializable {
 			stringValue = value.toString();
 		}
 		msg.message.put(name.toString(), stringValue);
+		trace(msg.message);
 		return msg;
 	}
 	public static Message extend(Message original, Object name, String value) {
@@ -147,5 +153,21 @@ public class Message implements Serializable {
 	@Override
 	public String toString() {
 		return message.toString().replaceAll("=null", "");
+	}
+	
+	
+	static void trace(Map<String, String> message) {
+		if ( ! logger.isTraceEnabled() ) {
+			return;
+		}
+		StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+		int entry = 3;
+		StackTraceElement last = stack[entry];
+		while (last.getClassName().endsWith("Message")) {
+			last = stack[++entry];
+		}
+		String caller = last.getClassName() +"."+ last.getMethodName() 
+				+":"+ last.getLineNumber();
+		message.put("TRACE", caller);
 	}
 }
