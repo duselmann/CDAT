@@ -285,6 +285,7 @@ public class Delegator extends UntypedActor {
 	 */
 	void sendCompleted(ActorRef needsToKnow) {
 		Message completed = Message.create(Control.onComplete, "done");
+		completed = Message.extend(completed, Naming.WORKER_NAME, name);
 		needsToKnow.tell(completed, self());
 	}
 	

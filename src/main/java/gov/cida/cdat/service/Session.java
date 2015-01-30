@@ -5,6 +5,7 @@ import static akka.actor.SupervisorStrategy.restart;
 import static akka.actor.SupervisorStrategy.resume;
 import static akka.actor.SupervisorStrategy.stop;
 import gov.cida.cdat.control.Control;
+import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.control.Status;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.io.stream.Registry;
@@ -15,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import scala.Option;
-import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
 import akka.actor.OneForOneStrategy;
 import akka.actor.Props;
@@ -45,7 +45,7 @@ public class Session extends UntypedActor {
 	
 	// TODO impl start/stop fail return true/false and the Actor supervisor
 	SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration
-			Duration.create("1 minute"), // TODO check the proper duration
+			SCManager.MINUTE, // TODO make configure
 			new Function<Throwable, Directive>() {
 		@Override
 		public Directive apply(Throwable t) {
@@ -70,8 +70,6 @@ public class Session extends UntypedActor {
 	}
 	
 	
-	
-	// TODO session should have a dispose all delegates for when the session is done
 	@Override
 	public void onReceive(Object msg) throws Exception {
 		if (msg == null) {
@@ -152,15 +150,13 @@ public class Session extends UntypedActor {
 	 * 					transformers are stream that inject themselves in the consumer flow
 	 * @return the new unique string that is used to send messages to submitted pipe
 	 */
-	String addWorker(AddWorkerMessage worker) { // TODO QueryWorker name change?
+	String addWorker(AddWorkerMessage worker) {
         // Create the AKKA service actor
 		logger.trace("Adding a worker with name: {}", worker.getName());
         ActorRef delegate = context().actorOf(Props.create(Delegator.class, worker), worker.getName());
         context().watch(delegate);
         
-        // TODO this is not isolated - need to refactor as a return message
-        // returns a unique name from the given name
-        return delegates.put(worker.getName(), delegate); // TODO dispose of actor?
+        return delegates.put(worker.getName(), delegate);
 	}
 	
 	/**
