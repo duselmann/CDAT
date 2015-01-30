@@ -4,8 +4,8 @@ package gov.cida.cdat;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.io.stream.DataPipe;
-import gov.cida.cdat.io.stream.SimpleStream;
-import gov.cida.cdat.io.stream.UrlStream;
+import gov.cida.cdat.io.stream.SimpleStreamContainer;
+import gov.cida.cdat.io.stream.UrlStreamContainer;
 import gov.cida.cdat.message.Message;
 
 import java.io.ByteArrayOutputStream;
@@ -20,11 +20,11 @@ public class TestControlStop {
 
 		// consumer
 		ByteArrayOutputStream      target = new ByteArrayOutputStream(1024*10);
-		SimpleStream<OutputStream> out  = new SimpleStream<OutputStream>(target);
+		SimpleStreamContainer<OutputStream> out  = new SimpleStreamContainer<OutputStream>(target);
 		
 		// producer
 		URL url = new URL("http://www.google.com");
-		UrlStream google = new UrlStream(url);
+		UrlStreamContainer google = new UrlStreamContainer(url);
 		
 		// pipe
 		final DataPipe pipe = new DataPipe(google, out);

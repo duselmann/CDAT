@@ -4,12 +4,12 @@ import gov.cida.cdat.exception.StreamInitException;
 
 import java.io.Closeable;
 
-public final class SimpleStream<S extends Closeable> extends StreamContainer<S> {
+public final class SimpleStreamContainer<S extends Closeable> extends StreamContainer<S> {
 
 	// simple stream wrapper where open applies the given stream to flow
 	private final S stream;
 	
-	public SimpleStream(S stream) {
+	public SimpleStreamContainer(S stream) {
 		this.stream = stream;
 	}
 	

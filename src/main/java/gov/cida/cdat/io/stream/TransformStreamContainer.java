@@ -6,12 +6,12 @@ import gov.cida.cdat.transform.Transformer;
 
 import java.io.OutputStream;
 
-public class TransformStream extends StreamContainer<TransformOutputStream> {
+public class TransformStreamContainer extends StreamContainer<TransformOutputStream> {
 
 	private OutputStream stream;
 	private Transformer transform;
 	
-	public TransformStream(Transformer transform, OutputStream stream) {
+	public TransformStreamContainer(Transformer transform, OutputStream stream) {
 		this.stream = stream;
 		this.transform = transform;
 	}

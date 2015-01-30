@@ -7,11 +7,11 @@ import java.io.InputStream;
 
 import javax.servlet.http.HttpServletRequest;
 
-public class HttpRequestStream extends StreamContainer<InputStream> {
+public class HttpRequestContainer extends StreamContainer<InputStream> {
 
 	private final HttpServletRequest request;
 	
-	public HttpRequestStream(HttpServletRequest request) {
+	public HttpRequestContainer(HttpServletRequest request) {
 		this.request = request;
 	}
 	

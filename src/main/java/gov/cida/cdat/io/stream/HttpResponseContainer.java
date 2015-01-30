@@ -7,11 +7,11 @@ import java.io.OutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
-public class HttpResponseStream extends StreamContainer<OutputStream> {
+public class HttpResponseContainer extends StreamContainer<OutputStream> {
 	
 	private final HttpServletResponse response;
 	
-	public HttpResponseStream(HttpServletResponse response) {
+	public HttpResponseContainer(HttpServletResponse response) {
 		this.response = response;
 	}
 	

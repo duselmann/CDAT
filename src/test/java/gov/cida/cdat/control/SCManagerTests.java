@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import gov.cida.cdat.io.stream.DataPipe;
-import gov.cida.cdat.io.stream.SimpleStream;
+import gov.cida.cdat.io.stream.SimpleStreamContainer;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
 import gov.cida.cdat.service.Naming;
@@ -69,11 +69,11 @@ public class SCManagerTests {
 		
 		// set up consumer
 		testPipe.consumer = new ByteArrayOutputStream(1024*10);
-		SimpleStream<OutputStream> out = new SimpleStream<OutputStream>(testPipe.consumer);
+		SimpleStreamContainer<OutputStream> out = new SimpleStreamContainer<OutputStream>(testPipe.consumer);
 		
 		// set up producer
 		testPipe.producer  = new ByteArrayInputStream(textString.getBytes());
-		SimpleStream<InputStream>   in = new SimpleStream<InputStream>(testPipe.producer);
+		SimpleStreamContainer<InputStream>   in = new SimpleStreamContainer<InputStream>(testPipe.producer);
 		
 		// pipe: connect the consumer and producer together with a data pump
 		testPipe.pipe = new DataPipe(in, out);

@@ -4,9 +4,9 @@ import gov.cida.cdat.io.StatusOutputStream;
 
 import java.io.OutputStream;
 
-public class StatusStream extends ChainedStream<StatusOutputStream> {
+public class StatusStreamContainer extends ChainedStreamContainer<StatusOutputStream> {
 
-	public StatusStream(StreamContainer<OutputStream> target) {
+	public StatusStreamContainer(StreamContainer<OutputStream> target) {
 		super(target);
 	}
 

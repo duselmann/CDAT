@@ -19,11 +19,11 @@ public class TestStreams {
 		
 		// consumer
 		ByteArrayOutputStream      target   = new ByteArrayOutputStream(1024*10);
-		SimpleStream<OutputStream> consumer = new SimpleStream<OutputStream>(target);
+		SimpleStreamContainer<OutputStream> consumer = new SimpleStreamContainer<OutputStream>(target);
 
 		// producer
 		URL url = new URL("http://www.google.com");
-		UrlStream google = new UrlStream(url);
+		UrlStreamContainer google = new UrlStreamContainer(url);
 		
 		// pipe
 		final DataPipe pipe = new DataPipe(google, consumer);

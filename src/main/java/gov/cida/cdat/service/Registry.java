@@ -1,4 +1,4 @@
-package gov.cida.cdat.io.stream;
+package gov.cida.cdat.service;
 
 
 import gov.cida.cdat.control.Status;

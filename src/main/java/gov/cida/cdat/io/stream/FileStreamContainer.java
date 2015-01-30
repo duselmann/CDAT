@@ -7,11 +7,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class FileStream extends StreamContainer<InputStream> {
+public class FileStreamContainer extends StreamContainer<InputStream> {
 
 	private final File file;
 	
-	public FileStream(File file) {
+	public FileStreamContainer(File file) {
 		this.file = file;
 	}
 

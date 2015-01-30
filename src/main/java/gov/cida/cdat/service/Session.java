@@ -8,7 +8,6 @@ import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.control.Status;
 import gov.cida.cdat.exception.CdatException;
-import gov.cida.cdat.io.stream.Registry;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
 

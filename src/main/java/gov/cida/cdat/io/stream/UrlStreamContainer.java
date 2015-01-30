@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-public class UrlStream extends StreamContainer<InputStream> {
+public class UrlStreamContainer extends StreamContainer<InputStream> {
 
 	private final URL url;
 	
-	public UrlStream(URL url) {
+	public UrlStreamContainer(URL url) {
 		this.url = url;
 	}
 
