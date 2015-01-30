@@ -47,16 +47,23 @@ public class TestControlSuccess {
 		
 		manager.send(workerName, Control.Start);
 		
+		System.out.println("waiting for worker to process");
+		Thread.sleep(3000);
+		System.out.println("send stop to worker");
+		
 		manager.send(workerName, Control.Stop, new Callback() {
 			public void onComplete(Throwable t, Message response) {
-				System.out.println("service shutdown scheduled");
+				System.out.println("service shutdown scheduled: "+ response);
 				manager.shutdown();
+	            // this will execute off the main thread
+	            // if manager is sent a message it WILL be on a DIFFERENT session
 			}
 		});
 	}
 	
 	
 	private static void report(String workerName, final Message response) {
+		System.out.println();
         System.out.println("onComplete Response is " + response);
 		
 		System.out.println("pipe results: expect >15kb with Google found in the text");
@@ -70,10 +77,15 @@ public class TestControlSuccess {
 			System.out.println("ERROR: Received too little data.");
 		}
 		String msg = "Google Not Found";
-		if ( new String(target.toByteArray()).contains("Google") ) {
+		String ggl = new String(target.toByteArray());
+		if ( ggl.contains("Google") ) {
 			msg = "Google Found";
+		}
+		if ( ggl.contains("</html>") ) {
+			msg += " and </html>";
 		}
 		System.out.println();
 		System.out.println(msg);
+		System.out.println();
 	}
 }

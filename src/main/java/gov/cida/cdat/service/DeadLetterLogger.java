@@ -11,7 +11,7 @@ public class DeadLetterLogger extends UntypedActor {
 	
 	public void onReceive(Object msg) throws Exception {
 		if (msg instanceof DeadLetter) {
-			logger.trace(">{}<",msg);
+			logger.trace("- > {} < - -",msg);
 		}
 	};
 }

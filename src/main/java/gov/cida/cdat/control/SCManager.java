@@ -40,10 +40,10 @@ public class SCManager {
 	
 	private static final String SESSION = "session";
 	
-	// TODO maybe these should be Durations rather than Timeout
 	public static final FiniteDuration MILLIS    = Duration.create(100, "milliseconds");
 	public static final FiniteDuration SECOND    = Duration.create(  1, "second");
 	public static final FiniteDuration HALF_MIN  = Duration.create( 30, "seconds");
+	public static final FiniteDuration MINUTE    = Duration.create(  1, "minute");
 	public static final FiniteDuration HOUR      = Duration.create(  1, "hour");
 	public static final FiniteDuration DAY       = Duration.create(  1, "day");
 	
@@ -57,11 +57,8 @@ public class SCManager {
 	public static SCManager instance() {
 		return instance;
 	}
-	// TODO one instance per application, then need a session level actor for user workers
-	// TODO session should be disposable and light weight
-	// TODO abandoned sessions and workers should be closed and disposed cleanly
+	// TODO abandoned sessions should be closed and disposed cleanly
 	
-	// TODO is this container safe - does each session live on a thread?
 	// tests suggest it is safe, however there is no guarantee that subsequent tasks run on the same thread
 	private ThreadLocal<ActorRef> session = new ThreadLocal<ActorRef>();
 	
@@ -85,7 +82,7 @@ public class SCManager {
 	private SCManager() {
         // Create the 'CDAT' akka actor system
         workerPool = ActorSystem.create("CDAT"); // TODO doc structure
-        // TODO test that when in tomcat that it same instance or new instance - we need know
+
         naming = workerPool.actorOf( Props.create(Naming.class, new Object[0]), "Naming");
 
         // listen to all dead letters for custom logging
@@ -99,15 +96,18 @@ public class SCManager {
 	 * 
 	 * It is package access for testing, would be private otherwise.
 	 * 
+	 * I think this is as thread safe a we can be. There be a race condition or optimization within the if blocks
+	 * 
 	 * @return a thread safe specific session
 	 */
-	// TODO is this thread safe? can there be a race condition within the if block
 	ActorRef session() {
 		if (session.get() == null) {
 			String sessionName = createNameFromLabel(SESSION);
 	        ActorRef sessionRef = workerPool.actorOf(
 	        		Props.create(Session.class, new Object[0]), sessionName);
-	        session.set(sessionRef);
+			if (session.get() == null) {
+				session.set(sessionRef);
+			}
 		}
 
 		return session.get();
@@ -138,7 +138,8 @@ public class SCManager {
 		Future<Object> future = Patterns.ask(naming, label, new Timeout(MILLIS));
 		try {
 			logger.trace("waiting for name from label '{}'", label);
-			Object result = Await.result(future, MILLIS);
+			// this stops blocking as soon as a result is returned. this should be plenty of time
+			Object result = Await.result(future, SECOND); // TODO make configurable
 			if (result instanceof Message) {
 				name = ((Message)result).get(Naming.WORKER_NAME);
 			}
@@ -187,6 +188,9 @@ public class SCManager {
 	 *   </pre>
 	 * <p> The name now equals "Fetch sediment from NWIS", or "Fetch 'data' from NWIS-01", etc.
 	 * </p>
+	 * <p>The onComplete message contains the worker.name and onComplete:done
+	 * 
+	 * 
 	 * @param workerLabel String workerLabel - IMPORTANT: Names must be unique. This returns a name 
 	 * 					from the suggested label. Names are used to ensure thread worker isolation from the spawning code
 	 * 					Users MUST maintain a reference to the new name to submit actions to the worker.
@@ -195,10 +199,10 @@ public class SCManager {
 	 * @param onComplete the callback when the worker has completed.
 	 * @return a future for interacting, if necessary, with the the response
 	 */
-	// TODO test that the onComplete message contains the worker.name
 	public Future<Object> addWorker(String workerLabel, DataPipe pipe, Callback onComplete) {
 		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, pipe);
-		Future<Object> response = Patterns.ask(session(), msg, 1000); // TODO time
+		// this will stop blocking as soon as the worker finishes and returns an onComplete message
+		Future<Object> response = Patterns.ask(session(), msg, new Timeout(DAY)); // TODO make configurable
 		wrapCallback(response, onComplete);
 		return response;
 	}
@@ -235,10 +239,21 @@ public class SCManager {
 	 * @return a future that contains a Message response from the worker upon completion or exception
 	 */
 	public Future<Object> send(String workerName, Message message) {
+		return send(workerName,message,new Timeout(HALF_MIN)); // TODO make configurable
+	}
+	/**
+	 * This is a similar method with a custom wait time.
+	 * 
+	 * @see SCManager.send(String workerName, Message message)
+	 * 
+	 * @param workerName the worker name to respond to the message (must be the unique name return from addWorker)
+	 * @param message the message the worker will receive. status or control
+	 * @param waitTime custom time to wait if you have a longer possible wait time
+	 * @return a future that contains a Message response from the worker upon completion or exception
+	 */
+	public Future<Object> send(String workerName, Message message, Timeout waitTime) {
 		message = Message.extend(message, Naming.WORKER_NAME, workerName);
-	    return Patterns.ask(session(), message, 50000); // TODO use the duration constants
-		// TODO should this one return a future
-	    // TODO config timeout and create a method sig for custom timeout
+	    return Patterns.ask(session(), message, waitTime);
 	}
 	
 	/**
@@ -258,6 +273,23 @@ public class SCManager {
 		return send(workerName, msg);
 	}
 	/**
+	 * <p>Enumerated control message</p>
+	 * <p>A convenience send for Control enum standard messages. It saves the user from requiring
+	 * construction of messages for standard messages in the Control and Status enum classess.
+	 * </p>
+	 * <p>Example: manager.send(workerName, Control.start);
+	 * </p>
+	 * @param workerName the unique work name to receive the message
+	 * @param ctrl an instance of the Control enum name
+	 * @param callback the action to take when the worker completes
+	 * @return a future containing a return message as to how the action executed
+	 */
+	public Future<Object> send(String workerName, Control ctrl, final Callback callback) {
+		Future<Object> response = send(workerName, ctrl);
+		wrapCallback(response, callback);
+		return response;
+	}
+	/**
 	 * <p>Enumerated status message</p>
 	 * <p>A convenience send for Control enum standard messages. It saves the user from requiring
 	 * construction of messages for standard messages in the Control and Status enum classess.
@@ -274,26 +306,7 @@ public class SCManager {
 		return send(workerName, msg);
 	}
 	
-	
-	/**
-	 * <p>Initial testing of a callback on a future. It is wrapped like this to ensure the user
-	 * receives a instance of Message instance rather then a plain Object. 
-	 * </p>
-	 * <p>TODO do we eventually want all message to have a callback option?
-	 * </p>
-	 * <p>TODO Example
-	 * </p>
-	 * @param workerName
-	 * @param ctrl
-	 * @param callback
-	 * @return
-	 */
-	public Future<Object> send(String workerName, Control ctrl, final Callback callback) {
-		Future<Object> response = send(workerName, ctrl);
-		wrapCallback(response, callback);
-		return response;
-	}
-	
+		
 	/**
 	 * Helper method that wraps the callback into the AKKA Object general
 	 * to the CDAT specific Message based callback.
@@ -324,13 +337,11 @@ public class SCManager {
 	 * 
 	 * <p>It is intended to be called by the application upon container shutdown to ensure all workers are closed.</p>
 	 * 
-	 * <p>TODO need a force on this and a wait for workers to finish
-	 * </p>
-	 * <p>TODO investigate a means to have session not able to call this - not likely
-	 * </p>
+	 * TODO need a force/wait versions of this for the option to wait for workers to finish
+	 * TODO investigate a means to have session NOT able to call this - not likely - I would like only the container to call this on shutdown
 	 */
 	public void shutdown() {
-		workerPool.scheduler().scheduleOnce( HALF_MIN,
+		workerPool.scheduler().scheduleOnce( HALF_MIN, // TODO make configurable
 			new Runnable() {
 				@Override
 				public void run() {
@@ -346,6 +357,14 @@ public class SCManager {
 	}
 	
 	
+	/**
+	 * Initial attempt to set the session to automatically start workers.
+	 * This could use some improvement.
+	 * 
+	 * @param value
+	 */
+	// TODO when a session is 'done' it should reset the autoStart state to DEFAULT.
+	// TODO make autoStart DEFAULT state configurable
 	public void setAutoStart(boolean value) {
 		Message msg = Message.create(Session.AUTOSTART, value);
 		session().tell(msg, ActorRef.noSender());

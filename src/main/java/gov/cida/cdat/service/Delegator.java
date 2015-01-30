@@ -1,9 +1,5 @@
 package gov.cida.cdat.service;
 
-import static akka.actor.SupervisorStrategy.escalate;
-import static akka.actor.SupervisorStrategy.restart;
-import static akka.actor.SupervisorStrategy.resume;
-import static akka.actor.SupervisorStrategy.stop;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Status;
 import gov.cida.cdat.exception.CdatException;
@@ -16,14 +12,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import scala.concurrent.duration.Duration;
-
 import akka.actor.ActorRef;
-import akka.actor.OneForOneStrategy;
-import akka.actor.SupervisorStrategy;
 import akka.actor.UntypedActor;
-import akka.actor.SupervisorStrategy.Directive;
-import akka.japi.Function;
 
 
 /**
@@ -74,7 +64,7 @@ public class Delegator extends UntypedActor {
 		this.name      = worker.getName();
 		this.worker    = worker.getWorker();
 		this.autoStart = worker.isAutoStart();
-		status = Status.isNew;
+		setStatus(Status.isNew);
 		logger.trace("new Delegator for worker:{} with autostart:{}", name, autoStart);
 	}
 	
@@ -116,9 +106,10 @@ public class Delegator extends UntypedActor {
 			} finally {
 				context().stop( self() );
 			}
+			response = Message.create(Control.Stop, true);
 		
 		// handle continue processing requests
-		} else if (status.is(Status.isStarted)) {
+		} else if (status!=null && status.is(Status.isStarted)) {
 			if ( msg.contains(PROCESS_MORE) ) {
 				logger.trace("delegator is continuing to process more");
 				process();
@@ -126,11 +117,11 @@ public class Delegator extends UntypedActor {
 			
 		// handle status requests
 		} else if (msg.contains(Status.isStarted)) {
-			response = Message.create(Status.isStarted, true);
+			response = Message.create(Status.isStarted, Status.isStarted.equals(status));
 		} else if (msg.contains(Status.isAlive)) {
 			response = Message.create(Status.isAlive, true);
 		} else if (msg.contains(Status.isDone)) {
-			response = Message.create(Status.isAlive, status.equals(Status.isDone));
+			response = Message.create(Status.isDone, Status.isDone.equals(status));
 		}
 		if (msg.contains(Status.CurrentStatus)) {
 			response = Message.create(Status.CurrentStatus, status);
@@ -181,11 +172,11 @@ public class Delegator extends UntypedActor {
 	@Override
 	public void postStop() throws Exception {
 		try {
-			status = Status.isDisposed;
 			if (Status.isStarted.equals(status)) {
 				worker.end();
 			}
 		} finally {
+			setStatus(Status.isDisposed);
 			super.postStop();
 		}
 	}
@@ -217,7 +208,7 @@ public class Delegator extends UntypedActor {
 			logger.trace("Ignoring multistart worker {}", name);
 			return Message.create(Control.Start,false);
 		}
-		status = Status.isStarted;
+		setStatus(Status.isStarted);
 		
 		Message msg;
 		try {
@@ -264,7 +255,7 @@ public class Delegator extends UntypedActor {
 	 */
 	void done(String qualifier) {
 		logger.debug("delegator done called with: {}", qualifier);
-		status = Status.isDone;		
+		setStatus(Status.isDone);
 		worker.end();
 		for (ActorRef needToKnow : onComplete) {
 			sendCompleted(needToKnow);
@@ -285,6 +276,7 @@ public class Delegator extends UntypedActor {
 	 */
 	void sendCompleted(ActorRef needsToKnow) {
 		Message completed = Message.create(Control.onComplete, "done");
+		completed = Message.extend(completed, Naming.WORKER_NAME, name);
 		needsToKnow.tell(completed, self());
 	}
 	
@@ -296,7 +288,10 @@ public class Delegator extends UntypedActor {
 	public Status getStatus() {
 		return status;
 	}
-	
+	void setStatus(Status newStatus) {
+		logger.trace("setting status: {}", newStatus);
+		status = newStatus;
+	}
 /*	
 	// TODO impl start/stop fail return true/false and the Actor supervisor
 	SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration
