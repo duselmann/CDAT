@@ -128,9 +128,7 @@ public class Session extends UntypedActor {
 	void onReceive(AddWorkerMessage addWorker) throws Exception {
 		addWorker.setAutoStart(autoStart);
 		logger.trace("Session recieved new worker {}", addWorker.getName());
-		String uniqueName = addWorker(addWorker);
-		Message msg = Message.create(Naming.WORKER_NAME,uniqueName);
-		sender().tell(msg, self());
+		addWorker(addWorker);
 	}
 	
 	
@@ -150,13 +148,12 @@ public class Session extends UntypedActor {
 	 * 					transformers are stream that inject themselves in the consumer flow
 	 * @return the new unique string that is used to send messages to submitted pipe
 	 */
-	String addWorker(AddWorkerMessage worker) {
+	void addWorker(AddWorkerMessage worker) {
         // Create the AKKA service actor
 		logger.trace("Adding a worker with name: {}", worker.getName());
         ActorRef delegate = context().actorOf(Props.create(Delegator.class, worker), worker.getName());
         context().watch(delegate);
-        
-        return delegates.put(worker.getName(), delegate);
+        delegates.put(worker.getName(), delegate);
 	}
 	
 	/**
