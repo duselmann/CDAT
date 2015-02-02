@@ -43,13 +43,15 @@ public class Session extends UntypedActor {
 	
 	
 	// TODO impl start/stop fail return true/false and the Actor supervisor
-	SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration
+	SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration // TODO make configure
 			SCManager.MINUTE, // TODO make configure
 			new Function<Throwable, Directive>() {
 		@Override
 		public Directive apply(Throwable t) {
+			System.out.println("session receved an exception");
 			logger.warn("session receved an exception");
 			
+			// TODO this is only called for un-handled exceptions.
 			// TODO proper handling - this is to inspect how this API works
 			if (t instanceof Exception) {
 				logger.warn("session receved an exception, resuming");
@@ -65,6 +67,7 @@ public class Session extends UntypedActor {
 	});
 	@Override
 	public SupervisorStrategy supervisorStrategy() {
+		logger.info("SupervisorStrategy fetched {}", supervisor);
 		return supervisor;
 	}
 	

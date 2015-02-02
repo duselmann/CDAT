@@ -4,14 +4,15 @@ package gov.cida.cdat;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Status;
 import gov.cida.cdat.io.stream.DataPipe;
 import gov.cida.cdat.io.stream.SimpleStreamContainer;
-import gov.cida.cdat.io.stream.UrlStreamContainer;
 import gov.cida.cdat.message.Message;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
 
 // TODO ensure that the fail is handled by the session strategy and that the worker is disposed
 public class TestControlFail {
@@ -29,13 +30,18 @@ public class TestControlFail {
 		SimpleStreamContainer<OutputStream>     out = new SimpleStreamContainer<OutputStream>(target);
 		
 		// producer
-		URL url = new URL("http://www.asdfsdfasdf.com");
-		UrlStreamContainer in = new UrlStreamContainer(url);
+		InputStream error = new InputStream() {
+			@Override
+			public int read() throws IOException {
+				throw new IOException();
+			}
+		};
+		SimpleStreamContainer<InputStream> in = new SimpleStreamContainer<InputStream>(error);
 		
 		// pipe
 		DataPipe pipe = new DataPipe(in, out);
 		
-		workerName = manager.addWorker("google", pipe);
+		workerName = manager.addWorker("error", pipe);
 		
 		manager.send(workerName, Message.create("Message", "Test"));
 		manager.send(workerName, Control.Start);
@@ -62,6 +68,13 @@ public class TestControlFail {
 		System.out.println( "total bytes: " +target.size() );
 		System.out.println( new String(target.toByteArray()) );
 		
+		String qual = "NOT ";
+		if (null != response.get(Status.isError)) {
+			qual = "";
+		}
+		System.out.println("response message DOES " +qual+ "contain isError message" );
+		System.out.println("response isError => " + response.get(Status.isError) );
+
 		System.out.println();
 		System.out.println();
 	}
