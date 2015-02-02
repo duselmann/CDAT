@@ -19,10 +19,10 @@ public class TestStatusStreams {
 		
 		// consumer
 		ByteArrayOutputStream      target   = new ByteArrayOutputStream(1024*10);
-		SimpleStream<OutputStream> consumer = new SimpleStream<OutputStream>(target);
+		SimpleStreamContainer<OutputStream> consumer = new SimpleStreamContainer<OutputStream>(target);
 
 		// status chained stream
-		final StatusStream status = new StatusStream(consumer);
+		final StatusStreamContainer status = new StatusStreamContainer(consumer);
 		
 		// chained container class example - it works too but the line above is more concise
 //		final ChainedStream<StatusOutputStream> status =
@@ -35,7 +35,7 @@ public class TestStatusStreams {
 		
 		// producer
 		URL url = new URL("http://www.google.com");
-		UrlStream google = new UrlStream(url);
+		UrlStreamContainer google = new UrlStreamContainer(url);
 		
 		// pipe
 		final DataPipe pipe = new DataPipe(google, status);

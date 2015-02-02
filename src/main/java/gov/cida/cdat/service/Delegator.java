@@ -3,6 +3,7 @@ package gov.cida.cdat.service;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Status;
 import gov.cida.cdat.exception.CdatException;
+import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
 
@@ -49,6 +50,11 @@ public class Delegator extends UntypedActor {
 	 * @see Status
 	 */
 	private Status status;
+	
+	/**
+	 * Holds the instance of the latest exception. It is used to communicate to the worker owner.
+	 */
+	private Exception lastError;
 	
 	/**
 	 * If the worker should start automatically then this should be set to true on worker create.
@@ -171,10 +177,14 @@ public class Delegator extends UntypedActor {
 	 */
 	@Override
 	public void postStop() throws Exception {
+		logger.trace("worker delegate stoped: {}", name);
 		try {
 			if (Status.isStarted.equals(status)) {
-				worker.end();
+				worker.end(); // so that the owner can clean up resources
 			}
+		} catch (Exception e) {
+			setLastError(e);
+			// TODO figure out how to manage status for disposed workers
 		} finally {
 			setStatus(Status.isDisposed);
 			super.postStop();
@@ -206,6 +216,7 @@ public class Delegator extends UntypedActor {
 	Message start() throws CdatException {
 		if ( ! Status.isNew.equals(status) ) {
 			logger.trace("Ignoring multistart worker {}", name);
+			setLastError(new StreamInitException("May only start new workers"));
 			return Message.create(Control.Start,false);
 		}
 		setStatus(Status.isStarted);
@@ -221,6 +232,7 @@ public class Delegator extends UntypedActor {
 		} catch (Exception e) {
 			logger.error("Exception opening pipe",e);
 			msg = Message.create("Success", "False");
+			setLastError(e);
 		}
 		return msg;
 	}
@@ -231,14 +243,20 @@ public class Delegator extends UntypedActor {
 	 */
 	void process() throws CdatException {
 		logger.trace("delegator proccessing worker");
-		boolean isMore = worker.process();
 		
-		// this allows the status and control message in on the action
-		if (isMore) {
-			logger.trace("delegator sending message to CONTINUE");
-			self().tell(CONTINUE, self()); // .noSender() ?
-		} else {
-			done(" called from process when there was no more");
+		try {
+			boolean isMore = worker.process();
+			
+			// this allows the status and control message in on the action
+			if (isMore) {
+				logger.trace("delegator sending message to CONTINUE");
+				self().tell(CONTINUE, self()); // .noSender() ?
+			} else {
+				done(" called from process when there was no more");
+			}
+		} catch (Exception e) {
+			setLastError(e);
+			done("error");
 		}
 	}
 	
@@ -255,19 +273,24 @@ public class Delegator extends UntypedActor {
 	 */
 	void done(String qualifier) {
 		logger.debug("delegator done called with: {}", qualifier);
-		setStatus(Status.isDone);
-		worker.end();
-		for (ActorRef needToKnow : onComplete) {
-			sendCompleted(needToKnow);
+		try {
+			worker.end();
+			setStatus(Status.isDone);
+		} catch (Exception e) {
+			setLastError(e);
+		} finally {
+			for (ActorRef needToKnow : onComplete) {
+				sendCompleted(needToKnow);
+			}
+			onComplete.clear();
 		}
-		onComplete.clear();
 	}
 	
 	/**
-	 * Helper method that creates an onComplete:done message and sends it
+	 * Helper method that creates an onComplete:done/error message and sends it
 	 * to all those who need to know.
 	 * 
-	 * Self documenting helper method. The call to this from done() is simply
+	 * Self "documenting" helper method. The call to this from done() is simply
 	 * to make that method cleaner.
 	 * 
 	 * It is package access for testing, would be private otherwise.
@@ -275,10 +298,32 @@ public class Delegator extends UntypedActor {
 	 * @param needsToKnow
 	 */
 	void sendCompleted(ActorRef needsToKnow) {
-		Message completed = Message.create(Control.onComplete, "done");
-		completed = Message.extend(completed, Naming.WORKER_NAME, name);
+		String value = "done";
+		Message completed = Message.create(Naming.WORKER_NAME, name);
+		if (lastError != null) {
+			value = "error";
+			String exceptionMessage = createExceptionMessage(lastError);
+			completed = Message.extend(completed, Status.isError, exceptionMessage);
+		}
+		completed = Message.extend(completed, Control.onComplete, value);
 		needsToKnow.tell(completed, self());
 	}
+
+	/**
+	 * Helper method to construct a message of the exception tree.
+	 * It recursively calls itself to walk the cause tree.
+	 * @param t an exception to process. this is Throwable because of getCasue.
+	 * @return a string of all messages in the exception tree
+	 */
+	String createExceptionMessage(Throwable t) {
+		String msg = t.getMessage();
+		if (t.getCause() != null) {
+			msg += ":" + createExceptionMessage(t.getCause());
+		}
+		return msg;
+	}	
+	
+	
 	
 	/**
 	 * access life cycle status
@@ -289,34 +334,20 @@ public class Delegator extends UntypedActor {
 		return status;
 	}
 	void setStatus(Status newStatus) {
+		if (Status.isError.equals(status)) {
+			logger.trace("status isError -> NOT setting status: {}", newStatus);
+			return;
+		}
 		logger.trace("setting status: {}", newStatus);
 		status = newStatus;
 	}
-/*	
-	// TODO impl start/stop fail return true/false and the Actor supervisor
-	SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration
-			Duration.create("1 minute"), // TODO check the proper duration
-			new Function<Throwable, Directive>() {
-		@Override
-		public Directive apply(Throwable t) {
-			logger.warn("session receved an exception");
-			
-			// TODO proper handling - this is to inspect how this API works
-			if (t instanceof Exception) {
-				logger.warn("session receved an exception, resuming");
-				return resume();
-			} else if (t instanceof Throwable) {
-				return stop();
-			} else if (t instanceof IllegalArgumentException) {
-				return restart();
-			} else {
-				return escalate();
-			}
-		}
-	});
-	@Override
-	public SupervisorStrategy supervisorStrategy() {
-		return supervisor;
+	
+	/**
+	 * Helper method to properly set the latest exception and update the status
+	 * @param lastError
+	 */
+	void setLastError(Exception lastError) {
+		setStatus(Status.isError);
+		this.lastError = lastError;
 	}
-*/	
 }

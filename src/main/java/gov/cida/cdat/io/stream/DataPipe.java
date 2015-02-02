@@ -12,7 +12,7 @@ import java.io.OutputStream;
 
 public class DataPipe implements Openable<InputStream>, Closeable {
 	
-	public static final int DEFAULT_DURATION = 5000;
+	public static final int DEFAULT_DURATION = 10000; // TODO make configurable
 	public static final int FULL_DURATION    = -1;
 	
 	private final StreamContainer<InputStream>  producer;

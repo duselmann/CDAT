@@ -3,9 +3,9 @@ package gov.cida.cdat;
 
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
-import gov.cida.cdat.io.stream.FileStream;
+import gov.cida.cdat.io.stream.FileStreamContainer;
 import gov.cida.cdat.io.stream.DataPipe;
-import gov.cida.cdat.io.stream.SimpleStream;
+import gov.cida.cdat.io.stream.SimpleStreamContainer;
 import gov.cida.cdat.message.Message;
 
 import java.io.ByteArrayOutputStream;
@@ -20,7 +20,7 @@ public class TestControlInterrupt {
 
 		// consumer
 		ByteArrayOutputStream      target   = new ByteArrayOutputStream(1024*10);
-		SimpleStream<OutputStream> consumer = new SimpleStream<OutputStream>(target);
+		SimpleStreamContainer<OutputStream> consumer = new SimpleStreamContainer<OutputStream>(target);
 		
 		// producer
 		File file = new File("lib/akka/scalatest_2.11-2.1.3.jar");
@@ -32,7 +32,7 @@ public class TestControlInterrupt {
 			System.exit(1);
 		}
 		
-		FileStream producer = new FileStream(file);
+		FileStreamContainer producer = new FileStreamContainer(file);
 		
 		// pipe
 		final DataPipe pipe = new DataPipe(producer, consumer);

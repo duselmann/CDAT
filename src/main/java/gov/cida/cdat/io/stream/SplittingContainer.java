@@ -2,16 +2,17 @@ package gov.cida.cdat.io.stream;
 
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.Closer;
+import gov.cida.cdat.io.SplitOutputStream;
 
 import java.io.OutputStream;
 
-public abstract class ChainedStream<S extends OutputStream> extends StreamContainer<OutputStream> {
+public abstract class SplittingContainer<S extends SplitOutputStream> extends StreamContainer<SplitOutputStream> {
 
-	private StreamContainer<OutputStream> target;
+	private StreamContainer<OutputStream>[] targets;
 	private S stream;
 
-	public ChainedStream(StreamContainer<OutputStream> target) {
-		this.target = target;
+	public SplittingContainer(@SuppressWarnings("unchecked") StreamContainer<OutputStream> ... targets) {
+		this.targets = targets;
 	}
 	
 	@Override
@@ -33,22 +34,25 @@ public abstract class ChainedStream<S extends OutputStream> extends StreamContai
 		// TODO does it make sense for init() to call another open
 		// TODO I would like init() to be the chaining and open to be the this action
 		// for now it is necessary for chaining
-		stream = chain( target.open() );
+		for (StreamContainer<OutputStream> target : targets) {
+			stream = chain( target.open() );
+		}
 		return stream;
 	}
 	
 	
 	@Override
 	protected final void cleanup() {
-		Closer.close(target);
+		for (StreamContainer<OutputStream> target : targets) {
+			Closer.close(target);
+		}
 	}
 	
 	/**
-	 * This is a specific getStream that is typed to the chain 
+	 * This is a specific getStream that is typed 
 	 * @return
 	 */
-	public final S getChainedStream() {
-		// TODO try refactoring the generics to remove this method
+	public final S getSplitStream() {
 		return stream;
 	}
 }

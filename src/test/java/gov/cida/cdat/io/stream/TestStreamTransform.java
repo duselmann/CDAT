@@ -27,11 +27,11 @@ public class TestStreamTransform {
 		Transformer transform = new RegexTransformer("div","span");
 		TransformOutputStream tout = new TransformOutputStream(target, transform);
 
-		SimpleStream<OutputStream> out  = new SimpleStream<OutputStream>(tout);
+		SimpleStreamContainer<OutputStream> out  = new SimpleStreamContainer<OutputStream>(tout);
 
 		// Producer
 		URL url = new URL("http://www.google.com");
-		UrlStream google = new UrlStream(url);
+		UrlStreamContainer google = new UrlStreamContainer(url);
 		
 		// Pipe producer to consumer
 		final DataPipe pipe = new DataPipe(google, out);
