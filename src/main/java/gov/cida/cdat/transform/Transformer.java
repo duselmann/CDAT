@@ -1,7 +1,12 @@
 package gov.cida.cdat.transform;
 
-public interface Transformer {
+public abstract class Transformer<T> {
 
-	byte[] transform(byte[] bytes, int off, int len);
+	public byte[] transform(byte[] bytes, int off, int len) {
+		return null;
+	}
+	public byte[] transform(T obj) {
+		return null;
+	}
 
 }

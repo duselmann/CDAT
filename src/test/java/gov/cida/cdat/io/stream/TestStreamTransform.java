@@ -3,7 +3,6 @@ package gov.cida.cdat.io.stream;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.io.TransformOutputStream;
 import gov.cida.cdat.transform.RegexTransformer;
-import gov.cida.cdat.transform.Transformer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -24,8 +23,8 @@ public class TestStreamTransform {
 		ByteArrayOutputStream      target = new ByteArrayOutputStream(1024*10);
 
 		// Transformer
-		Transformer transform = new RegexTransformer("div","span");
-		TransformOutputStream tout = new TransformOutputStream(target, transform);
+		RegexTransformer transform = new RegexTransformer("div","span");
+		TransformOutputStream<Object> tout = new TransformOutputStream<Object>(target, transform);
 
 		SimpleStreamContainer<OutputStream> out  = new SimpleStreamContainer<OutputStream>(tout);
 

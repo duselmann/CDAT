@@ -115,15 +115,13 @@
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
 			<scope>test</scope>
-<!-- since when did they add this dependency - no sir, I don't like it.
-         	<exclusions>
-        		<exclusion>
-        			<artifactId>hamcrest-core</artifactId>
-        			<groupId>org.hamcrest</groupId>
-        		</exclusion>
-        	</exclusions>
- -->
  		</dependency>
+<dependency>
+	<groupId>org.apache.derby</groupId>
+	<artifactId>derby</artifactId>
+	<version>10.11.1.1</version>
+			<scope>test</scope>
+</dependency>
 
 	</dependencies>
 
