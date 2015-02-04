@@ -5,6 +5,7 @@ import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.Openable;
 
 import java.io.Closeable;
+import java.io.Flushable;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
@@ -17,6 +18,13 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
 	private S stream;
+	private StreamContainer<?> downstream;
+	
+	public StreamContainer() {}
+	public StreamContainer(StreamContainer<?> downstream) {
+		this.downstream = downstream;
+	}
+	
 	
 	/**
 	 * This is used to identify the subclass in logging
@@ -53,17 +61,25 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 	public final void close() throws IOException {
 		logger.debug("Close called: {} ", getName());
 		try {
-			Method flush;
-			Class<?> streamClass = getStream().getClass();
-			if ( null != ( flush = streamClass.getMethod("flush") ) ) {
-				logger.debug("Flush called: {} ", streamClass.getName());
-				flush.invoke(getStream());
+			if (getStream() instanceof Flushable) {
+				((Flushable)getStream()).flush();
+			} else {
+				Method flush;
+				Class<?> streamClass = getStream().getClass();
+				if ( null != ( flush = streamClass.getMethod("flush") ) ) {
+					logger.debug("Flush called: {} ", streamClass.getName());
+					flush.invoke(getStream());
+				}
 			}
 		} catch (Exception e) {
 			// does not matter, if flush not available then do not do it
 		} finally {
 			cleanup(); // TODO determine ideal calling location for this method
 			closeStream();
+			if (downstream != null) {
+				downstream.close();
+				downstream = null;
+			}
 		}
 	}
 	

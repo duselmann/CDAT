@@ -1,39 +1,40 @@
 package gov.cida.cdat.db;
 
 import gov.cida.cdat.exception.StreamInitException;
+import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.Openable;
+import gov.cida.cdat.io.TransformOutputStream;
+import gov.cida.cdat.io.stream.TransformStreamContainer;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
 
 public abstract class DbContainer<T> implements Openable<DbReader<T>>,Closeable  {
 
 	Connection conn;
 	DbReader<T> dbReader;
+	TransformStreamContainer<T> target;
 	
-	public DbContainer(Connection conn) {
+	public DbContainer(Connection conn, TransformStreamContainer<T> transformer) {
 		this.conn = conn;
+		target = transformer;
 	}
 	
-	public abstract DbReader<T> init(ResultSet rs);
+	public abstract DbReader<T> init(TransformOutputStream<T> target) throws StreamInitException;
 	
 	public DbReader<T> open() throws StreamInitException {
-		try {
-			Statement st = conn.createStatement();
-			ResultSet rs = st.executeQuery("select * from people");
-			dbReader = init(rs);
-			return dbReader;
-		} catch (Exception e) {
-			throw new StreamInitException("Failed to open db result set", e);
-		}
+		System.out.println("DbContainer open");
+		
+		dbReader = init(target.open());
+		return dbReader;
 		
 	}
 
 	@Override
 	public void close() throws IOException {
-		dbReader.close();
+		System.out.println("DbContainer close");
+		Closer.close(dbReader);
+		Closer.close(target);
 	}
 }

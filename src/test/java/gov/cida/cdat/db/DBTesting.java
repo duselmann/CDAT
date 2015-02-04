@@ -1,14 +1,17 @@
 package gov.cida.cdat.db;
 
-import gov.cida.cdat.io.TransformOutputStream;
+import gov.cida.cdat.io.stream.SimpleStreamContainer;
+import gov.cida.cdat.io.stream.TransformStreamContainer;
 import gov.cida.cdat.transform.Transformer;
 
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,24 +44,28 @@ public class DBTesting {
 
 
 	@Test
-	public void testSelectStream() {
+	public void testSelectStream() throws Exception {
 		System.out.println("testSelectStream");
 		
 		// consumer
 		ByteArrayOutputStream target = new ByteArrayOutputStream(4096*4);
-//		SimpleStreamContainer<ByteArrayOutputStream> baosc = new SimpleStreamContainer<ByteArrayOutputStream>(baos);
+		SimpleStreamContainer<OutputStream> targetContainer = new SimpleStreamContainer<OutputStream>(target);
 		
 		// Transformer
 		Transformer<Pojo> transform = new PojoCharacterSeparatorTransformer(",");
-		TransformOutputStream<Pojo> pout = new TransformOutputStream<Pojo>(target, transform);
+//		TransformOutputStream<Pojo> pout = new TransformOutputStream<Pojo>(target, transform);
+		TransformStreamContainer<Pojo> transContainer = new TransformStreamContainer<Pojo>(transform, targetContainer);
 
-//		SimpleStreamContainer<OutputStream> out  = new SimpleStreamContainer<OutputStream>(tout);
-//
 		// Producer
+		PojoDbContainer prod = new PojoDbContainer(conn, transContainer);
+		prod.open().read().close();
 		
-//		
-//		// Pipe producer to consumer
-//		final DataPipe pipe = new DataPipe(google, out);
+		String csv = new String(target.toByteArray());
+		System.out.println( csv );
 		
+		Assert.assertTrue("Header expexted", csv.startsWith("\"name\",\"address\",\"phone\""));
+		Assert.assertTrue("Only one header", 0>csv.indexOf("\"name\",\"address\",\"phone\"", 20));
+		Assert.assertTrue("Expect to find John", csv.contains("John"));
+		Assert.assertTrue("Expect to find Jane", csv.contains("Jane"));
 	}
 }

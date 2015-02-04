@@ -30,4 +30,10 @@ public class TransformOutputStream<T> extends OutputStream {
 		byte[] bytes = transform.transform(obj);
 		target.write(bytes);
 	}
+	
+	@Override
+	public void close() throws IOException {
+		Closer.close(target);
+		super.close();
+	}
 }
