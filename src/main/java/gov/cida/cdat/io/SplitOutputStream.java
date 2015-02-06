@@ -1,5 +1,7 @@
 package gov.cida.cdat.io;
 
+
+// TODO ARE THE WRITES BLOCKING
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -22,7 +24,9 @@ public class SplitOutputStream extends OutputStream {
 	public void write(int b) throws IOException {
 		for (OutputStream target : targets) {
 			try {
-				target.write(b);
+				if ( ! errors.containsKey(target) ) {
+					target.write(b);
+				}
 			} catch (Exception e) {
 				manageException(target, e);
 			}
@@ -36,7 +40,9 @@ public class SplitOutputStream extends OutputStream {
 	public void write(byte[] bytes) throws IOException {
 		for (OutputStream target : targets) {
 			try {
-				target.write(bytes);
+				if ( ! errors.containsKey(target) ) {
+					target.write(bytes);
+				}
 			} catch (Exception e) {
 				manageException(target, e);
 			}
@@ -50,7 +56,9 @@ public class SplitOutputStream extends OutputStream {
 	public void write(byte[] b, int off, int len) throws IOException {
 		for (OutputStream target : targets) {
 			try {
-				target.write(b, off, len);
+				if ( ! errors.containsKey(target) ) {
+					target.write(b, off, len);
+				}
 			} catch (Exception e) {
 				manageException(target, e);
 			}
@@ -75,7 +83,9 @@ public class SplitOutputStream extends OutputStream {
 	public void flush() throws IOException {
 		for (OutputStream target : targets) {
 			try {
-				target.flush();
+				if ( ! errors.containsKey(target) ) {
+					target.flush();
+				}
 			} catch (Exception e) {
 				manageException(target, e);
 			}

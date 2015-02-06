@@ -2,19 +2,21 @@ package gov.cida.cdat.db;
 
 import gov.cida.cdat.transform.Transformer;
 
-public class PojoCharacterSeparatorTransformer extends Transformer<Pojo> {
+public class PojoTransformer extends Transformer<Pojo> {
 	
-	String separator = ",";
-	String newline   = "\n";
-	boolean firstCall = true;
+	private String  separator = ",";
+	private String  newline   = "\n";
+	private boolean firstCall = true;
 	
-	PojoCharacterSeparatorTransformer(String join) {
+	
+	PojoTransformer(String join) {
 		separator = join;
 	}
-	PojoCharacterSeparatorTransformer(String join, String newline) {
+	PojoTransformer(String join, String newline) {
 		separator = join;
 		this.newline = newline;
 	}
+	
 	
 	@Override
 	public byte[] transform(Pojo person) {
@@ -34,6 +36,8 @@ public class PojoCharacterSeparatorTransformer extends Transformer<Pojo> {
 	
 	
 	void createRow(StringBuilder buf, String name, String address, String phone) {
+		// Here be your favorite CSV framework implementation
+		
 		buf.append('"').append(name).append('"').append(separator);
 		buf.append('"').append(address).append('"').append(separator);
 		buf.append('"').append(phone).append('"').append(newline);

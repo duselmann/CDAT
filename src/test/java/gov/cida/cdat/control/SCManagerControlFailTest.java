@@ -1,6 +1,7 @@
-package gov.cida.cdat;
+package gov.cida.cdat.control;
 
 
+import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
@@ -8,21 +9,26 @@ import gov.cida.cdat.control.Status;
 import gov.cida.cdat.io.stream.DataPipe;
 import gov.cida.cdat.io.stream.SimpleStreamContainer;
 import gov.cida.cdat.message.Message;
+import gov.cida.cdat.service.PipeWorker;
+import gov.cida.cdat.service.Worker;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 // TODO ensure that the fail is handled by the session strategy and that the worker is disposed
-public class TestControlFail {
+public class SCManagerControlFailTest {
 
 	private static ByteArrayOutputStream target;
 	private static String workerName;
 	private static SCManager manager;
 	
-	
-	public static void main(String[] args) throws Exception {
+	@Test
+	public void testFailResponse() throws Exception {
 		manager = SCManager.instance();
 
 		// consumer
@@ -40,42 +46,45 @@ public class TestControlFail {
 		
 		// pipe
 		DataPipe pipe = new DataPipe(in, out);
-		
-		workerName = manager.addWorker("error", pipe);
+		Worker worker = new PipeWorker(pipe);
+
+		workerName = manager.addWorker("error", worker);
 		
 		manager.send(workerName, Message.create("Message", "Test"));
 		manager.send(workerName, Control.Start);
+		
+		final Message[] message = new Message[1];
 		manager.send(workerName, Control.onComplete, new Callback(){
 	        public void onComplete(Throwable t, Message response){
+	        	message[0] = response;
 	            report(response);
 	        }
 	    });
 
 		manager.send(workerName, Control.Stop, new Callback() {
 			public void onComplete(Throwable t, Message response) {
-				System.out.println("service shutdown");
+				TestUtils.log("service shutdown");
 				manager.shutdown();
 			}
 		});
+		
+		TestUtils.waitAlittleWhileForResponse(message);
+		
+		Assert.assertTrue("", message[0].toString().contains("Error reading from producer stream"));
 	}
 	
 	
 	private static void report(final Message response) {
-        System.out.println("onComplete Response is " + response);
-		
-		System.out.println();
-		System.out.println("pipe results: expect zero length, handled by session, and pool system continue running");
-		System.out.println( "total bytes: " +target.size() );
-		System.out.println( new String(target.toByteArray()) );
+		TestUtils.log("onComplete Response is ", response);
+		TestUtils.log("pipe results: expect zero length, handled by session, and pool system continue running");
+		TestUtils.log( "total bytes: ", target.size() );
+		TestUtils.log( new String(target.toByteArray()) );
 		
 		String qual = "NOT ";
 		if (null != response.get(Status.isError)) {
 			qual = "";
 		}
-		System.out.println("response message DOES " +qual+ "contain isError message" );
-		System.out.println("response isError => " + response.get(Status.isError) );
-
-		System.out.println();
-		System.out.println();
+		TestUtils.log("response message DOES ", qual, "contain isError message" );
+		TestUtils.log("response isError => ", response.get(Status.isError) );
 	}
 }

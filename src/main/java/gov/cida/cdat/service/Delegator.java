@@ -144,9 +144,9 @@ public class Delegator extends UntypedActor {
 		}
 		
 		// now give the work a chance to react
-		Message workerResponse = worker.onReceive(msg);
+		/* Message workerResponse = */ worker.onReceive(msg);
 		
-		// this causes an infinite message loop
+		// TODO this causes an infinite message loop and I am not sure why
 //		if (null == response) {
 //			response = workerResponse;
 //		}
