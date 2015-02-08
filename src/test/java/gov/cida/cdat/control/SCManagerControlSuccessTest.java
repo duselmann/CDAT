@@ -16,7 +16,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.junit.Assert;
+import static org.junit.Assert.*;
+
 import org.junit.Test;
 
 
@@ -38,7 +39,6 @@ public class SCManagerControlSuccessTest {
 		dataRef = TestUtils.sampleData();
 		InputStream source = new ByteArrayInputStream(dataRef);
 		SimpleStreamContainer<InputStream>  in = new SimpleStreamContainer<InputStream>(source);
-
 		
 		// pipe
 		DataPipe pipe = new DataPipe(in, out);
@@ -49,20 +49,25 @@ public class SCManagerControlSuccessTest {
 		System.out.println("send custom message to worker");
 		manager.send(workerName, Message.create("Message", "Test"));
 		
-		final Message[] messages = new Message[1];
+		final Message[] completed = new Message[1];
 		// This is called with a null response if the Patterns.ask timeout expires
 		manager.send(workerName, Control.onComplete, new Callback(){
 	        public void onComplete(Throwable t, Message response){
-	        	messages[0] = response;
+	        	completed[0] = response;
 	        }
 	    });
-		
+
 		System.out.println("send start to worker");
 		manager.send(workerName, Control.Start);
 		
 		System.out.println("waiting for worker to process");
-		TestUtils.waitAlittleWhileForResponse(messages);
-        report(workerName, messages[0]);
+		TestUtils.waitAlittleWhileForResponse(completed);
+
+		assertTrue("DataPipe should be complete when finished", pipe.isComplete());
+		assertEquals("producer stream should be null after close", null, pipe.getProducerStream());
+		assertEquals("consumer stream should be null after close", null, pipe.getConsumerStream());
+		
+        report(workerName, completed[0]);
 
 		System.out.println("send stop to worker");
 		manager.send(workerName, Control.Stop, new Callback() {
@@ -99,10 +104,10 @@ public class SCManagerControlSuccessTest {
 			msg += " and 'end'";
 		}
 
-		Assert.assertTrue("Expect to find 'begin' in results", str.contains("begin"));
-		Assert.assertTrue("Expect to find 'middle' in results", str.contains("middle"));
-		Assert.assertTrue("Expect to find 'end' in results", str.contains("end"));
-		Assert.assertFalse("Expect to NOT find 'zoo' in results", str.contains("zoo"));
+		assertTrue("Expect to find 'begin' in results", str.contains("begin"));
+		assertTrue("Expect to find 'middle' in results", str.contains("middle"));
+		assertTrue("Expect to find 'end' in results", str.contains("end"));
+		assertFalse("Expect to NOT find 'zoo' in results", str.contains("zoo"));
 		
 		TestUtils.log(msg);
 	}

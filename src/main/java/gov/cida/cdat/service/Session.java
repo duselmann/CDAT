@@ -96,6 +96,7 @@ public class Session extends UntypedActor {
 			unhandled(msg);
 		}
 		
+		// this will dead letter if the sender is not waiting for a reply - this is ok
 		sender().tell(Message.create("UnknowMessageType", msg.getClass().getName()),self());
 	}
 	void onReceive(final Message msg) throws Exception {
@@ -108,16 +109,13 @@ public class Session extends UntypedActor {
 		String workerName = msg.get(Naming.WORKER_NAME);
 		ActorRef worker = delegates.get(workerName);
 		
-		if (worker != null) {
-			logger.trace( worker.path().toString() );
-		}
-		
 		if (worker == null) {
 			logger.warn("Failed to find worker named {} on session {}", workerName, self().path());
 			unhandled(msg);
 			return;
 			
 		} else {
+			logger.trace( worker.path().toString() );
 			// workers only read message keys that pertain to them
 			// it is okay to pass the original message along
 			// forward is better than telling in this case. worker.tell(msg, self());

@@ -179,6 +179,7 @@ public class Delegator extends UntypedActor {
 	public void postStop() throws Exception {
 		logger.trace("worker delegate stoped: {}", name);
 		try {
+			// call end if this is the first stop call
 			if (Status.isStarted.equals(status)) {
 				worker.end(); // so that the owner can clean up resources
 			}
@@ -186,6 +187,9 @@ public class Delegator extends UntypedActor {
 			setLastError(e);
 			// TODO figure out how to manage status for disposed workers
 		} finally {
+			// once the delegate is stopped it is not longer accessible
+			// TODO this status should be passed to the session for management
+			// TODO of course if the session cannot access this then it is disposed
 			setStatus(Status.isDisposed);
 			super.postStop();
 		}

@@ -1,5 +1,6 @@
 package gov.cida.cdat.io.stream;
 
+import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.Openable;
@@ -83,7 +84,8 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 		if ( stream != null ) {
 			throw new StreamInitException("Can only open stream once.");
 		}
-		return setStream( init() );
+		S initStream = init();
+		return setStream(initStream);
 	}
 
 	/**
@@ -141,10 +143,10 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 	 */
 	protected final S setStream(S newStream) {
 		// original stream protection
-		if ( this.stream == null ) {
-			this.stream = newStream;
+		if ( stream == null ) {
+			stream = newStream;
 		}
-		return newStream;
+		return stream;
 	}
 	
 	/**
