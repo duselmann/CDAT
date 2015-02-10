@@ -17,7 +17,7 @@ public class DelegatorAutoStartTest {
 	
 	
 	@Test
-	public void testStatusLifeCycle() throws Exception {
+	public void testAutoStart() throws Exception {
 		manager = SCManager.instance();
 
 		manager.setAutoStart(true);
@@ -45,5 +45,4 @@ public class DelegatorAutoStartTest {
 			manager.setAutoStart(false);
 		}
 	}
-	
 }

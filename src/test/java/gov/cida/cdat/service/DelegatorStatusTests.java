@@ -168,4 +168,39 @@ public class DelegatorStatusTests {
 		
 		manager.send(workerName, Control.Stop);
 	}
+	
+	
+	@Test
+	public void testDoubleStartShouldError() throws Exception {
+		manager = SCManager.instance();
+
+		manager.setAutoStart(true);
+		
+		try {
+			final int[] callCount = new int[1];
+			final Boolean[] beginCalled = new Boolean[1];
+			final String workerName = manager.addWorker("autoStartTest",  new Worker() {
+				
+				@Override
+				public void begin() throws CdatException {
+					beginCalled[0]=true;
+					callCount[0]++;
+				}
+			});
+			manager.send(workerName, Control.Start);
+			manager.send(workerName, Control.Start);
+	
+			TestUtils.waitAlittleWhileForResponse(beginCalled);
+			Thread.sleep(500);
+			
+			assertTrue("begin should be called", beginCalled[0]);
+			assertEquals("begin should be called once", 1, callCount[0]);
+			
+			manager.send(workerName, Control.Stop);
+			
+		} finally {
+			// TODO this is why I would like a session reset/dispose after leaving scope or similar
+			manager.setAutoStart(false);
+		}
+	}
 }

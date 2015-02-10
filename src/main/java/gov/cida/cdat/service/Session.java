@@ -1,9 +1,6 @@
 package gov.cida.cdat.service;
 
-import static akka.actor.SupervisorStrategy.escalate;
-import static akka.actor.SupervisorStrategy.restart;
-import static akka.actor.SupervisorStrategy.resume;
-import static akka.actor.SupervisorStrategy.stop;
+import static akka.actor.SupervisorStrategy.*;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.control.Status;
@@ -48,21 +45,21 @@ public class Session extends UntypedActor {
 			new Function<Throwable, Directive>() {
 		@Override
 		public Directive apply(Throwable t) {
-			System.out.println("session receved an exception");
-			logger.warn("session receved an exception");
-			
 			// TODO this is only called for un-handled exceptions.
 			// TODO proper handling - this is to inspect how this API works
-			if (t instanceof Exception) {
-				logger.warn("session receved an exception, resuming");
-				return resume();
-			} else if (t instanceof Throwable) {
-				return stop();
-			} else if (t instanceof IllegalArgumentException) {
-				return restart();
-			} else {
+//			System.out.println("session receved an exception");
+//			logger.warn("session receved an exception");
+//			
+//			if (t instanceof Exception) {
+//				logger.warn("session receved an exception, resuming");
+//				return resume();
+//			} else if (t instanceof Throwable) {
+//				return stop();
+//			} else if (t instanceof IllegalArgumentException) {
+//				return restart();
+//			} else {
 				return escalate();
-			}
+//			}
 		}
 	});
 	@Override
@@ -74,9 +71,6 @@ public class Session extends UntypedActor {
 	
 	@Override
 	public void onReceive(Object msg) throws Exception {
-		if (msg == null) {
-			return;
-		}
 		
 		if (msg instanceof AddWorkerMessage) {
 			addWorker((AddWorkerMessage)msg);
