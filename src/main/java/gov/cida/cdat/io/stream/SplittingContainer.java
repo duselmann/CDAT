@@ -6,13 +6,15 @@ import gov.cida.cdat.io.SplitOutputStream;
 
 import java.io.OutputStream;
 
-public abstract class SplittingContainer<S extends SplitOutputStream> extends StreamContainer<SplitOutputStream> {
+public abstract class SplittingContainer extends StreamContainer<SplitOutputStream> {
 
-	private StreamContainer<OutputStream>[] targets;
-	private S stream;
+	private StreamContainer<? extends OutputStream>[] targets;
+	private OutputStream[] childTargetStreams;
+	private SplitOutputStream stream;
 
-	public SplittingContainer(@SuppressWarnings("unchecked") StreamContainer<OutputStream> ... targets) {
+	public SplittingContainer(@SuppressWarnings("unchecked") StreamContainer<? extends OutputStream> ... targets) {
 		this.targets = targets;
+		childTargetStreams = new OutputStream[targets.length];
 	}
 	
 	@Override
@@ -26,24 +28,26 @@ public abstract class SplittingContainer<S extends SplitOutputStream> extends St
 	 * @param stream the given the stream of the chained 'parent'
 	 * @return should return the stream this container is designed
 	 */
-	protected abstract S chain(OutputStream stream);
+	protected abstract OutputStream chain(OutputStream stream);
 	
 	
 	@Override
-	public S init() throws StreamInitException {
+	public final SplitOutputStream init() throws StreamInitException {
 		// TODO does it make sense for init() to call another open
 		// TODO I would like init() to be the chaining and open to be the this action
 		// for now it is necessary for chaining
-		for (StreamContainer<OutputStream> target : targets) {
-			stream = chain( target.open() );
+		int child = 0;
+		for (StreamContainer<? extends OutputStream> target : targets) {
+			childTargetStreams[child++] = chain( target.open() );
 		}
+		stream = new SplitOutputStream(childTargetStreams);
 		return stream;
 	}
 	
 	
 	@Override
 	protected final void cleanup() {
-		for (StreamContainer<OutputStream> target : targets) {
+		for (StreamContainer<? extends OutputStream> target : targets) {
 			Closer.close(target);
 		}
 	}
@@ -52,7 +56,7 @@ public abstract class SplittingContainer<S extends SplitOutputStream> extends St
 	 * This is a specific getStream that is typed 
 	 * @return
 	 */
-	public final S getSplitStream() {
+	public final SplitOutputStream getSplitStream() {
 		return stream;
 	}
 }

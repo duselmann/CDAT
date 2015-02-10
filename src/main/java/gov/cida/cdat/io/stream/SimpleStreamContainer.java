@@ -7,15 +7,15 @@ import java.io.Closeable;
 public final class SimpleStreamContainer<S extends Closeable> extends StreamContainer<S> {
 
 	// simple stream wrapper where open applies the given stream to flow
-	private final S stream;
+	private final S wrappedStream;
 	
 	public SimpleStreamContainer(S stream) {
-		this.stream = stream;
+		this.wrappedStream = stream;
 	}
 	
 	@Override
 	public S init() throws StreamInitException {
-		return stream;
+		return wrappedStream;
 	}
 
 	@Override

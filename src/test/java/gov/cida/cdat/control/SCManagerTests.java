@@ -3,17 +3,19 @@ package gov.cida.cdat.control;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.io.stream.DataPipe;
 import gov.cida.cdat.io.stream.SimpleStreamContainer;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
 import gov.cida.cdat.service.Naming;
+import gov.cida.cdat.service.PipeWorker;
+import gov.cida.cdat.service.Worker;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
@@ -52,18 +54,7 @@ public class SCManagerTests {
 			return new String(consumer.toByteArray());
 		}
 	}
-	
-
-	public static int waitAlittleWhileForResponse(Message response[]) {
-		int count=0;
-		while (null==response[0] && count++ < 100) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {}
-		}
-		return count;
-	}
-	
+		
 	public static PipeTestObj createTestPipe(String textString) {
 		PipeTestObj testPipe = new PipeTestObj();
 		
@@ -80,35 +71,7 @@ public class SCManagerTests {
 				
 		return testPipe;
 	}
-	
-	public static void print(Object ... objs) {
-		// used to print a result that stands out from the logs
-		// use logging or println itself if this is not needed
-		
-		System.out.println();
-		for (Object obj:objs) {
-			System.out.print(obj==null ?"null" :obj.toString());
-			System.out.print(" ");
-		}
-		System.out.println();
-		System.out.println();
-	}
 
-
-	public static Object reflectValue(Object objToReflect, String fieldNameValueToFetch) {
-		// reflection access is a bit wonky - this is way many of my classes are package access
-		// cannot do it this time because the PipeWorker is a subclass of Worker which does not have a pipe member variable
-		try {
-			Field pipeField     = objToReflect.getClass().getDeclaredField(fieldNameValueToFetch);
-			pipeField.setAccessible(true);
-			Object reflectValue = pipeField.get(objToReflect);
-			return reflectValue;
-		} catch (Exception e) {
-			assertFalse("Failed to reflect "+fieldNameValueToFetch, true);
-		}
-		return null;
-	}
-	
 	
 	/*
 	 * TESTS FOLLOW
@@ -170,7 +133,8 @@ public class SCManagerTests {
 		PipeTestObj testPipe = createTestPipe(TEST_STRING);
 		
 		// submit the pipe as a worker to the manager on the session
-		final String  workerName = manager.addWorker(TEST_STRING, testPipe.pipe);
+		Worker        worker     = new PipeWorker(testPipe.pipe);
+		final String  workerName = manager.addWorker(TEST_STRING, worker);
 
 		final String EXPECTED = TEST_STRING.replaceAll(" ","_")+"-1";
 		// ensure that the response contains the worker name since a future is returned from the submit
@@ -191,13 +155,13 @@ public class SCManagerTests {
 		manager.send(workerName, Control.Start);
 
 		// wait some time for the worker to finish
-		int count = waitAlittleWhileForResponse(response);
+		int count = TestUtils.waitAlittleWhileForResponse(response);
 		
     	// this send the message that this worker is no longer needed
 		manager.send(workerName, Control.Stop);
 		
 		// lets just see the count
-		print("wait cycle count:", count);
+		TestUtils.log("wait cycle count:", count);
 		
 		assertTrue("Expect count to be must less than 100", count<100);
 		
@@ -214,7 +178,7 @@ public class SCManagerTests {
 	// TODO would also like to check for memory leaks
 	public void testWorker_workerDisposeOnStop() throws Exception {
 		
-		print("Start testing a second start");
+		TestUtils.log("Start testing a second start");
 		
 		// obtain an instance of the manager
 		final SCManager  manager = SCManager.instance();
@@ -225,7 +189,8 @@ public class SCManagerTests {
 		PipeTestObj testPipe = createTestPipe(TEST_STRING);
 
 		// submit the pipe as a worker to the manager on the session
-		final String  workerName = manager.addWorker(TEST_STRING, testPipe.pipe);
+		Worker        worker     = new PipeWorker(testPipe.pipe);
+		final String  workerName = manager.addWorker(TEST_STRING, worker);
 
 		// this is a holder to pass data between threads.
 		final Message[] response = new Message[1];
@@ -242,12 +207,12 @@ public class SCManagerTests {
 		manager.send(workerName, Control.Start);
 		
 		// wait some time for the worker to finish
-		waitAlittleWhileForResponse(response);
+		TestUtils.waitAlittleWhileForResponse(response);
 
     	// this send the message that this worker is no longer needed
 		manager.send(workerName, Control.Stop);
 
-		print("Issuing second start");
+		TestUtils.log("Issuing second start");
 		
 		// clear out the consumer to see if it gets refilled
 		testPipe.consumer.reset();
@@ -256,7 +221,7 @@ public class SCManagerTests {
 		manager.send(workerName, Control.Start);
 		
 		// wait some time for the worker to finish
-		waitAlittleWhileForResponse(response);
+		TestUtils.waitAlittleWhileForResponse(response);
 		
 		// now test that the consumer remains empty
 		assertEquals("Expect that the disposed worker does not execute", "", testPipe.results() );
@@ -278,7 +243,8 @@ public class SCManagerTests {
 		final Message[] response = new Message[1];
 		
 		// submit the pipe as a worker to the manager on the session
-		manager.addWorker(TEST_STRING, testPipe.pipe, new Callback(){
+		Worker        worker     = new PipeWorker(testPipe.pipe);
+		manager.addWorker(TEST_STRING, worker, new Callback(){
     		// This is called with a null response if the Patterns.ask timeout expires
 	        public void onComplete(Throwable t, Message resp) {
 	        	// get a reference to the message
@@ -287,7 +253,7 @@ public class SCManagerTests {
 	    });
 
 		// wait some time for the worker to finish
-		waitAlittleWhileForResponse(response);
+		TestUtils.waitAlittleWhileForResponse(response);
 		
 		final String EXPECTED = TEST_STRING.replaceAll(" ","_")+"-1";
 		final String workerName = response[0].get(Naming.WORKER_NAME);
@@ -379,13 +345,14 @@ public class SCManagerTests {
 		
 		final DataPipe pipe    = new DataPipe(null, null);
 		
-		AddWorkerMessage msg   = manager.createAddWorkerMessage(RAW_LABEL, pipe);
+		Worker worker          = new PipeWorker(pipe);
+		AddWorkerMessage msg   = manager.createAddWorkerMessage(RAW_LABEL, worker);
 				
 		assertEquals("we expect that an Add Worker Message name be related to the given label", EXPECT, msg.getName());
 
 		// reflection access is a bit wonky - this is way many of my classes are package access
 		// cannot do it this time because the PipeWorker is a subclass of Worker which does not have a pipe member variable
-		Object workerPipe      = reflectValue(msg.getWorker(), "pipe");
+		Object workerPipe      = TestUtils.reflectValue(msg.getWorker(), "pipe");
 		
 		assertEquals("we expect that an Add Worker Message pipe be the given pipe", pipe, workerPipe);
 	}

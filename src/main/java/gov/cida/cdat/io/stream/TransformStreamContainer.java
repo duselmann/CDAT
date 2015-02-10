@@ -6,19 +6,21 @@ import gov.cida.cdat.transform.Transformer;
 
 import java.io.OutputStream;
 
-public class TransformStreamContainer extends StreamContainer<TransformOutputStream> {
+public class TransformStreamContainer<T> extends StreamContainer<TransformOutputStream<T>> {
 
-	private OutputStream stream;
-	private Transformer transform;
+	private StreamContainer<OutputStream> downstream;
+	private Transformer<T> transform;
 	
-	public TransformStreamContainer(Transformer transform, OutputStream stream) {
-		this.stream = stream;
-		this.transform = transform;
+	public TransformStreamContainer(Transformer<T> transform, StreamContainer<OutputStream> target) {
+		super(target);
+		this.downstream = target;
+		this.transform  = transform;
 	}
 	
 	@Override
-	public TransformOutputStream init() throws StreamInitException {
-		return new TransformOutputStream(stream, transform);
+	public TransformOutputStream<T> init() throws StreamInitException {
+		OutputStream stream = downstream.open();
+		return new TransformOutputStream<T>(stream, transform);
 	}
 
 	@Override

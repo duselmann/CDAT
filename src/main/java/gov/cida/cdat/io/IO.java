@@ -32,7 +32,7 @@ public final class IO {
 	public static boolean copy(InputStream source, OutputStream target, long duration) throws CdatException {
 		// if duration is zero or less that is the signal to copy all
 		// otherwise we copy for the given duration
-		if (duration <= 0) {
+		if (duration < 0) {
 			copy(source, target);
 			return false; // there is no more
 		} else {

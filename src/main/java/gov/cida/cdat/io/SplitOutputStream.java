@@ -1,18 +1,21 @@
 package gov.cida.cdat.io;
 
+
+// TODO ARE THE WRITES BLOCKING
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 public class SplitOutputStream extends OutputStream {
 
 	private OutputStream[] targets;
-	private final Map<String,Exception> errors;
+	private final Map<OutputStream,Exception> errors;
 	
 	public SplitOutputStream(OutputStream ... targets) {
 		this.targets = targets;
-		errors = new HashMap<String, Exception>();
+		errors = new WeakHashMap<OutputStream, Exception>();
 	}
 	
 	/**
@@ -22,7 +25,9 @@ public class SplitOutputStream extends OutputStream {
 	public void write(int b) throws IOException {
 		for (OutputStream target : targets) {
 			try {
-				target.write(b);
+				if ( ! errors.containsKey(target) ) {
+					target.write(b);
+				}
 			} catch (Exception e) {
 				manageException(target, e);
 			}
@@ -36,7 +41,9 @@ public class SplitOutputStream extends OutputStream {
 	public void write(byte[] bytes) throws IOException {
 		for (OutputStream target : targets) {
 			try {
-				target.write(bytes);
+				if ( ! errors.containsKey(target) ) {
+					target.write(bytes);
+				}
 			} catch (Exception e) {
 				manageException(target, e);
 			}
@@ -50,7 +57,9 @@ public class SplitOutputStream extends OutputStream {
 	public void write(byte[] b, int off, int len) throws IOException {
 		for (OutputStream target : targets) {
 			try {
-				target.write(b, off, len);
+				if ( ! errors.containsKey(target) ) {
+					target.write(b, off, len);
+				}
 			} catch (Exception e) {
 				manageException(target, e);
 			}
@@ -75,7 +84,9 @@ public class SplitOutputStream extends OutputStream {
 	public void flush() throws IOException {
 		for (OutputStream target : targets) {
 			try {
-				target.flush();
+				if ( ! errors.containsKey(target) ) {
+					target.flush();
+				}
 			} catch (Exception e) {
 				manageException(target, e);
 			}
@@ -91,7 +102,7 @@ public class SplitOutputStream extends OutputStream {
 		if (null==target) {
 			return;
 		}
-		errors.put(target.getClass().getName(), e);
+		errors.put(target, e);
 	}
 	/**
 	 * @return true if any stream threw an exception
@@ -108,8 +119,8 @@ public class SplitOutputStream extends OutputStream {
 	/**
 	 * @return A protected copy of all recent exceptions for streams
 	 */
-	public Map<String,Exception> getErrors() {
+	public Map<OutputStream,Exception> getErrors() {
 		// protective copy
-		return new HashMap<String,Exception>(errors);
+		return new HashMap<OutputStream,Exception>(errors);
 	}
 }

@@ -23,7 +23,7 @@ public class StatusOutputStream extends OutputStream {
 	@Override
 	public void write(int b) throws IOException {
 		updateTime();
-		byteCount += 2;
+		byteCount += 1;
 		target.write(b);
 	}
 	/**
@@ -109,7 +109,7 @@ public class StatusOutputStream extends OutputStream {
 			openTime = System.currentTimeMillis() - openTime;
 		}
 		isOpen = false;
-		target.close();
+		Closer.close(target);
 		target = null;
 	}
 	

@@ -36,15 +36,17 @@ public class DataPipe implements Openable<InputStream>, Closeable {
 		try {
 			producer.open();
 		} catch (Exception e) {
+			Closer.close(producer);
 			throw new  StreamInitException("Failed open producer to pipe streams", e);
 		}
 		try {
 			consumer.open();
 		} catch (Exception e) {
 			Closer.close(producer);
+			Closer.close(consumer);
 			throw new  StreamInitException("Failed open consumer to pipe streams", e);
 		}
-		return producer.getStream(); // TODO this might not be useful
+		return producer.getStream(); // TODO this might not be useful or necessary
 	}
 
 	
@@ -67,11 +69,8 @@ public class DataPipe implements Openable<InputStream>, Closeable {
 	@Override
 	public void close() {
 		isComplete = true;
-		try {
-			Closer.close(producer);
-		} finally {
-			Closer.close(consumer);
-		}
+		Closer.close(producer);
+		Closer.close(consumer);
 	}
 	
 	public boolean isComplete() {

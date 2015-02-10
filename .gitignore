@@ -4,3 +4,4 @@ localfiles
 .settings
 bin
 target
+derby.log

@@ -13,7 +13,7 @@ import gov.cida.cdat.message.Message;
  * @see Control
  */
 public enum Status {
-	isNew,isStarted,isAlive,isDone,isError,isDisposed,config,CurrentStatus;
+	isNew,isStarted,isAlive,isDone,isError,isDisposed,CurrentStatus;
 	
 	// cannot override equals
 	public boolean is(Object other) {

@@ -1,12 +1,11 @@
 package gov.cida.cdat.control;
 
-import gov.cida.cdat.io.stream.DataPipe;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
 import gov.cida.cdat.service.DeadLetterLogger;
 import gov.cida.cdat.service.Naming;
-import gov.cida.cdat.service.PipeWorker;
 import gov.cida.cdat.service.Session;
+import gov.cida.cdat.service.Worker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,6 +90,14 @@ public class SCManager {
 	}
 
 	/**
+	 * For thread testing and AKKA direct access custom implementation.
+	 * @return the name of the session the current manager is using.
+	 */
+	String sessionName() {
+		return session().path().name();
+	}
+	
+	/**
 	 * This is the helper session accessor. However, since it has a side effect of creating
 	 * an instance if there is not one, it is not getSession.
 	 * 
@@ -168,8 +175,8 @@ public class SCManager {
 	 * 					transformers are stream that inject themselves in the consumer flow
 	 * @return the new unique name string that is used to send messages to submitted pipe
 	 */
-	public String addWorker(String workerLabel, DataPipe pipe) {
-		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, pipe);
+	public String addWorker(String workerLabel, Worker worker) {
+		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, worker);
 		session().tell(msg, ActorRef.noSender());
 		return msg.getName();
 	}
@@ -199,8 +206,8 @@ public class SCManager {
 	 * @param onComplete the callback when the worker has completed.
 	 * @return a future for interacting, if necessary, with the the response
 	 */
-	public Future<Object> addWorker(String workerLabel, DataPipe pipe, Callback onComplete) {
-		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, pipe);
+	public Future<Object> addWorker(String workerLabel, Worker worker, Callback onComplete) {
+		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, worker);
 		// this will stop blocking as soon as the worker finishes and returns an onComplete message
 		Future<Object> response = Patterns.ask(session(), msg, new Timeout(DAY)); // TODO make configurable
 		wrapCallback(response, onComplete);
@@ -216,9 +223,9 @@ public class SCManager {
 	 * @param pipe the pipe to execute on the new worker
 	 * @return the message for a new worker
 	 */
-	AddWorkerMessage createAddWorkerMessage(String workerLabel, DataPipe pipe) {
+	AddWorkerMessage createAddWorkerMessage(String workerLabel, Worker worker) {
 		String workerName = createNameFromLabel(workerLabel);
-		AddWorkerMessage msg = AddWorkerMessage.create(workerName, new PipeWorker(pipe));
+		AddWorkerMessage msg = AddWorkerMessage.create(workerName, worker);
 		return msg;
 	}
 	
@@ -301,9 +308,21 @@ public class SCManager {
 	 * @return a future containing a return message as to how the action executed
 	 * @see SCManager.send(String workerName, Message message)
 	 */
-	public Future<Object> send(String workerName, Status status) {
+	public Message send(String workerName, Status status) {
 		Message msg = Message.create(status);
-		return send(workerName, msg);
+		Future<Object> future = send(workerName, msg);
+		Object result = null;
+		try {
+			result = Await.result(future, SECOND); // TODO make configure
+		} catch (Exception e) {
+			result = Message.create("error",e.getMessage());
+		}
+		return (Message)result;
+	}
+	public Future<Object> send(String workerName, Status status, final Callback callback) {
+		Future<Object> response = send(workerName, Message.create(status));
+		wrapCallback(response, callback);
+		return response;
 	}
 	
 		

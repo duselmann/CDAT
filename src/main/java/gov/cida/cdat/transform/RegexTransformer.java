@@ -1,6 +1,6 @@
 package gov.cida.cdat.transform;
 
-public class RegexTransformer implements Transformer{
+public class RegexTransformer extends Transformer<Object> {
 
 	String pattern;
 	String replace;

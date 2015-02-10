@@ -12,4 +12,13 @@ public class Closer {
 			// TODO I know, I know. Never swallow. But really?
 		}
 	}
+	public static void close(AutoCloseable closeable) {
+		try {
+			if (closeable != null) {
+				closeable.close();
+			}
+		} catch (Exception e) {
+			// TODO I know, I know. Never swallow. But really?
+		}
+	}
 }
