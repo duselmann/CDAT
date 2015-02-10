@@ -308,9 +308,21 @@ public class SCManager {
 	 * @return a future containing a return message as to how the action executed
 	 * @see SCManager.send(String workerName, Message message)
 	 */
-	public Future<Object> send(String workerName, Status status) {
+	public Message send(String workerName, Status status) {
 		Message msg = Message.create(status);
-		return send(workerName, msg);
+		Future<Object> future = send(workerName, msg);
+		Object result = null;
+		try {
+			result = Await.result(future, SECOND); // TODO make configure
+		} catch (Exception e) {
+			result = Message.create("error",e.getMessage());
+		}
+		return (Message)result;
+	}
+	public Future<Object> send(String workerName, Status status, final Callback callback) {
+		Future<Object> response = send(workerName, Message.create(status));
+		wrapCallback(response, callback);
+		return response;
 	}
 	
 		

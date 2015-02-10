@@ -1,5 +1,6 @@
 package gov.cida.cdat.message;
 
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,16 +10,18 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Messages are strongly typed key:value maps of type (string,string) where the value is used
+ * <p>Messages are strongly typed key:value maps of type (string,string) where the value is used
  * to qualify the message (the key is the message). For example, (stop,force) would abort a worker
  * where (stop,null) might wait for a clean exit (at least clean up resources if force does not).
- * 
- * Each custom worker is responsible for addressing its own custom messages.
- * 
- * Messages are also the return type for each message sent to a worker. For example, a config
+ * </p>
+ * <p>Each custom worker is responsible for addressing its own custom messages.
+ * </p>
+ * <p>Messages are also the return type for each message sent to a worker. For example, a config
  * status inquiry could return a message of key:value pairs for its config. As in: server, port, etc 
- * 
- * It is not a concurrent map because we will enforce immutable messages. Each layer will create a new message from the old to extend.
+ * </p>
+ * <p>It is not a concurrent map because we will enforce immutable messages. Each layer will create
+ * a new message from the old to extend.
+ * </p>
  * 
  * TODO impl custom workers
  * 
@@ -30,20 +33,21 @@ public class Message implements Serializable {
 	private static final Logger logger = LoggerFactory.getLogger(Message.class);
 	
 	/**
-	 * the internal map containing the message.
-	 * A message is a possible composable item.
+	 * <p>The internal map containing the message. A message is a possible compose-able item.
 	 * Many directives may be in a single message.
-	 * 
-	 * Example:
+	 * </p>
+	 * <pre>Example:
 	 * isStart and isDone are a nice combo. 
 	 * Suppose you needed to know if the work was done.
 	 * Well, it is also important to know if the work was
 	 * started if done is false. One request returns two inquires.
-	 * 
+	 * </pre>
 	 */
 	private final Map<String, String> message;
 	
-	// TODO should this be private or exposed?
+	/**
+	 * This is private to ensure that the messages are immutable.
+	 */
 	protected Message() {
 		message = new HashMap<String,String>();
 	}
@@ -52,7 +56,7 @@ public class Message implements Serializable {
 	 * This is not a constructor because originally I had intended on returning the Map
 	 * but I like the clarity of the stronger Message type, I suppose these could be constructors now.
 	 * 
-	 * @return
+	 * @return new message with a protective copy of the given map message entries.
 	 */
 	public static Message create(Map<String, String> map) {
 		Message msg = new Message();
@@ -60,9 +64,25 @@ public class Message implements Serializable {
 		trace(msg.message);
 		return msg;
 	}
+	/**
+	 * A convenience method for a message without a value - name only.
+	 * @param name message name
+	 * @return new simple message of the given name only
+	 */
 	public static Message create(Object name) {
 		return create(name, null);
 	}
+	/**
+	 * Name:value pair message creator method.
+	 * This is useful for creating message returned to the user.
+	 * For example, if the user sends a Status.isAlive then the return could be isAlive:true.
+	 * Another example of potential use is the user sending a qualifier for a message.
+	 * For example, Control.Stop:Force could be used to stop the current worker without waiting or cleanup.
+	 * 
+	 * @param name message name
+	 * @param value message qualifier
+	 * @return a message created from the name:value pair
+	 */
 	public static Message create(Object name, Object value) {
 		if (name == null || "".equals(name)) {
 			throw new NullPointerException("Message name is required.");
@@ -77,6 +97,14 @@ public class Message implements Serializable {
 		trace(msg.message);
 		return msg;
 	}
+	/**
+	 * Since messages are immutable and this helper method creates an extended copy of the 
+	 * original message with an additional message entry.
+	 * @param original the source of the original message the we want to extend
+	 * @param name additional message name
+	 * @param value additional message qualifier
+	 * @return new extended message
+	 */
 	public static Message extend(Message original, Object name, String value) {
 		if (null == original) {
 			return create(name,value);
@@ -85,6 +113,12 @@ public class Message implements Serializable {
 		msg.message.put(name.toString(), value);
 		return msg;
 	}
+	/**
+	 * convenience method for creating a boolean qualifier
+	 * @param name message name
+	 * @param value message qualifier
+	 * @return new message qualified with the string representation of the boolean value
+	 */
 	public static Message create(Object name, boolean value) {
 		return create(name, ""+value);
 	}
@@ -156,6 +190,15 @@ public class Message implements Serializable {
 	}
 	
 	
+	/**
+	 * This is a very convenient method that adds the caller line to the message 
+	 * when in TRACE logging mode. In conjunction with the DeadLetterLogger, it is
+	 * a an invaluable troubleshooting duo.
+	 * 
+	 * @see gov.cida.cdat.service.DeadLetterLogger
+	 * 
+	 * @param message
+	 */
 	static void trace(Map<String, String> message) {
 		if ( ! logger.isTraceEnabled() ) {
 			return;

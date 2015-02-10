@@ -79,18 +79,13 @@ public class Session extends UntypedActor {
 		}
 		
 		if (msg instanceof AddWorkerMessage) {
-			onReceive((AddWorkerMessage)msg);
+			addWorker((AddWorkerMessage)msg);
 			return;
 		} else if (msg instanceof Message) {
 			onReceive((Message)msg);
 			return;
 		} else if (msg instanceof Terminated) {
-			Status status = Status.isDisposed;
-			Terminated ref = (Terminated)msg;
-//			if (false) { // TODO check for exception in delegate
-//				status = Status.isError;
-//			}
-			delegates.setStatus(ref.actor().path().name(), status);
+			onReceive((Terminated)msg);
 			return;
 		} else {
 			unhandled(msg);
@@ -99,40 +94,75 @@ public class Session extends UntypedActor {
 		// this will dead letter if the sender is not waiting for a reply - this is ok
 		sender().tell(Message.create("UnknowMessageType", msg.getClass().getName()),self());
 	}
-	void onReceive(final Message msg) throws Exception {
+	/**
+	 * This helper method manages the termination status of delegate workers
+	 * @param ref the termination message
+	 */
+	void onReceive(Terminated ref) {
+		String workerName = ref.actor().path().name();
+		logger.trace("termination recieved for {}", workerName);
+		Status status = Status.isDisposed;
+		
+//		if (false) { // TODO check for something to set this status
+//			status = Status.isError;
+//		}
+		
+		delegates.setStatus(workerName, status);
+	}
+	/**
+	 * The helper method that manages the exposed framework messages.
+	 * @param msg the message to act on
+	 */
+	void onReceive(final Message msg) {
 		logger.trace("Session recieved message {}", msg);
+		Message response = null;
 		
 		if (msg.contains(AUTOSTART)) {
 			autoStart = "true".equals( msg.get(AUTOSTART) );
 		}
 		
 		String workerName = msg.get(Naming.WORKER_NAME);
-		ActorRef worker = delegates.get(workerName);
+
+		if ( ! delegates.isAlive(workerName) ) {
+			// the session must handle these if the worker is not alive to respond
+			if (msg.contains(Status.isAlive)) {
+				// if the session is handling this then it it not alive
+				response = Message.create(Status.isAlive, false);
+				
+			} else if (msg.contains(Status.isDone)) {
+				response = Message.create(Status.isDone, true);
+				
+			} else if (msg.contains(Status.isDisposed)) {
+				response = Message.create(Status.isDisposed, true);
+				
+			} else if (msg.contains(Status.CurrentStatus)) {
+				String currentSatus = delegates.getStatus(workerName);
+				response = Message.create(Status.CurrentStatus, currentSatus);
+			}
+			if (response != null) {
+				sender().tell(response, self());
+			}
+			return; // a dead worker cannot respond to a forwarded message
+		}
 		
+		ActorRef worker = delegates.get(workerName);
+		// if there was no worker found then the we have no delegate to whom to send a message
 		if (worker == null) {
 			logger.warn("Failed to find worker named {} on session {}", workerName, self().path());
 			unhandled(msg);
 			return;
 			
 		} else {
-			logger.trace( worker.path().toString() );
+			logger.trace("worker full name: {}", worker.path());
 			// workers only read message keys that pertain to them
 			// it is okay to pass the original message along
-			// forward is better than telling in this case. worker.tell(msg, self());
 			if (msg.contains(Control.Start)) {
 				delegates.setStatus(workerName, Status.isStarted);
 			} 
+			// forward is better than telling in this case. worker.tell(msg, self());
 			worker.forward(msg, context());
 		}
 	}
-	void onReceive(AddWorkerMessage addWorker) throws Exception {
-		addWorker.setAutoStart(autoStart);
-		logger.trace("Session recieved new worker {}", addWorker.getName());
-		addWorker(addWorker);
-        Message msg = Message.create(Naming.WORKER_NAME,addWorker.getName());
-        sender().tell(msg, self());
-	}
-	
 	
 	/**
 	 * <p>submits a worker for an ETL stream (pipe), 
@@ -150,12 +180,22 @@ public class Session extends UntypedActor {
 	 * 					transformers are stream that inject themselves in the consumer flow
 	 * @return the new unique string that is used to send messages to submitted pipe
 	 */
-	void addWorker(AddWorkerMessage worker) {
+	void addWorker(AddWorkerMessage addWorker) {
+		String workerName = addWorker.getName();
+		logger.trace("Session adding a worker with name: {}", workerName);
+
+		// send the unique name back to the requester
+		Message msg = Message.create(Naming.WORKER_NAME, workerName);
+        sender().tell(msg, self()); // this will fall into the dead letter queue if there is no callback waiting
+
+		addWorker.setAutoStart(autoStart); // pass along the session automatic start state
+		
         // Create the AKKA service actor
-		logger.trace("Adding a worker with name: {}", worker.getName());
-        ActorRef delegate = context().actorOf(Props.create(Delegator.class, worker), worker.getName());
-        context().watch(delegate);
-        delegates.put(worker.getName(), delegate);
+        ActorRef delegate = context().actorOf(Props.create(Delegator.class, addWorker), workerName);
+        
+        context().watch(delegate); // watch the delegate for termination handling
+        
+        delegates.put(workerName, delegate); // maintain a convenient reference
 	}
 	
 	/**

@@ -1,6 +1,5 @@
 package gov.cida.cdat.io.stream;
 
-import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.Openable;

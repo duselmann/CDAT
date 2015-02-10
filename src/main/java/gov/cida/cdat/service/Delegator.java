@@ -79,7 +79,7 @@ public class Delegator extends UntypedActor {
 	 *  AKKA framework generic messages receiver
 	 */
 	public void onReceive(Object msg) throws Exception {
-		logger.trace("Delegator recieved message {}", msg);
+		logger.trace("Delegator recieved message {} ", msg);
 		if (msg instanceof Message) {
 			onReceive((Message)msg);
 			return;
@@ -120,16 +120,19 @@ public class Delegator extends UntypedActor {
 				logger.trace("delegator is continuing to process more");
 				process();
 			}
-			
+		
+		}
+		// TODO should these be else if or just if
 		// handle status requests
+		if (msg.contains(Status.isNew)) {
+			response = createStatusMessage(Status.isNew);
 		} else if (msg.contains(Status.isStarted)) {
-			response = Message.create(Status.isStarted, Status.isStarted.equals(status));
+			response = createStatusMessage(Status.isStarted);
 		} else if (msg.contains(Status.isAlive)) {
 			response = Message.create(Status.isAlive, true);
 		} else if (msg.contains(Status.isDone)) {
-			response = Message.create(Status.isDone, Status.isDone.equals(status));
-		}
-		if (msg.contains(Status.CurrentStatus)) {
+			response = createStatusMessage(Status.isDone);
+		} else if (msg.contains(Status.CurrentStatus)) {
 			response = Message.create(Status.CurrentStatus, status);
 		}
 		
@@ -157,6 +160,15 @@ public class Delegator extends UntypedActor {
 		}
 	}
 
+	/**
+	 * status check helper method to make the code a bit DRYer.
+	 * 
+	 * @param status the status to check
+	 * @return a message containing the state of the delegate to the give status
+	 */
+	Message createStatusMessage(Status status) {
+		return Message.create(status, this.status.equals(status));
+	}
 
 	/**
 	 * AKKA method called when a worker is issued. 
