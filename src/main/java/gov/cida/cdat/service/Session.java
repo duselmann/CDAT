@@ -123,7 +123,7 @@ public class Session extends UntypedActor {
 		
 		String workerName = msg.get(Naming.WORKER_NAME);
 
-		if ( ! delegates.isAlive(workerName) ) {
+		if ( null != workerName && ! delegates.isAlive(workerName) ) {
 			// the session must handle these if the worker is not alive to respond
 			if (msg.contains(Status.isAlive)) {
 				// if the session is handling this then it it not alive
