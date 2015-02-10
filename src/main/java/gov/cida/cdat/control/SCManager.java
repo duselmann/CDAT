@@ -37,7 +37,8 @@ import akka.util.Timeout;
 public class SCManager {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
-	private static final String SESSION = "session";
+	public static final Object AUTOSTART = "AUTOSTART";
+	public static final String SESSION   = "SESSION";
 	
 	public static final FiniteDuration MILLIS    = Duration.create(100, "milliseconds");
 	public static final FiniteDuration SECOND    = Duration.create(  1, "second");
@@ -53,10 +54,53 @@ public class SCManager {
 	static {
 		instance = new SCManager();
 	}
+	/**
+	 * A convenience method to access the instance since
+	 * calling openSession twice seems counter intuitive
+	 * @return the current SC manager instance
+	 */
 	public static SCManager instance() {
 		return instance;
 	}
-	// TODO abandoned sessions should be closed and disposed cleanly
+	/**
+	 * <p>"Creates" a session instance for thread safe actions.
+	 * </p>
+	 * <p>Actually, the session() method creates the session if none exists.
+	 * This method just looks nice as in the following example.
+	 * </p>
+	 * <p>Example:</p>
+	 * <pre>
+	 *	SCManager session = SCManager.open();
+	 *	try {
+	 *		Worker helloWorld = new Worker() {
+	 *			public boolean process() {
+	 *				System.out.println("Hello World");
+	 *				return false; // Answers the question: Is there more?
+	 *			}
+	 *		};
+	 *		String name = session.addWorker("HelloWorld", helloWorld);
+	 *		session.send(name, Control.Start);
+	 *	} finally {
+	 *		session.close();
+	 *	}		
+	 * </pre>
+	 * @return the current SC manager instance
+	 */
+	public static SCManager open() {
+		return instance();
+	}
+	public void close() {
+		try {
+			// this tells the session to stop processing workers
+			setAutoStart(false); // this is for completeness
+			Message stop = Message.create(Control.Stop, SCManager.SESSION);
+			session().tell(stop, ActorRef.noSender());
+		} finally {
+			// this removes the session from the thread 
+			// a new one will be issued upon the next request
+			session.remove();
+		}
+	}
 	
 	// tests suggest it is safe, however there is no guarantee that subsequent tasks run on the same thread
 	private ThreadLocal<ActorRef> session = new ThreadLocal<ActorRef>();
@@ -384,8 +428,9 @@ public class SCManager {
 	 */
 	// TODO when a session is 'done' it should reset the autoStart state to DEFAULT.
 	// TODO make autoStart DEFAULT state configurable
-	public void setAutoStart(boolean value) {
-		Message msg = Message.create(Session.AUTOSTART, value);
+	public SCManager setAutoStart(boolean value) {
+		Message msg = Message.create(SCManager.AUTOSTART, value);
 		session().tell(msg, ActorRef.noSender());
+		return this; // method chaining
 	}
 }
