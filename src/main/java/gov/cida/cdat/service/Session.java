@@ -23,8 +23,6 @@ import akka.japi.Function;
 
 
 public class Session extends UntypedActor {
-	public static final Object AUTOSTART = "autostart";
-
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
 
@@ -111,8 +109,12 @@ public class Session extends UntypedActor {
 		logger.trace("Session recieved message {}", msg);
 		Message response = null;
 		
-		if (msg.contains(AUTOSTART)) {
-			autoStart = "true".equals( msg.get(AUTOSTART) );
+		if (msg.contains(SCManager.AUTOSTART)) {
+			autoStart = "true".equals( msg.get(SCManager.AUTOSTART) );
+		}
+		if ( SCManager.SESSION.equals( msg.get(Control.Stop) ) ) {
+			context().stop( self() );
+			return;
 		}
 		
 		String workerName = msg.get(Naming.WORKER_NAME);
@@ -198,7 +200,7 @@ public class Session extends UntypedActor {
 	 */
 	@Override
 	public void postStop() throws CdatException {
-		logger.trace("Session stopped.");
+		logger.trace("Session stopped. {} ", self().path());
 		try {
 			super.postStop();
 		} catch (Exception e) {
