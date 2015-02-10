@@ -44,13 +44,13 @@ public class SCManagerControlThreadedTest {
 			spawnThread("second");
 			
 			// delayed test
-			Thread.sleep(2000);
+			Thread.sleep(500);
 			spawnThread("third");
 			
-			Thread.sleep(2000);
+			Thread.sleep(500);
 			spawnThread("fourth");
 			
-			Thread.sleep(2000);
+			Thread.sleep(500);
 		} finally {
 			System.out.println("shuttdown submitted");
 			manager.shutdown();

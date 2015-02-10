@@ -50,16 +50,20 @@ public class SplitStreamContainerTests {
 			}
 		};
 		
+		assertFalse("Expect the stream NOT to be open yet", splittingContainer.isOpen());
+		
 		assertEquals("Expect the chain called zero before open", 0, chainCalls[0]);
 		
 		String testBytes = "Test Bytes";
 		splittingContainer.open();
+		assertTrue("Expect the stream to be open yet", splittingContainer.isOpen());
 		
 		assertEquals("Expect the chain to called once per split stream on open", 3, chainCalls[0]);
 		
 		splittingContainer.getSplitStream().write(testBytes.getBytes());		
 		
 		splittingContainer.close();
+		assertFalse("Expect the stream NOT to be open any longer", splittingContainer.isOpen());
 		
 		int child=0;
 		for(ByteArrayOutputStream out : outs) {
