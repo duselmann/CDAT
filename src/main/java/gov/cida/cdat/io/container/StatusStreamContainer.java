@@ -1,4 +1,4 @@
-package gov.cida.cdat.io.stream;
+package gov.cida.cdat.io.container;
 
 import gov.cida.cdat.io.StatusOutputStream;
 

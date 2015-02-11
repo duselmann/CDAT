@@ -1,7 +1,7 @@
 package gov.cida.cdat.db;
 
 import gov.cida.cdat.exception.StreamInitException;
-import gov.cida.cdat.io.stream.TransformStreamContainer;
+import gov.cida.cdat.io.container.TransformStreamContainer;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

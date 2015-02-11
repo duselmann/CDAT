@@ -6,7 +6,7 @@ import gov.cida.cdat.exception.producer.ProducerException;
 import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.Openable;
 import gov.cida.cdat.io.TransformOutputStream;
-import gov.cida.cdat.io.stream.TransformStreamContainer;
+import gov.cida.cdat.io.container.TransformStreamContainer;
 
 import java.io.Closeable;
 import java.io.IOException;
