@@ -1,8 +1,11 @@
-package gov.cida.cdat.io.stream;
+package gov.cida.cdat.io.container;
 
 import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.exception.StreamInitException;
+import gov.cida.cdat.io.container.DataPipe;
+import gov.cida.cdat.io.container.SimpleStreamContainer;
+import gov.cida.cdat.io.container.StreamContainer;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

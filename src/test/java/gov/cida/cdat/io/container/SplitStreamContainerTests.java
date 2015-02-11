@@ -1,7 +1,9 @@
-package gov.cida.cdat.io.stream;
+package gov.cida.cdat.io.container;
 
 import static org.junit.Assert.*;
 import gov.cida.cdat.exception.StreamInitException;
+import gov.cida.cdat.io.container.SplittingContainer;
+import gov.cida.cdat.io.container.StreamContainer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

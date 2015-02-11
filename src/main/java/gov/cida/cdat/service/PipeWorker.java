@@ -1,7 +1,7 @@
 package gov.cida.cdat.service;
 
 import gov.cida.cdat.exception.CdatException;
-import gov.cida.cdat.io.stream.DataPipe;
+import gov.cida.cdat.io.container.DataPipe;
 
 public class PipeWorker extends Worker {
 

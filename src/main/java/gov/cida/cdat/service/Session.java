@@ -32,6 +32,10 @@ public class Session extends UntypedActor {
 	 *  contains the lookup of something that does work like an ETL, Query, or Session
 	 */
 	final Registry delegates;
+	
+	/**
+	 * Constructor is simple and should only be used by SCManager only.
+	 */
 	public Session() {
 		delegates = new Registry();
 	}

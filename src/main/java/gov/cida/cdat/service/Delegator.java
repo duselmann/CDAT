@@ -18,7 +18,7 @@ import akka.actor.UntypedActor;
 
 
 /**
- * This is the 'threaded' delegate to run workers.
+ * This is the 'threaded' via AKKA delegate to run workers.
  * Implementation should extend Worker with specific behavior.
  * 
  * @author duselman
@@ -27,7 +27,13 @@ import akka.actor.UntypedActor;
 public class Delegator extends UntypedActor {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
+	/**
+	 * The message name for processing more or CONTINUE
+	 */
 	private static final String  PROCESS_MORE = "process.more";
+	/**
+	 * The message to continue processing more data
+	 */
 	private static final Message CONTINUE     = Message.create(PROCESS_MORE);
 
 	/**
@@ -54,7 +60,7 @@ public class Delegator extends UntypedActor {
 	/**
 	 * Holds the instance of the latest exception. It is used to communicate to the worker owner.
 	 */
-	private Exception lastError;
+	private Exception currentError;
 	
 	/**
 	 * If the worker should start automatically then this should be set to true on worker create.
@@ -66,6 +72,11 @@ public class Delegator extends UntypedActor {
 	 */
 	private final List<ActorRef> onComplete = new LinkedList<ActorRef>();
 	
+	
+	/**
+	 * Constructor that takes the AddWorkerMessage payload and assigns all values to the new delegate.
+	 * @param worker the AddWorkerMessage payload
+	 */
 	public Delegator(AddWorkerMessage worker) {
 		this.name      = worker.getName();
 		this.worker    = worker.getWorker();
@@ -91,10 +102,8 @@ public class Delegator extends UntypedActor {
 	 * Stop will issue a stop request to the delegate after calling done on the worker.
 	 * onComplete will maintain the sender in a list that want a callback on finishing
 	 * 
-	 * TODO need to pass messages to the worker for custom actions.
-	 * 
-	 * @param msg
-	 * @throws Exception
+	 * @param msg the incoming message from the session manager
+	 * @throws Exception AKKA requires it a raw Exception
 	 */
 	public void onReceive(Message msg) throws Exception {
 		Message response = null;
@@ -149,7 +158,7 @@ public class Delegator extends UntypedActor {
 		// now give the work a chance to react
 		/* Message workerResponse = */ worker.onReceive(msg);
 		
-		// TODO this causes an infinite message loop and I am not sure why
+		// This causes an infinite message loop and I am not sure why
 //		if (null == response) {
 //			response = workerResponse;
 //		}
@@ -163,20 +172,19 @@ public class Delegator extends UntypedActor {
 	/**
 	 * status check helper method to make the code a bit DRYer.
 	 * 
-	 * @param status the status to check
+	 * @param isStatus the status to check
 	 * @return a message containing the state of the delegate to the give status
 	 */
-	Message createStatusMessage(Status status) {
-		return Message.create(status, this.status.equals(status));
+	Message createStatusMessage(Status isStatus) {
+		return Message.create(isStatus, this.status.equals(isStatus));
 	}
 
 	/**
 	 * AKKA method called when a worker is issued. 
-	 * We use it for autostarting this worker.
+	 * We use it for automatically starting this worker.
 	 */
 	@Override
 	public void preStart() throws Exception {
-		super.preStart(); // TODO not sure if this is necessary
 		if (autoStart) {
 			logger.debug("Delegate AUTOSTART worker");
 			start();
@@ -196,21 +204,24 @@ public class Delegator extends UntypedActor {
 				worker.end(); // so that the owner can clean up resources
 			}
 		} catch (Exception e) {
-			setLastError(e);
-			// TODO figure out how to manage status for disposed workers
+			setCurrentError(e);
 		} finally {
-			// once the delegate is stopped it is not longer accessible
-			// TODO this status should be passed to the session for management
-			// TODO of course if the session cannot access this then it is disposed
+			// once the delegate is stopped it is no longer accessible
+			// therefore this is a bit more about ideals than it is useful
 			setStatus(Status.isDisposed);
-			super.postStop();
 		}
 	}
 
-	
+
+	/**
+	 * @return the unique name or this delegate
+	 */
 	public String getName() {
 		return name;
 	}
+	/**
+	 * @return the worker Id - part of the initial spec but currently unused
+	 */
 	public long getId() {
 		return worker.getId();
 	}
@@ -222,8 +233,6 @@ public class Delegator extends UntypedActor {
 	 * 
 	 * It is package access for testing, would be private otherwise.
 	 * 
-	 * TODO impl CdatException here and handling in the Session supervisor
-	 * 
 	 * @return Returns a message of Success:True on finish of no errors or
 	 *         False if there was any exception thrown.
 	 *         
@@ -231,24 +240,21 @@ public class Delegator extends UntypedActor {
 	 */
 	Message start() throws CdatException {
 		if ( ! Status.isNew.equals(status) ) {
-			logger.trace("Ignoring multistart worker {}", name);
-			setLastError(new StreamInitException("May only start new workers"));
+			logger.debug("Ignoring multistart worker {}", name);
+			setCurrentError(new StreamInitException("May only start new workers"));
 			return Message.create(Control.Start,false);
 		}
 		setStatus(Status.isStarted);
 		
 		Message msg;
 		try {
-			// TODO need to release every so often during transfer and
-			// TODO query wait ensure control and status messages are processed
 			worker.begin();
 			process();
 			msg = Message.create("Success", "True");
 			logger.trace("Worker {} started", name);
 		} catch (Exception e) {
-			logger.error("Exception opening pipe",e);
 			msg = Message.create("Success", "False");
-			setLastError(e);
+			setCurrentError(e);
 		}
 		return msg;
 	}
@@ -271,7 +277,7 @@ public class Delegator extends UntypedActor {
 				done(" called from process when there was no more");
 			}
 		} catch (Exception e) {
-			setLastError(e);
+			setCurrentError(e);
 			done("error");
 		}
 	}
@@ -293,7 +299,7 @@ public class Delegator extends UntypedActor {
 			worker.end();
 			setStatus(Status.isDone);
 		} catch (Exception e) {
-			setLastError(e);
+			setCurrentError(e);
 		} finally {
 			for (ActorRef needToKnow : onComplete) {
 				sendCompleted(needToKnow);
@@ -301,6 +307,7 @@ public class Delegator extends UntypedActor {
 			onComplete.clear();
 		}
 	}
+	
 	
 	/**
 	 * Helper method that creates an onComplete:done/error message and sends it
@@ -316,9 +323,9 @@ public class Delegator extends UntypedActor {
 	void sendCompleted(ActorRef needsToKnow) {
 		String value = "done";
 		Message completed = Message.create(Naming.WORKER_NAME, name);
-		if (lastError != null) {
+		if (currentError != null) {
 			value = "error";
-			String exceptionMessage = createExceptionMessage(lastError);
+			String exceptionMessage = createExceptionMessage(currentError);
 			completed = Message.extend(completed, Status.isError, exceptionMessage);
 		}
 		completed = Message.extend(completed, Control.onComplete, value);
@@ -337,9 +344,7 @@ public class Delegator extends UntypedActor {
 			msg += ":" + createExceptionMessage(t.getCause());
 		}
 		return msg;
-	}	
-	
-	
+	}
 	
 	/**
 	 * access life cycle status
@@ -349,7 +354,13 @@ public class Delegator extends UntypedActor {
 	public Status getStatus() {
 		return status;
 	}
+	/**
+	 * framework accessor to set the current status. It will not allow
+	 * the status to over write once in error status.
+	 * @param newStatus the current status
+	 */
 	void setStatus(Status newStatus) {
+		// preserve error status
 		if (Status.isError.equals(status)) {
 			logger.trace("status isError -> NOT setting status: {}", newStatus);
 			return;
@@ -360,10 +371,15 @@ public class Delegator extends UntypedActor {
 	
 	/**
 	 * Helper method to properly set the latest exception and update the status
-	 * @param lastError
+	 * @param currentError
 	 */
-	void setLastError(Exception lastError) {
+	void setCurrentError(Exception error) {
+		logger.debug("Exception running worker", error);
 		setStatus(Status.isError);
-		this.lastError = lastError;
+		this.currentError = error;
+		worker.setCurrentError(error);
+		if ( worker.isTerminateOnError(error) ) {
+			context().stop( self() );
+		}
 	}
 }
