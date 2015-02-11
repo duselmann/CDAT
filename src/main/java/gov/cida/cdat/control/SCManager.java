@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
-import scala.concurrent.duration.FiniteDuration;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.DeadLetter;
@@ -33,19 +31,18 @@ import akka.util.Timeout;
  * @author duselman
  *
  */
-//TODO better name?
 public class SCManager {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
+	/**
+	 *  This is used to send an auto start message to the session..
+	 */
 	public static final Object AUTOSTART = "AUTOSTART";
+	/**
+	 * This is used to send to the session a message for the session rather than the worker
+	 */
 	public static final String SESSION   = "SESSION";
 	
-	public static final FiniteDuration MILLIS    = Duration.create(100, "milliseconds");
-	public static final FiniteDuration SECOND    = Duration.create(  1, "second");
-	public static final FiniteDuration HALF_MIN  = Duration.create( 30, "seconds");
-	public static final FiniteDuration MINUTE    = Duration.create(  1, "minute");
-	public static final FiniteDuration HOUR      = Duration.create(  1, "hour");
-	public static final FiniteDuration DAY       = Duration.create(  1, "day");
 	
 	/**
 	 *  singleton pattern, each user session will have a session worker
@@ -89,6 +86,10 @@ public class SCManager {
 	public static SCManager open() {
 		return instance();
 	}
+	
+	/**
+	 * When done wit the session call close to release the session
+	 */
 	public void close() {
 		try {
 			// this tells the session to stop processing workers
@@ -102,7 +103,9 @@ public class SCManager {
 		}
 	}
 	
-	// tests suggest it is safe, however there is no guarantee that subsequent tasks run on the same thread
+	/**
+	 * This is the session worker instance. Each thread is given its own instance.
+	 */
 	private ThreadLocal<ActorRef> session = new ThreadLocal<ActorRef>();
 	
 	/**
@@ -115,12 +118,14 @@ public class SCManager {
 	 */
 	private final ActorRef naming;
 
+	/**
+	 * This worker is used to log all dead letters. It is only active while in TRACE mode.
+	 */
 	private final ActorRef deadLetterLogger;
 	
 	/**
-	 *  private constructor for singleton pattern
-	 *  because it is a thread pool system where 
-	 *  multiple instances is incongruous.
+	 *  private constructor for singleton pattern because it is a 
+	 *  thread pool system where multiple instances would be incongruous.
 	 */  
 	private SCManager() {
         // Create the 'CDAT' akka actor system
@@ -163,9 +168,7 @@ public class SCManager {
 
 		return session.get();
 	}
-	// TODO abandoned sessions and workers should be closed and disposed cleanly
-	// TODO what I mean is that upon session exiting scope in the container it should dispose of its current workers
-	// TODO we should also reset autostart to what ever default we desire
+	// TODO abandoned sessions should be stopped
 	
 	/**
 	 * This helper method messages the Naming worker to ensure unique names.
@@ -186,11 +189,11 @@ public class SCManager {
 		String name = label;
 		
 		logger.trace("sending message to creating name from label '{}'", label);
-		Future<Object> future = Patterns.ask(naming, label, new Timeout(MILLIS));
+		Future<Object> future = Patterns.ask(naming, label, new Timeout(Time.MILLIS));
 		try {
 			logger.trace("waiting for name from label '{}'", label);
 			// this stops blocking as soon as a result is returned. this should be plenty of time
-			Object result = Await.result(future, SECOND); // TODO make configurable
+			Object result = Await.result(future, Time.SECOND); // TODO make configurable
 			if (result instanceof Message) {
 				name = ((Message)result).get(Naming.WORKER_NAME);
 			}
@@ -253,7 +256,7 @@ public class SCManager {
 	public Future<Object> addWorker(String workerLabel, Worker worker, Callback onComplete) {
 		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, worker);
 		// this will stop blocking as soon as the worker finishes and returns an onComplete message
-		Future<Object> response = Patterns.ask(session(), msg, new Timeout(DAY)); // TODO make configurable
+		Future<Object> response = Patterns.ask(session(), msg, new Timeout(Time.DAY)); // TODO make configurable
 		wrapCallback(response, onComplete);
 		return response;
 	}
@@ -290,7 +293,7 @@ public class SCManager {
 	 * @return a future that contains a Message response from the worker upon completion or exception
 	 */
 	public Future<Object> send(String workerName, Message message) {
-		return send(workerName,message,new Timeout(HALF_MIN)); // TODO make configurable
+		return send(workerName,message,new Timeout(Time.HALF_MIN)); // TODO make configurable
 	}
 	/**
 	 * This is a similar method with a custom wait time.
@@ -357,7 +360,7 @@ public class SCManager {
 		Future<Object> future = send(workerName, msg);
 		Object result = null;
 		try {
-			result = Await.result(future, SECOND); // TODO make configure
+			result = Await.result(future, Time.SECOND); // TODO make configure
 		} catch (Exception e) {
 			result = Message.create("error",e.getMessage());
 		}
@@ -404,7 +407,7 @@ public class SCManager {
 	 * TODO investigate a means to have session NOT able to call this - not likely - I would like only the container to call this on shutdown
 	 */
 	public void shutdown() {
-		workerPool.scheduler().scheduleOnce( HALF_MIN, // TODO make configurable
+		workerPool.scheduler().scheduleOnce( Time.HALF_MIN, // TODO make configurable
 			new Runnable() {
 				@Override
 				public void run() {
@@ -426,7 +429,6 @@ public class SCManager {
 	 * 
 	 * @param value
 	 */
-	// TODO when a session is 'done' it should reset the autoStart state to DEFAULT.
 	// TODO make autoStart DEFAULT state configurable
 	public SCManager setAutoStart(boolean value) {
 		Message msg = Message.create(SCManager.AUTOSTART, value);

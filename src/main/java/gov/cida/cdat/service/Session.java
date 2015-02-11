@@ -4,6 +4,7 @@ import static akka.actor.SupervisorStrategy.*;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.control.Status;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
@@ -41,27 +42,14 @@ public class Session extends UntypedActor {
 	}
 	
 	
-	// TODO impl start/stop fail return true/false and the Actor supervisor
 	SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration // TODO make configure
-			SCManager.MINUTE, // TODO make configure
+			Time.MINUTE, // TODO make configure
 			new Function<Throwable, Directive>() {
 		@Override
 		public Directive apply(Throwable t) {
-			// TODO this is only called for un-handled exceptions.
-			// TODO proper handling - this is to inspect how this API works
-//			System.out.println("session receved an exception");
-//			logger.warn("session receved an exception");
-//			
-//			if (t instanceof Exception) {
-//				logger.warn("session receved an exception, resuming");
-//				return resume();
-//			} else if (t instanceof Throwable) {
-//				return stop();
-//			} else if (t instanceof IllegalArgumentException) {
-//				return restart();
-//			} else {
-				return escalate();
-//			}
+			logger.warn("session receved an exception from worker");
+			// could be resume(), restart(), escalate() or stop()
+			return stop();
 		}
 	});
 	@Override

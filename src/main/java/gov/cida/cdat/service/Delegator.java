@@ -131,7 +131,6 @@ public class Delegator extends UntypedActor {
 			}
 		
 		}
-		// TODO should these be else if or just if
 		// handle status requests
 		if (msg.contains(Status.isNew)) {
 			response = createStatusMessage(Status.isNew);
