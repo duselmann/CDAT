@@ -28,8 +28,20 @@ import akka.util.Timeout;
  * <p>It was asked if it would be possible to submit a blocking message. this is against the AKKA model and is not recommended.
  * Could it be possible to make status/control on submitted messages? They are not workers (AKKA Actors); hence, it is unlikely.
  * </p>
+ * <p>Here is a sample worker hierarchy.
+ * </p>
+ * <pre>
+ *             CDAT
+ *          /    |   \
+ *        /      |     \
+ *      /        |       \
+ * SESSION-1  SESSION-5  SESSION-9
+ *    |          |        |      \
+ * worker-2    job-1      |        \
+ *                    siteCount-3   siteSelect-3
+ * </pre>
+ * 
  * @author duselman
- *
  */
 public class SCManager {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -52,8 +64,10 @@ public class SCManager {
 		instance = new SCManager();
 	}
 	/**
-	 * A convenience method to access the instance since
+	 * <p>A convenience method to access the instance since
 	 * calling openSession twice seems counter intuitive
+	 * </p>
+	 * 
 	 * @return the current SC manager instance
 	 */
 	public static SCManager instance() {
@@ -129,7 +143,7 @@ public class SCManager {
 	 */  
 	private SCManager() {
         // Create the 'CDAT' akka actor system
-        workerPool = ActorSystem.create("CDAT"); // TODO doc structure
+        workerPool = ActorSystem.create("CDAT");
 
         naming = workerPool.actorOf( Props.create(Naming.class, new Object[0]), "Naming");
 
@@ -344,9 +358,9 @@ public class SCManager {
 		return response;
 	}
 	/**
-	 * <p>Enumerated status message</p>
+	 * <p>Enumerated status message (blocking of a limited time)</p>
 	 * <p>A convenience send for Control enum standard messages. It saves the user from requiring
-	 * construction of messages for standard messages in the Control and Status enum classess.
+	 * construction of messages for standard messages in the Control and Status enum classes.
 	 * </p>
 	 * <p>Example: manager.send(workerName, Status.isAlive);
 	 * </p>
@@ -366,6 +380,19 @@ public class SCManager {
 		}
 		return (Message)result;
 	}
+	/**
+	 * <p>Enumerated status message (non-blocking)</p>
+	 * <p>A convenience send for Control enum standard messages. It saves the user from requiring
+	 * construction of messages for standard messages in the Control and Status enum classes.
+	 * </p>
+	 * <p>Example: manager.send(workerName, Status.isAlive);
+	 * </p>
+	 * @param workerName the unique work name to receive the message
+	 * @param ctrl an instance of the Status enum name
+	 * @param callback the method to call when the status is processed
+	 * @return a future containing a return message as to how the action executed
+	 * @see SCManager.send(String workerName, Message message)
+	 */
 	public Future<Object> send(String workerName, Status status, final Callback callback) {
 		Future<Object> response = send(workerName, Message.create(status));
 		wrapCallback(response, callback);
