@@ -2,9 +2,6 @@ package gov.cida.cdat.service;
 
 import static akka.actor.SupervisorStrategy.*;
 
-import java.lang.ref.WeakReference;
-
-import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.control.Status;
@@ -13,11 +10,12 @@ import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
 
+import java.lang.ref.WeakReference;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import scala.Option;
-import scala.concurrent.Future;
 import akka.actor.ActorRef;
 import akka.actor.OneForOneStrategy;
 import akka.actor.Props;
@@ -26,8 +24,6 @@ import akka.actor.SupervisorStrategy.Directive;
 import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.japi.Function;
-import akka.pattern.Patterns;
-import akka.util.Timeout;
 
 
 public class Session extends UntypedActor {
@@ -164,42 +160,37 @@ public class Session extends UntypedActor {
 	 * @see SCManager.close()
 	 */
 	void stopSession() {
-		int delegateCount = 0;
-		final int[] completedCount = new int[1];
-		
-		// first wait for all delegates to complete
-		for (WeakReference<ActorRef> delegate : delegates.workers.values()) {
-			// do not wait for completed work
-			if (delegate==null || delegate.get()==null 
-					|| ! delegates.isAlive(delegate.get().path().name())) {
-				continue;
-			}
-			delegateCount++;
-			
-			// send an onComplete message to the delegate
-			// cannot use the SCManager.send() because we are on another thread
-			Message onCompleteMsg = Message.create(Control.onComplete);
-			Future<Object>   resp = Patterns.ask(delegate.get(), onCompleteMsg, new Timeout(Time.DAY));
-			SCManager.wrapCallback(resp, context().dispatcher(), new Callback() {
-				@Override
-				public void onComplete(Throwable t, Message response) {
-					completedCount[0]++; // TODO is this thread safe?
-				}
-			});
-//			delegate.get().tell(onCompleteMsg, self());
-		}
-		
-		// then wait for delegates to complete but not too forever
 		try {
+			int delegates = delegateCount();
 			long endTime = Time.later(Time.HOUR); // TODO make configurable
-			while (delegateCount > completedCount[0]  &&  Time.now()<endTime) {
+			while (delegates>0  &&  Time.now()<endTime) {
 				Thread.sleep( Time.HALF_MIN.toMillis() ); // TODO make configurable
+				delegates = delegateCount();
 			}
 		} catch (Exception e) {
 			// if there is an issue then stop now
 		} finally {
 			context().stop( self() );
 		}		
+	}
+	
+	/**
+	 * Counts all delegates that have a Status.isAlive - a special status
+	 * that is related to !isDone, !isDisposed, and !isError 
+	 * This relies on the delegate properly reporting when it completes.
+	 * @return the count of delegates that have not completed yet
+	 */
+	int delegateCount() {
+		int delegateCount = 0;
+
+		for (WeakReference<ActorRef> delegate : delegates.workers.values()) {
+			// only count delegates that are not done yet
+			if (delegate!=null && delegate.get()!=null 
+					&& delegates.isAlive(delegate.get().path().name())) {
+				delegateCount++;
+			}
+		}
+		return delegateCount;
 	}
 
 
