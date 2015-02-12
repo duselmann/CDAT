@@ -1,5 +1,7 @@
 package gov.cida.cdat.io;
 
+import gov.cida.cdat.control.Time;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -51,16 +53,16 @@ public class StatusOutputStream extends OutputStream {
 	private void updateTime() {
 		isOpen = true;
 		if (openTime==0) {
-			openTime = System.currentTimeMillis();
+			openTime = Time.now();
 		}
-		lastWriteTime = System.currentTimeMillis();
+		lastWriteTime = Time.now();
 	}
 	/**
 	 * returns the milliseconds since the last write
 	 * @return long milliseconds since last write
 	 */
 	public long getMsSinceLastWrite() {
-		return System.currentTimeMillis() - lastWriteTime;
+		return Time.duration(lastWriteTime);
 	}
 
 	/**
@@ -71,7 +73,7 @@ public class StatusOutputStream extends OutputStream {
 		// the openTime initially stores the full time in milliseconds when open was called
 		// upon close it then stores the duration in milliseconds
 		if (isOpen) {
-			return System.currentTimeMillis() - openTime;
+			return Time.duration(openTime);
 		}
 		return openTime;
 	}
@@ -106,7 +108,7 @@ public class StatusOutputStream extends OutputStream {
 	public void close() throws IOException {
 		if (isOpen) {
 			isDone = true;
-			openTime = System.currentTimeMillis() - openTime;
+			openTime = Time.duration(openTime);
 		}
 		isOpen = false;
 		Closer.close(target);

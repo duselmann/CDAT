@@ -1,5 +1,6 @@
 package gov.cida.cdat.io;
 
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.exception.consumer.ConsumerException;
 import gov.cida.cdat.exception.producer.ProducerException;
@@ -81,18 +82,16 @@ public final class IO {
 	 */
 	public static boolean copy(InputStream source, OutputStream target, int bufferSize, long duration)
 			throws CdatException {
-		long currentTime = System.currentTimeMillis();
-		long endTime     = currentTime + duration;
+		long endTime     = Time.later(duration);
 		
 		byte[] buffer = new byte[bufferSize];
 		long total = 0;
 		int  count = 0;
 
-		while (count >= 0 && currentTime < endTime) {
+		while (count >= 0 && Time.now() < endTime) {
 			write(target, buffer, count);
 			count = read(source, buffer);
 			total += count;
-			currentTime = System.currentTimeMillis();
 		}
 		write(target, buffer, count);
 		

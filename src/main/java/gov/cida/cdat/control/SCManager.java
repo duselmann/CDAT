@@ -11,9 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import scala.concurrent.Await;
+import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
-import scala.concurrent.duration.FiniteDuration;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.DeadLetter;
@@ -30,22 +29,33 @@ import akka.util.Timeout;
  * <p>It was asked if it would be possible to submit a blocking message. this is against the AKKA model and is not recommended.
  * Could it be possible to make status/control on submitted messages? They are not workers (AKKA Actors); hence, it is unlikely.
  * </p>
+ * <p>Here is a sample worker hierarchy.
+ * </p>
+ * <pre>
+ *             CDAT
+ *          /    |   \
+ *        /      |     \
+ *      /        |       \
+ * SESSION-1  SESSION-5  SESSION-9
+ *    |          |        |      \
+ * worker-2    job-1      |        \
+ *                    siteCount-3   siteSelect-3
+ * </pre>
+ * 
  * @author duselman
- *
  */
-//TODO better name?
 public class SCManager {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
+	/**
+	 *  This is used to send an auto start message to the session..
+	 */
 	public static final Object AUTOSTART = "AUTOSTART";
+	/**
+	 * This is used to send to the session a message for the session rather than the worker
+	 */
 	public static final String SESSION   = "SESSION";
 	
-	public static final FiniteDuration MILLIS    = Duration.create(100, "milliseconds");
-	public static final FiniteDuration SECOND    = Duration.create(  1, "second");
-	public static final FiniteDuration HALF_MIN  = Duration.create( 30, "seconds");
-	public static final FiniteDuration MINUTE    = Duration.create(  1, "minute");
-	public static final FiniteDuration HOUR      = Duration.create(  1, "hour");
-	public static final FiniteDuration DAY       = Duration.create(  1, "day");
 	
 	/**
 	 *  singleton pattern, each user session will have a session worker
@@ -55,8 +65,10 @@ public class SCManager {
 		instance = new SCManager();
 	}
 	/**
-	 * A convenience method to access the instance since
+	 * <p>A convenience method to access the instance since
 	 * calling openSession twice seems counter intuitive
+	 * </p>
+	 * 
 	 * @return the current SC manager instance
 	 */
 	public static SCManager instance() {
@@ -89,12 +101,29 @@ public class SCManager {
 	public static SCManager open() {
 		return instance();
 	}
+	
+	/**
+	 * When done with the session call close to release the session when all jobs complete.
+	 */
 	public void close() {
+		close(false);
+	}
+	/**
+	 * When done with the session call close to release the session
+	 */
+	public void close(boolean force) {
 		try {
 			// this tells the session to stop processing workers
 			setAutoStart(false); // this is for completeness
-			Message stop = Message.create(Control.Stop, SCManager.SESSION);
-			session().tell(stop, ActorRef.noSender());
+			
+			if (force) {
+				// hard stop
+				workerPool.stop(session());
+			} else {
+				// soft stop
+				Message stop = Message.create(Control.Stop, SCManager.SESSION);
+				session().tell(stop, ActorRef.noSender());
+			}
 		} finally {
 			// this removes the session from the thread 
 			// a new one will be issued upon the next request
@@ -102,29 +131,34 @@ public class SCManager {
 		}
 	}
 	
-	// tests suggest it is safe, however there is no guarantee that subsequent tasks run on the same thread
+	/**
+	 * This is the session worker instance. Each thread is given its own instance.
+	 */
 	private ThreadLocal<ActorRef> session = new ThreadLocal<ActorRef>();
 	
 	/**
 	 *  like a thread pool but workers are not tied to a thread
+	 *  Package access for testing.
 	 */
-	private final ActorSystem workerPool;
+	final ActorSystem workerPool;
 	
 	/**
 	 * This is a special worker for naming to ensure that threads do not compete for unique names
 	 */
 	private final ActorRef naming;
 
+	/**
+	 * This worker is used to log all dead letters. It is only active while in TRACE mode.
+	 */
 	private final ActorRef deadLetterLogger;
 	
 	/**
-	 *  private constructor for singleton pattern
-	 *  because it is a thread pool system where 
-	 *  multiple instances is incongruous.
+	 *  private constructor for singleton pattern because it is a 
+	 *  thread pool system where multiple instances would be incongruous.
 	 */  
 	private SCManager() {
         // Create the 'CDAT' akka actor system
-        workerPool = ActorSystem.create("CDAT"); // TODO doc structure
+        workerPool = ActorSystem.create("CDAT");
 
         naming = workerPool.actorOf( Props.create(Naming.class, new Object[0]), "Naming");
 
@@ -163,9 +197,7 @@ public class SCManager {
 
 		return session.get();
 	}
-	// TODO abandoned sessions and workers should be closed and disposed cleanly
-	// TODO what I mean is that upon session exiting scope in the container it should dispose of its current workers
-	// TODO we should also reset autostart to what ever default we desire
+	// TODO abandoned sessions should be stopped
 	
 	/**
 	 * This helper method messages the Naming worker to ensure unique names.
@@ -186,11 +218,11 @@ public class SCManager {
 		String name = label;
 		
 		logger.trace("sending message to creating name from label '{}'", label);
-		Future<Object> future = Patterns.ask(naming, label, new Timeout(MILLIS));
+		Future<Object> future = Patterns.ask(naming, label, new Timeout(Time.MILLIS));
 		try {
 			logger.trace("waiting for name from label '{}'", label);
 			// this stops blocking as soon as a result is returned. this should be plenty of time
-			Object result = Await.result(future, SECOND); // TODO make configurable
+			Object result = Await.result(future, Time.SECOND); // TODO make configurable
 			if (result instanceof Message) {
 				name = ((Message)result).get(Naming.WORKER_NAME);
 			}
@@ -253,8 +285,8 @@ public class SCManager {
 	public Future<Object> addWorker(String workerLabel, Worker worker, Callback onComplete) {
 		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, worker);
 		// this will stop blocking as soon as the worker finishes and returns an onComplete message
-		Future<Object> response = Patterns.ask(session(), msg, new Timeout(DAY)); // TODO make configurable
-		wrapCallback(response, onComplete);
+		Future<Object> response = Patterns.ask(session(), msg, new Timeout(Time.DAY)); // TODO make configurable
+		wrapCallback(response, workerPool.dispatcher(), onComplete);
 		return response;
 	}
 
@@ -290,7 +322,7 @@ public class SCManager {
 	 * @return a future that contains a Message response from the worker upon completion or exception
 	 */
 	public Future<Object> send(String workerName, Message message) {
-		return send(workerName,message,new Timeout(HALF_MIN)); // TODO make configurable
+		return send(workerName,message,new Timeout(Time.HALF_MIN)); // TODO make configurable
 	}
 	/**
 	 * This is a similar method with a custom wait time.
@@ -337,13 +369,13 @@ public class SCManager {
 	 */
 	public Future<Object> send(String workerName, Control ctrl, final Callback callback) {
 		Future<Object> response = send(workerName, ctrl);
-		wrapCallback(response, callback);
+		wrapCallback(response, workerPool.dispatcher(), callback);
 		return response;
 	}
 	/**
-	 * <p>Enumerated status message</p>
+	 * <p>Enumerated status message (blocking of a limited time)</p>
 	 * <p>A convenience send for Control enum standard messages. It saves the user from requiring
-	 * construction of messages for standard messages in the Control and Status enum classess.
+	 * construction of messages for standard messages in the Control and Status enum classes.
 	 * </p>
 	 * <p>Example: manager.send(workerName, Status.isAlive);
 	 * </p>
@@ -357,15 +389,28 @@ public class SCManager {
 		Future<Object> future = send(workerName, msg);
 		Object result = null;
 		try {
-			result = Await.result(future, SECOND); // TODO make configure
+			result = Await.result(future, Time.SECOND); // TODO make configure
 		} catch (Exception e) {
 			result = Message.create("error",e.getMessage());
 		}
 		return (Message)result;
 	}
+	/**
+	 * <p>Enumerated status message (non-blocking)</p>
+	 * <p>A convenience send for Control enum standard messages. It saves the user from requiring
+	 * construction of messages for standard messages in the Control and Status enum classes.
+	 * </p>
+	 * <p>Example: manager.send(workerName, Status.isAlive);
+	 * </p>
+	 * @param workerName the unique work name to receive the message
+	 * @param ctrl an instance of the Status enum name
+	 * @param callback the method to call when the status is processed
+	 * @return a future containing a return message as to how the action executed
+	 * @see SCManager.send(String workerName, Message message)
+	 */
 	public Future<Object> send(String workerName, Status status, final Callback callback) {
 		Future<Object> response = send(workerName, Message.create(status));
-		wrapCallback(response, callback);
+		wrapCallback(response, workerPool.dispatcher(), callback);
 		return response;
 	}
 	
@@ -379,11 +424,11 @@ public class SCManager {
 	 * @param response the future to add append the callback
 	 * @param callback the callback instance to attach to the Future.onComplete
 	 */
-	void wrapCallback(Future<Object> response, final Callback callback) {
+	public static void wrapCallback(Future<Object> response, ExecutionContext context, final Callback callback) {
 		if (callback == null) {
 			return;
 		}
-		logger.trace("wrapping onComplete with typed cast (Message) response {}", callback);
+//		logger.trace("wrapping onComplete with typed cast (Message) response {}", callback);
 		
 		// this is wrapper in order to allow the user a typed Message callback
 		OnComplete<Object> wrapper = new OnComplete<Object>() {
@@ -392,7 +437,7 @@ public class SCManager {
 			}
 		};
 		
-	    response.onComplete(wrapper, workerPool.dispatcher());
+	    response.onComplete(wrapper, context);
 	}
 	
 	/**
@@ -404,7 +449,7 @@ public class SCManager {
 	 * TODO investigate a means to have session NOT able to call this - not likely - I would like only the container to call this on shutdown
 	 */
 	public void shutdown() {
-		workerPool.scheduler().scheduleOnce( HALF_MIN, // TODO make configurable
+		workerPool.scheduler().scheduleOnce( Time.HALF_MIN, // TODO make configurable
 			new Runnable() {
 				@Override
 				public void run() {
@@ -426,7 +471,6 @@ public class SCManager {
 	 * 
 	 * @param value
 	 */
-	// TODO when a session is 'done' it should reset the autoStart state to DEFAULT.
 	// TODO make autoStart DEFAULT state configurable
 	public SCManager setAutoStart(boolean value) {
 		Message msg = Message.create(SCManager.AUTOSTART, value);

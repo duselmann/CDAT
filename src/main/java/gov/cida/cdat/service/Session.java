@@ -1,12 +1,16 @@
 package gov.cida.cdat.service;
 
 import static akka.actor.SupervisorStrategy.*;
+
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.control.Status;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
+
+import java.lang.ref.WeakReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,27 +45,14 @@ public class Session extends UntypedActor {
 	}
 	
 	
-	// TODO impl start/stop fail return true/false and the Actor supervisor
 	SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration // TODO make configure
-			SCManager.MINUTE, // TODO make configure
+			Time.MINUTE, // TODO make configure
 			new Function<Throwable, Directive>() {
 		@Override
 		public Directive apply(Throwable t) {
-			// TODO this is only called for un-handled exceptions.
-			// TODO proper handling - this is to inspect how this API works
-//			System.out.println("session receved an exception");
-//			logger.warn("session receved an exception");
-//			
-//			if (t instanceof Exception) {
-//				logger.warn("session receved an exception, resuming");
-//				return resume();
-//			} else if (t instanceof Throwable) {
-//				return stop();
-//			} else if (t instanceof IllegalArgumentException) {
-//				return restart();
-//			} else {
-				return escalate();
-//			}
+			logger.warn("session receved an exception from worker");
+			// could be resume(), restart(), escalate() or stop()
+			return stop();
 		}
 	});
 	@Override
@@ -117,7 +108,7 @@ public class Session extends UntypedActor {
 			autoStart = "true".equals( msg.get(SCManager.AUTOSTART) );
 		}
 		if ( SCManager.SESSION.equals( msg.get(Control.Stop) ) ) {
-			context().stop( self() );
+			stopSession();
 			return;
 		}
 		
@@ -164,6 +155,45 @@ public class Session extends UntypedActor {
 		}
 	}
 	
+	/**
+	 * Stops the session after all workers have been given time to finish.
+	 * @see SCManager.close()
+	 */
+	void stopSession() {
+		try {
+			int delegates = delegateCount();
+			long endTime = Time.later(Time.HOUR); // TODO make configurable
+			while (delegates>0  &&  Time.now()<endTime) {
+				Thread.sleep( Time.HALF_MIN.toMillis() ); // TODO make configurable
+				delegates = delegateCount();
+			}
+		} catch (Exception e) {
+			// if there is an issue then stop now
+		} finally {
+			context().stop( self() );
+		}		
+	}
+	
+	/**
+	 * Counts all delegates that have a Status.isAlive - a special status
+	 * that is related to !isDone, !isDisposed, and !isError 
+	 * This relies on the delegate properly reporting when it completes.
+	 * @return the count of delegates that have not completed yet
+	 */
+	int delegateCount() {
+		int delegateCount = 0;
+
+		for (WeakReference<ActorRef> delegate : delegates.workers.values()) {
+			// only count delegates that are not done yet
+			if (delegate!=null && delegate.get()!=null 
+					&& delegates.isAlive(delegate.get().path().name())) {
+				delegateCount++;
+			}
+		}
+		return delegateCount;
+	}
+
+
 	/**
 	 * <p>submits a worker for an ETL stream (pipe), 
 	 * </p>

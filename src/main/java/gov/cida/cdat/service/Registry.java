@@ -81,7 +81,9 @@ public class Registry {
 	public boolean isAlive(String name) {
 		Status status = Status.valueOf( getStatus(name) );
 		
-		if (Status.isDone.equals(status)  ||  Status.isDisposed.equals(status)) {
+		if (Status.isDone.equals(status)
+				||  Status.isDisposed.equals(status)
+				||  Status.isError.equals(status) ) {
 			// we do not need to check for isAlive because that is not a set-able status
 			// isAlive is a status used to request if the worker is alive
 			return false;

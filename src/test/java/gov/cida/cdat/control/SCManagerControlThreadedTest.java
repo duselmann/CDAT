@@ -81,7 +81,7 @@ public class SCManagerControlThreadedTest {
 					e.printStackTrace();
 				}
 			}
-		}).start(); // remember not to use run
+		}, label).start(); // remember not to use run
 	}
 
 
@@ -113,6 +113,7 @@ public class SCManagerControlThreadedTest {
 	        public void onComplete(Throwable t, Message response){
 	        	messages[threadNameToIndex(threadName)] = response;
 	            report(threadName, workerName, response);
+	            manager.send(workerName, Control.Stop);
 	        }
 
 			private int threadNameToIndex(String threadName) {
