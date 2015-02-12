@@ -418,7 +418,7 @@ public class SCManagerTests {
 		// obtain an instance of the manager
 		SCManager  manager     = SCManager.instance();
 
-		manager.wrapCallback(future, callback);
+		SCManager.wrapCallback(future, manager.workerPool.dispatcher(), callback);
 
 		assertTrue("Callback should have been attached to the Future", onCompleteCalled_future[0]);
 		

@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import scala.concurrent.Await;
+import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -102,14 +103,27 @@ public class SCManager {
 	}
 	
 	/**
-	 * When done wit the session call close to release the session
+	 * When done with the session call close to release the session when all jobs complete.
 	 */
 	public void close() {
+		close(false);
+	}
+	/**
+	 * When done with the session call close to release the session
+	 */
+	public void close(boolean force) {
 		try {
 			// this tells the session to stop processing workers
 			setAutoStart(false); // this is for completeness
-			Message stop = Message.create(Control.Stop, SCManager.SESSION);
-			session().tell(stop, ActorRef.noSender());
+			
+			if (force) {
+				// hard stop
+				workerPool.stop(session());
+			} else {
+				// soft stop
+				Message stop = Message.create(Control.Stop, SCManager.SESSION);
+				session().tell(stop, ActorRef.noSender());
+			}
 		} finally {
 			// this removes the session from the thread 
 			// a new one will be issued upon the next request
@@ -124,8 +138,9 @@ public class SCManager {
 	
 	/**
 	 *  like a thread pool but workers are not tied to a thread
+	 *  Package access for testing.
 	 */
-	private final ActorSystem workerPool;
+	final ActorSystem workerPool;
 	
 	/**
 	 * This is a special worker for naming to ensure that threads do not compete for unique names
@@ -271,7 +286,7 @@ public class SCManager {
 		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, worker);
 		// this will stop blocking as soon as the worker finishes and returns an onComplete message
 		Future<Object> response = Patterns.ask(session(), msg, new Timeout(Time.DAY)); // TODO make configurable
-		wrapCallback(response, onComplete);
+		wrapCallback(response, workerPool.dispatcher(), onComplete);
 		return response;
 	}
 
@@ -354,7 +369,7 @@ public class SCManager {
 	 */
 	public Future<Object> send(String workerName, Control ctrl, final Callback callback) {
 		Future<Object> response = send(workerName, ctrl);
-		wrapCallback(response, callback);
+		wrapCallback(response, workerPool.dispatcher(), callback);
 		return response;
 	}
 	/**
@@ -395,7 +410,7 @@ public class SCManager {
 	 */
 	public Future<Object> send(String workerName, Status status, final Callback callback) {
 		Future<Object> response = send(workerName, Message.create(status));
-		wrapCallback(response, callback);
+		wrapCallback(response, workerPool.dispatcher(), callback);
 		return response;
 	}
 	
@@ -409,11 +424,11 @@ public class SCManager {
 	 * @param response the future to add append the callback
 	 * @param callback the callback instance to attach to the Future.onComplete
 	 */
-	void wrapCallback(Future<Object> response, final Callback callback) {
+	public static void wrapCallback(Future<Object> response, ExecutionContext context, final Callback callback) {
 		if (callback == null) {
 			return;
 		}
-		logger.trace("wrapping onComplete with typed cast (Message) response {}", callback);
+//		logger.trace("wrapping onComplete with typed cast (Message) response {}", callback);
 		
 		// this is wrapper in order to allow the user a typed Message callback
 		OnComplete<Object> wrapper = new OnComplete<Object>() {
@@ -422,7 +437,7 @@ public class SCManager {
 			}
 		};
 		
-	    response.onComplete(wrapper, workerPool.dispatcher());
+	    response.onComplete(wrapper, context);
 	}
 	
 	/**

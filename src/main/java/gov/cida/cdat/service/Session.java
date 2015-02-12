@@ -1,6 +1,10 @@
 package gov.cida.cdat.service;
 
 import static akka.actor.SupervisorStrategy.*;
+
+import java.lang.ref.WeakReference;
+
+import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.control.Status;
@@ -13,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import scala.Option;
+import scala.concurrent.Future;
 import akka.actor.ActorRef;
 import akka.actor.OneForOneStrategy;
 import akka.actor.Props;
@@ -21,6 +26,8 @@ import akka.actor.SupervisorStrategy.Directive;
 import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.japi.Function;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
 
 
 public class Session extends UntypedActor {
@@ -105,7 +112,7 @@ public class Session extends UntypedActor {
 			autoStart = "true".equals( msg.get(SCManager.AUTOSTART) );
 		}
 		if ( SCManager.SESSION.equals( msg.get(Control.Stop) ) ) {
-			context().stop( self() );
+			stopSession();
 			return;
 		}
 		
@@ -152,6 +159,50 @@ public class Session extends UntypedActor {
 		}
 	}
 	
+	/**
+	 * Stops the session after all workers have been given time to finish.
+	 * @see SCManager.close()
+	 */
+	void stopSession() {
+		int delegateCount = 0;
+		final int[] completedCount = new int[1];
+		
+		// first wait for all delegates to complete
+		for (WeakReference<ActorRef> delegate : delegates.workers.values()) {
+			// do not wait for completed work
+			if (delegate==null || delegate.get()==null 
+					|| ! delegates.isAlive(delegate.get().path().name())) {
+				continue;
+			}
+			delegateCount++;
+			
+			// send an onComplete message to the delegate
+			// cannot use the SCManager.send() because we are on another thread
+			Message onCompleteMsg = Message.create(Control.onComplete);
+			Future<Object>   resp = Patterns.ask(delegate.get(), onCompleteMsg, new Timeout(Time.DAY));
+			SCManager.wrapCallback(resp, context().dispatcher(), new Callback() {
+				@Override
+				public void onComplete(Throwable t, Message response) {
+					completedCount[0]++; // TODO is this thread safe?
+				}
+			});
+//			delegate.get().tell(onCompleteMsg, self());
+		}
+		
+		// then wait for delegates to complete but not too forever
+		try {
+			long endTime = Time.later(Time.HOUR); // TODO make configurable
+			while (delegateCount > completedCount[0]  &&  Time.now()<endTime) {
+				Thread.sleep( Time.HALF_MIN.toMillis() ); // TODO make configurable
+			}
+		} catch (Exception e) {
+			// if there is an issue then stop now
+		} finally {
+			context().stop( self() );
+		}		
+	}
+
+
 	/**
 	 * <p>submits a worker for an ETL stream (pipe), 
 	 * </p>
