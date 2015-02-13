@@ -25,11 +25,11 @@ public class SCManagerControlFailTest {
 
 	private static ByteArrayOutputStream target;
 	private static String workerName;
-	private static SCManager manager;
+	private static SCManager session;
 	
 	@Test
 	public void testFailResponse() throws Exception {
-		manager = SCManager.instance();
+		session = SCManager.open();
 
 		// consumer
 		target = new ByteArrayOutputStream(1024*10);
@@ -48,20 +48,20 @@ public class SCManagerControlFailTest {
 		DataPipe pipe = new DataPipe(in, out);
 		Worker worker = new PipeWorker(pipe);
 
-		workerName = manager.addWorker("error", worker);
+		workerName = session.addWorker("error", worker);
 		
-		manager.send(workerName, Message.create("Message", "Test"));
-		manager.send(workerName, Control.Start);
+		session.send(workerName, Message.create("Message", "Test"));
+		session.send(workerName, Control.Start);
 		
 		final Message[] message = new Message[1];
-		manager.send(workerName, Control.onComplete, new Callback(){
+		session.send(workerName, Control.onComplete, new Callback(){
 	        public void onComplete(Throwable t, Message response){
 	        	message[0] = response;
 	            report(response);
 	        }
 	    });
 
-		manager.send(workerName, Control.Stop, new Callback() {
+		session.send(workerName, Control.Stop, new Callback() {
 			public void onComplete(Throwable t, Message response) {
 //				TestUtils.log("service shutdown");
 //				manager.shutdown();

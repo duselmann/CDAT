@@ -41,12 +41,12 @@ public class SCManagerAdminTokenTests {
 			TestUtils.waitAlittleWhileForResponse(sessions);
 
 			// make sure that the OTHER session is named what we expect
-			String sessionName = "SESSION-1";
-			assertEquals("Expect 1 unique session names", 1, sessionNames.size());
-			assertTrue("Expect SESSION-1 to be created", sessionNames.contains(sessionName));
+			assertEquals("Expect 1 unique session name", 1, sessionNames.size());
+			assertEquals("Expect 1 unique worker name", 1, sessionNames.size());
+			String sessionName = sessionNames.iterator().next();
+			String workerName  = workerNames.iterator().next();
 
 			// test that the session for the worker created on the OTHER session can be found
-			String workerName = workerNames.iterator().next();
 			ActorRef sesRef = session.session(workerName);
 			assertEquals("Expect " +workerName+ " for be found on SESSION-1", sessionName, sesRef.path().name());
 			
@@ -82,7 +82,7 @@ public class SCManagerAdminTokenTests {
 
 
 	private static void submitJob(final String threadName) throws MalformedURLException {
-		final SCManager manager = sessions[0] = SCManager.instance();
+		final SCManager session = sessions[0] = SCManager.open();
 
 		Worker worker = new Worker(){
 			@Override
@@ -91,9 +91,9 @@ public class SCManagerAdminTokenTests {
 				return super.process();
 			}
 		};
-		final String workerName = manager.addWorker(threadName, worker);
+		final String workerName = session.addWorker(threadName, worker);
 		
-		sessionNames.add(manager.sessionName());
+		sessionNames.add(session.sessionName());
 		workerNames.add(workerName);
 	}
 

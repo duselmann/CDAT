@@ -95,7 +95,7 @@ public class DBTesting {
 		producer.setFetchSize(1);
 
 		
-		SCManager manager = SCManager.instance();
+		SCManager session = SCManager.open();
 		Worker    worker  = new Worker() {
 			DbReader<Pojo> dbReader;
 			@Override
@@ -119,13 +119,13 @@ public class DBTesting {
 		};
 		
 		
-		String workerName = manager.addWorker("SelectAllPeople", worker);
-		manager.send(workerName, Control.Start);
+		String workerName = session.addWorker("SelectAllPeople", worker);
+		session.send(workerName, Control.Start);
 //		manager.shutdown();
 		//prod.open().read().close();
 				
 		final String[] result = new String[1];
-		manager.send(workerName, Control.onComplete, new Callback() {			
+		session.send(workerName, Control.onComplete, new Callback() {			
 			@Override
 			public void onComplete(Throwable t, Message response) {
 				result[0] =  new String(target.toByteArray());

@@ -24,12 +24,12 @@ import org.junit.Test;
 public class SCManagerControlSuccessTest {
 
 	private static ByteArrayOutputStream target;
-	private static SCManager manager;
+	private static SCManager session;
 	private static byte[] dataRef;
 	
 	@Test
 	public void testSuccessfulJobRun_SubmitStartProcessStopOnCompleteAndCustomMessage() throws Exception {
-		manager = SCManager.instance();
+		session = SCManager.open();
 
 		// consumer
 		target = new ByteArrayOutputStream(1024*10);
@@ -44,21 +44,21 @@ public class SCManagerControlSuccessTest {
 		DataPipe pipe = new DataPipe(in, out);
 		Worker worker = new PipeWorker(pipe);
 		
-		final String workerName = manager.addWorker("byteStream", worker);
+		final String workerName = session.addWorker("byteStream", worker);
 		
 		System.out.println("send custom message to worker");
-		manager.send(workerName, Message.create("Message", "Test"));
+		session.send(workerName, Message.create("Message", "Test"));
 		
 		final Message[] completed = new Message[1];
 		// This is called with a null response if the Patterns.ask timeout expires
-		manager.send(workerName, Control.onComplete, new Callback(){
+		session.send(workerName, Control.onComplete, new Callback(){
 	        public void onComplete(Throwable t, Message response){
 	        	completed[0] = response;
 	        }
 	    });
 
 		System.out.println("send start to worker");
-		manager.send(workerName, Control.Start);
+		session.send(workerName, Control.Start);
 		
 		System.out.println("waiting for worker to process");
 		TestUtils.waitAlittleWhileForResponse(completed);
@@ -70,7 +70,7 @@ public class SCManagerControlSuccessTest {
         report(workerName, completed[0]);
 
 		System.out.println("send stop to worker");
-		manager.send(workerName, Control.Stop, new Callback() {
+		session.send(workerName, Control.Stop, new Callback() {
 			public void onComplete(Throwable t, Message response) {
 //				System.out.println("service shutdown scheduled: "+ response);
 //				manager.shutdown();

@@ -29,14 +29,14 @@ public class SCManagerControlThreadedTest {
 
 	private static ByteArrayOutputStream consumer;
 	private static String workerLabel = "producer";
-	private static SCManager manager;
+	private static SCManager session;
 	private static Message[] messages = new Message[4]; // this must be equal or larger than the number of threads in the test
 	private static Set<String> sessionNames = new HashSet<String>();
 	private static Set<String> workerNames  = new HashSet<String>();
 	
 	@Test
 	public void testMultiThreadedRequests() throws Exception {
-		manager = SCManager.instance();
+		session = SCManager.open();
 		
 		try {
 			// no delay test
@@ -101,19 +101,19 @@ public class SCManagerControlThreadedTest {
 		DataPipe pipe = new DataPipe(in, out);
 		Worker worker = new PipeWorker(pipe);
 		
-		final String workerName = manager.addWorker(workerLabel, worker);
+		final String workerName = session.addWorker(workerLabel, worker);
 		
-		sessionNames.add(manager.sessionName());
+		sessionNames.add(session.sessionName());
 		workerNames.add(workerName);
 		
-		manager.send(workerName, Message.create("Message", "Test"));
+		session.send(workerName, Message.create("Message", "Test"));
 		
 		// This is called with a null response if the Patterns.ask timeout expires
-		manager.send(workerName, Control.onComplete, new Callback(){
+		session.send(workerName, Control.onComplete, new Callback(){
 	        public void onComplete(Throwable t, Message response){
 	        	messages[threadNameToIndex(threadName)] = response;
 	            report(threadName, workerName, response);
-	            manager.send(workerName, Control.Stop);
+	            session.send(workerName, Control.Stop);
 	        }
 
 			private int threadNameToIndex(String threadName) {
@@ -128,7 +128,7 @@ public class SCManagerControlThreadedTest {
 			}
 	    });
 		
-		manager.send(workerName, Control.Start);
+		session.send(workerName, Control.Start);
 	}
 	
 	

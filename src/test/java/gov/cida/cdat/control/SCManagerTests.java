@@ -80,7 +80,7 @@ public class SCManagerTests {
 	
 	@Test
 	public void testSingleton() {
-		SCManager instance1 = SCManager.instance();
+		SCManager instance1 = SCManager.open();
 		SCManager instance2 = SCManager.instance();
 		
 		assertEquals("Singleton instances should be equivilent", instance1, instance2);
@@ -89,9 +89,9 @@ public class SCManagerTests {
 	
 	@Test
 	public void testSession_SameSession() {
-		SCManager manager = SCManager.instance();
-		ActorRef instance1 = manager.session();
-		ActorRef instance2 = manager.session();
+		SCManager session = SCManager.open();
+		ActorRef instance1 = session.session();
+		ActorRef instance2 = session.session();
 		
 		assertEquals("Session instances should be equivilent", instance1, instance2);
 		assertTrue("Session instances should be equivilent references", instance1 == instance2);
@@ -99,16 +99,16 @@ public class SCManagerTests {
 	
 	@Test
 	public void testSession_DifferentTheadsDifferentSessions() throws Exception {
-		final SCManager manager = SCManager.instance();
+		final SCManager session = SCManager.open();
 		
-		ActorRef instance1 = manager.session();
+		ActorRef instance1 = session.session();
 		
 		final ActorRef[] sessionRef = new ActorRef[1];
 		
 		Thread thread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				sessionRef[0] = manager.session();
+				sessionRef[0] = session.session();
 			}
 		});
 		thread.start();
@@ -124,17 +124,17 @@ public class SCManagerTests {
 	// it is hard to test only one of these phases
 	public void testWorker_StartRunCompleteStop() throws Exception {
 		
-		// obtain an instance of the manager
-		final SCManager  manager = SCManager.instance();
+		// obtain an instance of the session
+		final SCManager  session = SCManager.open();
 
 		// a test string that can be used for comparison
 		String TEST_STRING = "Test String A";
 
 		PipeTestObj testPipe = createTestPipe(TEST_STRING);
 		
-		// submit the pipe as a worker to the manager on the session
+		// submit the pipe as a worker to the session on the session
 		Worker        worker     = new PipeWorker(testPipe.pipe);
-		final String  workerName = manager.addWorker(TEST_STRING, worker);
+		final String  workerName = session.addWorker(TEST_STRING, worker);
 
 		final String EXPECTED = TEST_STRING.replaceAll(" ","_")+"-1";
 		// ensure that the response contains the worker name since a future is returned from the submit
@@ -144,7 +144,7 @@ public class SCManagerTests {
 		final Message[] response = new Message[1];
 		
 		// wait for worker to complete
-		manager.send(workerName, Control.onComplete, new Callback(){
+		session.send(workerName, Control.onComplete, new Callback(){
     		// This is called with a null response if the Patterns.ask timeout expires
 	        public void onComplete(Throwable t, Message resp) {
 	        	// get a reference to the message
@@ -152,13 +152,13 @@ public class SCManagerTests {
 	        }
 	    });
 		// start the worker (from cDAT point of view, from AKKA it is already running)
-		manager.send(workerName, Control.Start);
+		session.send(workerName, Control.Start);
 
 		// wait some time for the worker to finish
 		int count = TestUtils.waitAlittleWhileForResponse(response);
 		
     	// this send the message that this worker is no longer needed
-		manager.send(workerName, Control.Stop);
+		session.send(workerName, Control.Stop);
 		
 		// lets just see the count
 		TestUtils.log("wait cycle count:", count);
@@ -180,23 +180,23 @@ public class SCManagerTests {
 		
 		TestUtils.log("Start testing a second start");
 		
-		// obtain an instance of the manager
-		final SCManager  manager = SCManager.instance();
+		// obtain an instance of the session
+		final SCManager  session = SCManager.open();
 
 		// a test string that can be used for comparison
 		String TEST_STRING = "Test String B";
 
 		PipeTestObj testPipe = createTestPipe(TEST_STRING);
 
-		// submit the pipe as a worker to the manager on the session
+		// submit the pipe as a worker to the session on the session
 		Worker        worker     = new PipeWorker(testPipe.pipe);
-		final String  workerName = manager.addWorker(TEST_STRING, worker);
+		final String  workerName = session.addWorker(TEST_STRING, worker);
 
 		// this is a holder to pass data between threads.
 		final Message[] response = new Message[1];
 		
 		// wait for worker to complete
-		manager.send(workerName, Control.onComplete, new Callback(){
+		session.send(workerName, Control.onComplete, new Callback(){
     		// This is called with a null response if the Patterns.ask timeout expires
 	        public void onComplete(Throwable t, Message resp) {
 	        	// get a reference to the message
@@ -204,13 +204,13 @@ public class SCManagerTests {
 	        }
 	    });
 		// start the worker (from cDAT point of view, from AKKA it is already running)
-		manager.send(workerName, Control.Start);
+		session.send(workerName, Control.Start);
 		
 		// wait some time for the worker to finish
 		TestUtils.waitAlittleWhileForResponse(response);
 
     	// this send the message that this worker is no longer needed
-		manager.send(workerName, Control.Stop);
+		session.send(workerName, Control.Stop);
 
 		TestUtils.log("Issuing second start");
 		
@@ -218,7 +218,7 @@ public class SCManagerTests {
 		testPipe.consumer.reset();
 		
 		// try to start it up again
-		manager.send(workerName, Control.Start);
+		session.send(workerName, Control.Start);
 		
 		// wait some time for the worker to finish
 		TestUtils.waitAlittleWhileForResponse(response);
@@ -231,8 +231,8 @@ public class SCManagerTests {
 	// it is hard to test only one of these phases
 	public void testWorker_withCallback() throws Exception {
 		
-		// obtain an instance of the manager
-		final SCManager  manager = SCManager.instance();
+		// obtain an instance of the session
+		final SCManager  session = SCManager.open();
 
 		// a test string that can be used for comparison
 		String TEST_STRING = "Test String C";
@@ -242,9 +242,9 @@ public class SCManagerTests {
 		// this is a holder to pass data between threads.
 		final Message[] response = new Message[1];
 		
-		// submit the pipe as a worker to the manager on the session
+		// submit the pipe as a worker to the session on the session
 		Worker        worker     = new PipeWorker(testPipe.pipe);
-		manager.addWorker(TEST_STRING, worker, new Callback(){
+		session.addWorker(TEST_STRING, worker, new Callback(){
     		// This is called with a null response if the Patterns.ask timeout expires
 	        public void onComplete(Throwable t, Message resp) {
 	        	// get a reference to the message
@@ -261,19 +261,19 @@ public class SCManagerTests {
 		assertEquals("we expect the worker name in the Callback response Message", EXPECTED, workerName);
 		
     	// this send the message that this worker is no longer needed
-		manager.send(workerName, Control.Stop);
+		session.send(workerName, Control.Stop);
     }
 	
 	@Test
 	public void testCreateNameFromLabel_spacesToUnderscore() throws Exception {
 		
-		// obtain an instance of the manager
-		SCManager  manager     = SCManager.instance();
+		// obtain an instance of the session
+		SCManager  session     = SCManager.open();
 		
 		final String RAW_LABEL = "a b c";
 		final String EXPECT    = "a_b_c-1";
 		
-		String result    = manager.createNameFromLabel(RAW_LABEL);
+		String result    = session.createNameFromLabel(RAW_LABEL);
 		
 		assertEquals("we expect that a label spaces are transposed to underscores '_'", EXPECT, result);
 	}
@@ -282,13 +282,13 @@ public class SCManagerTests {
 	@Test
 	public void testCreateNameFromLabel_initialSuffix() throws Exception {
 		
-		// obtain an instance of the manager
-		SCManager  manager     = SCManager.instance();
+		// obtain an instance of the session
+		SCManager  session     = SCManager.open();
 		
 		final String RAW_LABEL = "abc";
 		final String EXPECT    = "abc-1";
 		
-		String result    = manager.createNameFromLabel(RAW_LABEL);
+		String result    = session.createNameFromLabel(RAW_LABEL);
 		
 		assertEquals("we expect that a label is ensured unique with a suffix", EXPECT, result);
 	}
@@ -296,8 +296,8 @@ public class SCManagerTests {
 	@Test
 	public void testCreateNameFromLabel_secondaryInitialSuffix() throws Exception {
 		
-		// obtain an instance of the manager
-		SCManager  manager      = SCManager.instance();
+		// obtain an instance of the session
+		SCManager  session      = SCManager.open();
 		
 		final String RAW_LABEL1 = "qrs";
 		final String EXPECT1    = "qrs-1";
@@ -305,8 +305,8 @@ public class SCManagerTests {
 		final String RAW_LABEL2 = "xyz";
 		final String EXPECT2    = "xyz-1";
 		
-		String result1    = manager.createNameFromLabel(RAW_LABEL1);
-		String result2    = manager.createNameFromLabel(RAW_LABEL2);
+		String result1    = session.createNameFromLabel(RAW_LABEL1);
+		String result2    = session.createNameFromLabel(RAW_LABEL2);
 		
 		assertEquals(EXPECT1, result1);
 		assertEquals("we expect that each new label has its own suffix count", EXPECT2, result2);
@@ -315,17 +315,17 @@ public class SCManagerTests {
 	@Test
 	public void testCreateNameFromLabel_secondarySuffix_ensureUniqueness() throws Exception {
 		
-		// obtain an instance of the manager
-		SCManager  manager      = SCManager.instance();
+		// obtain an instance of the session
+		SCManager  session      = SCManager.open();
 		
 		final String RAW_LABEL = "www";
 		final String EXPECT1    = "www-1";
 		final String EXPECT2    = "www-2";
 		final String EXPECT3    = "www-3";
 		
-		String result1    = manager.createNameFromLabel(RAW_LABEL);
-		String result2    = manager.createNameFromLabel(RAW_LABEL);
-		String result3    = manager.createNameFromLabel(RAW_LABEL);
+		String result1    = session.createNameFromLabel(RAW_LABEL);
+		String result2    = session.createNameFromLabel(RAW_LABEL);
+		String result3    = session.createNameFromLabel(RAW_LABEL);
 		
 		assertEquals("we always expect the first suffix to be '-1' ", EXPECT1, result1);
 		assertEquals("we expect that each subsequent name request for the same label has an incremented suffix - should be '-2' ",
@@ -337,8 +337,8 @@ public class SCManagerTests {
 	@Test
 	public void testcreateAddWorkerMessage_simpleFactoryMethod_yaRight_ItsNeverSimple_soWeTest() throws Exception {
 		
-		// obtain an instance of the manager
-		SCManager  manager     = SCManager.instance();
+		// obtain an instance of the session
+		SCManager  session     = SCManager.open();
 		
 		final String RAW_LABEL = "aaa";
 		final String EXPECT    = "aaa-1";
@@ -346,7 +346,7 @@ public class SCManagerTests {
 		final DataPipe pipe    = new DataPipe(null, null);
 		
 		Worker worker          = new PipeWorker(pipe);
-		AddWorkerMessage msg   = manager.createAddWorkerMessage(RAW_LABEL, worker);
+		AddWorkerMessage msg   = session.createAddWorkerMessage(RAW_LABEL, worker);
 				
 		assertEquals("we expect that an Add Worker Message name be related to the given label", EXPECT, msg.getName());
 
@@ -415,10 +415,10 @@ public class SCManagerTests {
 		};
 		
 		
-		// obtain an instance of the manager
-		SCManager  manager     = SCManager.instance();
+		// obtain an instance of the session
+		SCManager  session     = SCManager.open();
 
-		SCManager.wrapCallback(future, manager.workerPool.dispatcher(), callback);
+		SCManager.wrapCallback(future, session.workerPool.dispatcher(), callback);
 
 		assertTrue("Callback should have been attached to the Future", onCompleteCalled_future[0]);
 		

@@ -33,7 +33,7 @@ public class SCManagerControlInterruptTest {
 	 */
 	@Test
 	public void testInterruptedStream() throws Exception {
-		SCManager manager = SCManager.instance();
+		SCManager session = SCManager.open();
 
 		final boolean[] closeCalled = new boolean[2];
 		// consumer
@@ -95,10 +95,10 @@ public class SCManagerControlInterruptTest {
 			}
 		};
 		
-		String workerName = manager.addWorker("Interrupted", worker);
+		String workerName = session.addWorker("Interrupted", worker);
 		
-		manager.send(workerName, Message.create(Control.Start));
-		manager.send(workerName, Message.create(Control.Stop));
+		session.send(workerName, Message.create(Control.Start));
+		session.send(workerName, Message.create(Control.Stop));
 //		manager.shutdown();
 		
 		Thread.sleep(100);

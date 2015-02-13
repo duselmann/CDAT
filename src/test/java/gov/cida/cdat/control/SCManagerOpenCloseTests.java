@@ -39,7 +39,7 @@ public class SCManagerOpenCloseTests {
 	}
 	
 	private String[] runWorker(final String workerLabel) {
-		SCManager session = SCManager.instance();
+		SCManager session = SCManager.open();
 		
 		final String[] response = new String[1];
 		Worker testWorker = new Worker() {

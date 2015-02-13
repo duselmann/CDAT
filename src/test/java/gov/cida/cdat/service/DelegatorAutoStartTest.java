@@ -13,19 +13,19 @@ import org.junit.Test;
 
 public class DelegatorAutoStartTest {
 
-	private static SCManager manager;
+	private static SCManager session;
 	
 	
 	@Test
 	public void testAutoStart() throws Exception {
-		manager = SCManager.instance();
+		session = SCManager.open();
 
-		manager.setAutoStart(true);
+		session.setAutoStart(true);
 		
 		try {
 		
 			final Boolean[] processCalled = new Boolean[1];
-			final String workerName = manager.addWorker("autoStartTest",  new Worker() {
+			final String workerName = session.addWorker("autoStartTest",  new Worker() {
 				@Override
 				public boolean process() throws CdatException {
 					processCalled[0] = true;
@@ -38,11 +38,11 @@ public class DelegatorAutoStartTest {
 			assertTrue("process should be called without explicit start message when autostart",
 					processCalled[0]);
 			
-			manager.send(workerName, Control.Stop);
+			session.send(workerName, Control.Stop);
 			
 		} finally {
 			// TODO this is why I would like a session reset/dispose after leaving scope or similar
-			manager.setAutoStart(false);
+			session.setAutoStart(false);
 		}
 	}
 }
