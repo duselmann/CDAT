@@ -197,10 +197,11 @@ public class Session extends UntypedActor {
 	/**
 	 * <p>submits a worker for an ETL stream (pipe), 
 	 * </p>
-	 * Example:<br>
-	 * String final NWIS_SEDIMENT = "Fetch sediment from NWIS";<br>
-	 * SCManager manager = SCManager.instance();<br>
-	 * String workerName = manager.addWorker(NWIS_SEDIMENT, nwisRequest);<br>
+	 * Example:<pre>
+	 * final String NWIS_SEDIMENT = "Fetch sediment from NWIS";
+	 * SCManager session = SCManager.open();
+	 * String workerName = manager.addWorker(NWIS_SEDIMENT, nwisRequest);
+	 * </pre>
 	 * <p> The name now equals "Fetch sediment from NWIS", or "Fetch sediment from NWIS-1", etc.
 	 * </p>
 	 * @param workerLabel String name - IMPORTANT: Names must be unique, this returns a new name 
