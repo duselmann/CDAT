@@ -34,6 +34,19 @@ public class TestUtils {
 	}
 	
 	
+	public static Object reflectValue(Class<?> classToReflect, String fieldNameValueToFetch) {
+		// reflection access is a bit wonky - this is way many of my classes are package access
+		// cannot do it this time because the PipeWorker is a subclass of Worker which does not have a pipe member variable
+		try {
+			Field pipeField     = classToReflect.getDeclaredField(fieldNameValueToFetch);
+			pipeField.setAccessible(true);
+			Object reflectValue = pipeField.get(classToReflect);
+			return reflectValue;
+		} catch (Exception e) {
+			assertFalse("Failed to reflect "+fieldNameValueToFetch, true);
+		}
+		return null;
+	}
 	public static Object reflectValue(Object objToReflect, String fieldNameValueToFetch) {
 		// reflection access is a bit wonky - this is way many of my classes are package access
 		// cannot do it this time because the PipeWorker is a subclass of Worker which does not have a pipe member variable
