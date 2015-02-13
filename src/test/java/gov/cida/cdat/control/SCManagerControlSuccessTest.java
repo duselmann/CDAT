@@ -72,8 +72,8 @@ public class SCManagerControlSuccessTest {
 		System.out.println("send stop to worker");
 		manager.send(workerName, Control.Stop, new Callback() {
 			public void onComplete(Throwable t, Message response) {
-				System.out.println("service shutdown scheduled: "+ response);
-				manager.shutdown();
+//				System.out.println("service shutdown scheduled: "+ response);
+//				manager.shutdown();
 	            // this will execute off the main thread
 	            // if manager is sent a message it WILL be on a DIFFERENT session
 			}

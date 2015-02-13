@@ -63,8 +63,8 @@ public class SCManagerControlFailTest {
 
 		manager.send(workerName, Control.Stop, new Callback() {
 			public void onComplete(Throwable t, Message response) {
-				TestUtils.log("service shutdown");
-				manager.shutdown();
+//				TestUtils.log("service shutdown");
+//				manager.shutdown();
 			}
 		});
 		

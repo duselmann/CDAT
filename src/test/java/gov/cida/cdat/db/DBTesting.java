@@ -121,7 +121,7 @@ public class DBTesting {
 		
 		String workerName = manager.addWorker("SelectAllPeople", worker);
 		manager.send(workerName, Control.Start);
-		manager.shutdown();
+//		manager.shutdown();
 		//prod.open().read().close();
 				
 		final String[] result = new String[1];

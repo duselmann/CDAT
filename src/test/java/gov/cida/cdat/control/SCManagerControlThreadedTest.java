@@ -52,8 +52,8 @@ public class SCManagerControlThreadedTest {
 			
 			Thread.sleep(500);
 		} finally {
-			System.out.println("shuttdown submitted");
-			manager.shutdown();
+//			System.out.println("shuttdown submitted");
+//			manager.shutdown();
 		}
 
 		// this might not be necessary because of the thread sleeps

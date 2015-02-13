@@ -99,7 +99,7 @@ public class SCManagerControlInterruptTest {
 		
 		manager.send(workerName, Message.create(Control.Start));
 		manager.send(workerName, Message.create(Control.Stop));
-		manager.shutdown();
+//		manager.shutdown();
 		
 		Thread.sleep(100);
 		String results =  new String(target.toByteArray());

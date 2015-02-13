@@ -111,14 +111,11 @@ public class SCManagerControlStopTest {
 		
 		// TODO this one test has issues when run within a major collection of tests. junit must fire up threads that compete for processor time ???
 		// run in isolation, this test expects less than 100 bytes written before stop is processed
-		Assert.assertTrue("Expect to recieve less than 1000 bytes, not " + target.size(), target.size()<1000);
+		Assert.assertTrue("Expect to recieve less than 200 bytes, not " + target.size(), target.size()<200);
 		
 		Assert.assertFalse("Expect NOT to find the 'middle'", results.contains("middle"));
 		Assert.assertFalse("Expect NOT to find the 'end'", results.contains("end"));
 		Assert.assertTrue("Expect close to be called on input", closeCalled[1]);
 		Assert.assertTrue("Expect close to be called on output", closeCalled[0]);
 	}
-	
-	
-
 }
