@@ -87,7 +87,7 @@ public class Session extends UntypedActor {
 	 */
 	void onReceive(Terminated ref) {
 		String workerName = ref.actor().path().name();
-		logger.trace("termination recieved for {}", workerName);
+		logger.trace("{} recieved termination for {}", self().path().name(), workerName);
 		Status status = Status.isDisposed;
 		
 //		if (false) { // TODO check for something to set this status
@@ -108,7 +108,7 @@ public class Session extends UntypedActor {
 			autoStart = "true".equals( msg.get(SCManager.AUTOSTART) );
 		}
 		if ( SCManager.SESSION.equals( msg.get(Control.Stop) ) ) {
-			stopSession();
+			stopSession(msg);
 			return;
 		}
 		
@@ -159,18 +159,25 @@ public class Session extends UntypedActor {
 	 * Stops the session after all workers have been given time to finish.
 	 * @see SCManager.close()
 	 */
-	void stopSession() {
+	void stopSession(Message msg) {
+		logger.trace("stopSession called - stopping session {}", self().path().name());
 		try {
+			int attempts = Message.getInt(msg, "attempts", 0);
 			int delegates = delegateCount();
-			long endTime = Time.later(Time.HOUR); // TODO make configurable
-			while (delegates>0  &&  Time.now()<endTime) {
-				Thread.sleep( Time.HALF_MIN.toMillis() ); // TODO make configurable
-				delegates = delegateCount();
+			
+			// TODO this could be a while loop instead of a message loop if we find this is too noisy
+			if (delegates>0  &&  attempts++<100) {
+				logger.trace("jobs remain running on {}", self().path().name());
+				Thread.sleep( Time.MILLIS.toMillis() ); // TODO make configurable
+				msg = Message.extend(msg, "attempts", ""+attempts);
+				self().tell(msg, self());
+			} else {
+				logger.trace("no works waiting to finish - stopping session {}", self().path().name());
+				context().stop( self() );
 			}
 		} catch (Exception e) {
+			logger.trace("waiting too long to finish - stopping session {}", self().path().name());
 			// if there is an issue then stop now
-		} finally {
-			context().stop( self() );
 		}		
 	}
 	
@@ -186,7 +193,7 @@ public class Session extends UntypedActor {
 		for (WeakReference<ActorRef> delegate : delegates.workers.values()) {
 			// only count delegates that are not done yet
 			if (delegate!=null && delegate.get()!=null 
-					&& delegates.isAlive(delegate.get().path().name())) {
+					&& delegates.isAlive( delegate.get().path().name() ) ) {
 				delegateCount++;
 			}
 		}
@@ -197,10 +204,11 @@ public class Session extends UntypedActor {
 	/**
 	 * <p>submits a worker for an ETL stream (pipe), 
 	 * </p>
-	 * Example:<br>
-	 * String final NWIS_SEDIMENT = "Fetch sediment from NWIS";<br>
-	 * SCManager manager = SCManager.instance();<br>
-	 * String workerName = manager.addWorker(NWIS_SEDIMENT, nwisRequest);<br>
+	 * Example:<pre>
+	 * final String NWIS_SEDIMENT = "Fetch sediment from NWIS";
+	 * SCManager session = SCManager.open();
+	 * String workerName = manager.addWorker(NWIS_SEDIMENT, nwisRequest);
+	 * </pre>
 	 * <p> The name now equals "Fetch sediment from NWIS", or "Fetch sediment from NWIS-1", etc.
 	 * </p>
 	 * @param workerLabel String name - IMPORTANT: Names must be unique, this returns a new name 
@@ -223,7 +231,8 @@ public class Session extends UntypedActor {
         // Create the AKKA service actor
         ActorRef delegate = context().actorOf(Props.create(Delegator.class, addWorker), workerName);
         
-        context().watch(delegate); // watch the delegate for termination handling
+        logger.trace("{} watching {}", self().path().name(), workerName);
+        getContext().watch(delegate); // watch the delegate for termination handling
         
         delegates.put(workerName, delegate); // maintain a convenient reference
 	}

@@ -9,14 +9,14 @@ import org.junit.Test;
 public class SCManagerOpenCloseTests {
 
 	@Test
-	public void test() {
+	public void testSessionOpenClose() {
 		
 		SCManager session = SCManager.open();
 		final String firstSession = session.sessionName();
 				
 		try {
 			String workerLabel = "testWorkerA";
-			String response[] = runWorker(workerLabel);
+			String response[] = runWorker(workerLabel, session);
 			assertEquals("expect worker A to run", workerLabel, response[0]);
 			
 		} finally {
@@ -28,7 +28,7 @@ public class SCManagerOpenCloseTests {
 				
 		try {
 			String workerLabel = "testWorkerB";
-			String response[] = runWorker(workerLabel);
+			String response[] = runWorker(workerLabel, session);
 			assertEquals("expect worker B to run", workerLabel, response[0]);
 			
 		} finally {
@@ -38,9 +38,7 @@ public class SCManagerOpenCloseTests {
 		assertNotEquals("expect new session after session close", firstSession, secondSession);
 	}
 	
-	private String[] runWorker(final String workerLabel) {
-		SCManager session = SCManager.instance();
-		
+	private String[] runWorker(final String workerLabel, SCManager session) {
 		final String[] response = new String[1];
 		Worker testWorker = new Worker() {
 			public boolean process() {

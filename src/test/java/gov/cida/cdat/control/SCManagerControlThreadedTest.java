@@ -29,15 +29,12 @@ public class SCManagerControlThreadedTest {
 
 	private static ByteArrayOutputStream consumer;
 	private static String workerLabel = "producer";
-	private static SCManager manager;
 	private static Message[] messages = new Message[4]; // this must be equal or larger than the number of threads in the test
 	private static Set<String> sessionNames = new HashSet<String>();
 	private static Set<String> workerNames  = new HashSet<String>();
 	
 	@Test
 	public void testMultiThreadedRequests() throws Exception {
-		manager = SCManager.instance();
-		
 		try {
 			// no delay test
 			spawnThread("first");
@@ -52,8 +49,8 @@ public class SCManagerControlThreadedTest {
 			
 			Thread.sleep(500);
 		} finally {
-			System.out.println("shuttdown submitted");
-			manager.shutdown();
+//			System.out.println("shuttdown submitted");
+//			manager.shutdown();
 		}
 
 		// this might not be necessary because of the thread sleeps
@@ -101,34 +98,42 @@ public class SCManagerControlThreadedTest {
 		DataPipe pipe = new DataPipe(in, out);
 		Worker worker = new PipeWorker(pipe);
 		
-		final String workerName = manager.addWorker(workerLabel, worker);
+		SCManager session = SCManager.open();
 		
-		sessionNames.add(manager.sessionName());
-		workerNames.add(workerName);
-		
-		manager.send(workerName, Message.create("Message", "Test"));
-		
-		// This is called with a null response if the Patterns.ask timeout expires
-		manager.send(workerName, Control.onComplete, new Callback(){
-	        public void onComplete(Throwable t, Message response){
-	        	messages[threadNameToIndex(threadName)] = response;
-	            report(threadName, workerName, response);
-	            manager.send(workerName, Control.Stop);
-	        }
-
-			private int threadNameToIndex(String threadName) {
-				switch (threadName) {
-					case "second": return 1;
-					case "third" : return 2;
-					case "fourth": return 3;
-					default:break;
+		try {
+			final String workerName = session.addWorker(workerLabel, worker);
+			
+			sessionNames.add(session.sessionName());
+			workerNames.add(workerName);
+			
+			session.send(workerName, Message.create("Message", "Test"));
+			
+			// This is called with a null response if the Patterns.ask timeout expires
+			session.send(workerName, Control.onComplete, new Callback(){
+		        public void onComplete(Throwable t, Message response){
+		        	messages[threadNameToIndex(threadName)] = response;
+		            report(threadName, workerName, response);
+		        }
+	
+				private int threadNameToIndex(String threadName) {
+					switch (threadName) {
+						case "second": return 1;
+						case "third" : return 2;
+						case "fourth": return 3;
+						default:break;
+					}
+					// "first"
+					return 0;
 				}
-				// "first"
-				return 0;
-			}
-	    });
-		
-		manager.send(workerName, Control.Start);
+		    });
+			
+			// the starting and stopping is not tested here
+			session.send(workerName, Control.Start);
+//            session.send(workerName, Control.Stop);
+			
+		} finally {
+			session.close(); // SESSION-20,SESSION-21,SESSION-22,SESSION-23
+		}
 	}
 	
 	

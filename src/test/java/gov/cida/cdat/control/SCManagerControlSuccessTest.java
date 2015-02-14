@@ -24,60 +24,64 @@ import org.junit.Test;
 public class SCManagerControlSuccessTest {
 
 	private static ByteArrayOutputStream target;
-	private static SCManager manager;
 	private static byte[] dataRef;
 	
 	@Test
 	public void testSuccessfulJobRun_SubmitStartProcessStopOnCompleteAndCustomMessage() throws Exception {
-		manager = SCManager.instance();
+		SCManager session = SCManager.open();
 
-		// consumer
-		target = new ByteArrayOutputStream(1024*10);
-		SimpleStreamContainer<OutputStream> out = new SimpleStreamContainer<OutputStream>(target);
-		
-		// producer
-		dataRef = TestUtils.sampleData();
-		InputStream source = new ByteArrayInputStream(dataRef);
-		SimpleStreamContainer<InputStream>  in = new SimpleStreamContainer<InputStream>(source);
-		
-		// pipe
-		DataPipe pipe = new DataPipe(in, out);
-		Worker worker = new PipeWorker(pipe);
-		
-		final String workerName = manager.addWorker("byteStream", worker);
-		
-		System.out.println("send custom message to worker");
-		manager.send(workerName, Message.create("Message", "Test"));
-		
-		final Message[] completed = new Message[1];
-		// This is called with a null response if the Patterns.ask timeout expires
-		manager.send(workerName, Control.onComplete, new Callback(){
-	        public void onComplete(Throwable t, Message response){
-	        	completed[0] = response;
-	        }
-	    });
-
-		System.out.println("send start to worker");
-		manager.send(workerName, Control.Start);
-		
-		System.out.println("waiting for worker to process");
-		TestUtils.waitAlittleWhileForResponse(completed);
-
-		assertTrue("DataPipe should be complete when finished", pipe.isComplete());
-		assertEquals("producer stream should be null after close", null, pipe.getProducerStream());
-		assertEquals("consumer stream should be null after close", null, pipe.getConsumerStream());
-		
-        report(workerName, completed[0]);
-
-		System.out.println("send stop to worker");
-		manager.send(workerName, Control.Stop, new Callback() {
-			public void onComplete(Throwable t, Message response) {
-				System.out.println("service shutdown scheduled: "+ response);
-				manager.shutdown();
-	            // this will execute off the main thread
-	            // if manager is sent a message it WILL be on a DIFFERENT session
-			}
-		});
+		try {
+			// consumer
+			target = new ByteArrayOutputStream(1024*10);
+			SimpleStreamContainer<OutputStream> out = new SimpleStreamContainer<OutputStream>(target);
+			
+			// producer
+			dataRef = TestUtils.sampleData();
+			InputStream source = new ByteArrayInputStream(dataRef);
+			SimpleStreamContainer<InputStream>  in = new SimpleStreamContainer<InputStream>(source);
+			
+			// pipe
+			DataPipe pipe = new DataPipe(in, out);
+			Worker worker = new PipeWorker(pipe);
+			
+			final String workerName = session.addWorker("byteStream", worker);
+			
+			System.out.println("send custom message to worker");
+			session.send(workerName, Message.create("Message", "Test"));
+			
+			final Message[] completed = new Message[1];
+			// This is called with a null response if the Patterns.ask timeout expires
+			session.send(workerName, Control.onComplete, new Callback(){
+		        public void onComplete(Throwable t, Message response){
+		        	completed[0] = response;
+		        }
+		    });
+	
+			System.out.println("send start to worker");
+			session.send(workerName, Control.Start);
+			
+			System.out.println("waiting for worker to process");
+			TestUtils.waitAlittleWhileForResponse(completed);
+	
+			assertTrue("DataPipe should be complete when finished", pipe.isComplete());
+			assertEquals("producer stream should be null after close", null, pipe.getProducerStream());
+			assertEquals("consumer stream should be null after close", null, pipe.getConsumerStream());
+			
+	        report(workerName, completed[0]);
+	
+			System.out.println("send stop to worker");
+			session.send(workerName, Control.Stop, new Callback() {
+				public void onComplete(Throwable t, Message response) {
+	//				System.out.println("service shutdown scheduled: "+ response);
+	//				manager.shutdown();
+		            // this will execute off the main thread
+		            // if manager is sent a message it WILL be on a DIFFERENT session
+				}
+			});
+			
+		} finally {
+			session.close();
+		}
 	}
 	
 	

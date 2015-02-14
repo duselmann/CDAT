@@ -27,6 +27,7 @@ public abstract class Worker {
 	 *  It is just an initial impl from initial specs and might not be used
 	 */
 	private final long id = (long)(Math.random() * 10000000000000L);
+	String name;
 	/**
 	 * Set to true by end() to indicate that it was called - this worker is done 
 	 */
@@ -45,7 +46,7 @@ public abstract class Worker {
 	 * @return the custom response message from the worker.
 	 */
 	public Message onReceive(Message msg) {
-		logger.trace("Worker onReceive: {}  message {}", id, msg);
+		logger.trace("Worker onReceive: {}  message {}", name, msg);
 		return Message.create("Not Handled");
 	}	
 	
@@ -54,7 +55,7 @@ public abstract class Worker {
 	 * You are guaranteed that this will be called before the process is started.
 	 */
 	public void begin() throws CdatException {
-		logger.trace("Worker begin: {}", id);
+		logger.trace("Worker begin: {}", name);
 	}
 	
 	/**
@@ -66,7 +67,7 @@ public abstract class Worker {
 	 * @throws CdatException
 	 */
 	public boolean process() throws CdatException {
-		logger.trace("Worker processing some data: {}", id);
+		logger.trace("Worker processing some data: {}", name);
 		return false; // there is never any data to process in the abstract
 	}
 
@@ -79,7 +80,7 @@ public abstract class Worker {
 	 */
 	public void end() {
 		isComplete = true;
-		logger.trace("Worker end: {}", id);
+		logger.trace("Worker end: {}", name);
 	}
 	
 	/**

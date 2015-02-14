@@ -55,7 +55,8 @@ public class SCManager {
 	 * This is used to send to the session a message for the session rather than the worker
 	 */
 	public static final String SESSION   = "SESSION";
-	
+
+	private static final String TOKEN    = "012345678910";  // TODO make configurable
 	
 	/**
 	 *  singleton pattern, each user session will have a session worker
@@ -101,6 +102,10 @@ public class SCManager {
 	public static SCManager open() {
 		return instance();
 	}
+	public static SCManager open(String adminToken) {
+		instance().token.set(adminToken);
+		return instance();
+	}
 	
 	/**
 	 * When done with the session call close to release the session when all jobs complete.
@@ -114,7 +119,7 @@ public class SCManager {
 	public void close(boolean force) {
 		try {
 			// this tells the session to stop processing workers
-			setAutoStart(false); // this is for completeness
+			setAutoStart(false); // this is for completeness // TODO make configurable
 			
 			if (force) {
 				// hard stop
@@ -128,6 +133,7 @@ public class SCManager {
 			// this removes the session from the thread 
 			// a new one will be issued upon the next request
 			session.remove();
+			token.remove();
 		}
 	}
 	
@@ -135,6 +141,7 @@ public class SCManager {
 	 * This is the session worker instance. Each thread is given its own instance.
 	 */
 	private ThreadLocal<ActorRef> session = new ThreadLocal<ActorRef>();
+	private ThreadLocal<String>   token   = new ThreadLocal<String>();
 	
 	/**
 	 *  like a thread pool but workers are not tied to a thread
@@ -198,6 +205,32 @@ public class SCManager {
 		return session.get();
 	}
 	// TODO abandoned sessions should be stopped
+	
+	ActorRef session(String workerName) {
+		// if we are an admin session
+		if (TOKEN.equals(token.get())) {
+			ActorRef session = null;
+
+            try {
+    			// find the worker by name
+            	String path = "akka://CDAT/user/*/"+workerName;
+    			logger.trace("searching for session for worker {}", path);
+    			Future<ActorRef> future = workerPool.actorSelection(path).resolveOne(Time.SECOND);
+				ActorRef worker  = Await.result(future, Time.SECOND);
+				logger.trace("found worker {}", worker.path());
+				// find the session the worker is running
+				future  = workerPool.actorSelection(worker.path().parent()).resolveOne(Time.SECOND);
+				session = Await.result(future, Time.SECOND);
+				logger.trace("found session {} for worker {}", session.path(), worker.path());
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+				// since we want to return null if not found we need not do anything else
+			}
+			return session;
+		}
+		return session();
+	}
 	
 	/**
 	 * This helper method messages the Naming worker to ensure unique names.
@@ -336,7 +369,7 @@ public class SCManager {
 	 */
 	public Future<Object> send(String workerName, Message message, Timeout waitTime) {
 		message = Message.extend(message, Naming.WORKER_NAME, workerName);
-	    return Patterns.ask(session(), message, waitTime);
+	    return Patterns.ask(session(workerName), message, waitTime);
 	}
 	
 	/**
@@ -448,7 +481,10 @@ public class SCManager {
 	 * TODO need a force/wait versions of this for the option to wait for workers to finish
 	 * TODO investigate a means to have session NOT able to call this - not likely - I would like only the container to call this on shutdown
 	 */
-	public void shutdown() {
+	public static void shutdown() {
+		final ActorSystem workerPool = instance().workerPool;
+		final Logger logger = LoggerFactory.getLogger(instance().getClass());
+		
 		workerPool.scheduler().scheduleOnce( Time.HALF_MIN, // TODO make configurable
 			new Runnable() {
 				@Override
