@@ -55,11 +55,10 @@ public class SCManagerAdminTokenTests {
 			TestUtils.waitAlittleWhileForResponse(processCalled);
 			assertTrue("expect that the admin token allows starting other session workers", processCalled[0]);
 			
-			session.send(workerName, Control.Stop);
-			sessions[0].close();
 		} finally {
 //			System.out.println("shuttdown submitted");
 //			manager.shutdown();
+			sessions[0].close();
 		}
 	}
 
@@ -95,6 +94,11 @@ public class SCManagerAdminTokenTests {
 		
 		sessionNames.add(session.sessionName());
 		workerNames.add(workerName);
+		
+		// nothing is running and the admin session will be starting a job
+		// we do not want to close the session but I have this here to show
+		// that is has not been forgotten
+		//session.close();
 	}
 
 }
