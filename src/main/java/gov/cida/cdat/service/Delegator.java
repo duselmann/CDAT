@@ -80,6 +80,7 @@ public class Delegator extends UntypedActor {
 	public Delegator(AddWorkerMessage worker) {
 		this.name      = worker.getName();
 		this.worker    = worker.getWorker();
+		this.worker.name = this.name;
 		this.autoStart = worker.isAutoStart();
 		setStatus(Status.isNew);
 		logger.trace("new Delegator for worker:{} with autostart:{}", name, autoStart);
