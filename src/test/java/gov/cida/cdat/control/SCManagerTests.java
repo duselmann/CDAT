@@ -81,42 +81,55 @@ public class SCManagerTests {
 	@Test
 	public void testSingleton() {
 		SCManager instance1 = SCManager.open();
-		SCManager instance2 = SCManager.instance();
-		
-		assertEquals("Singleton instances should be equivilent", instance1, instance2);
-		assertTrue("Singleton instances should be equivilent references", instance1 == instance2);
-    }
+		try {
+			SCManager instance2 = SCManager.instance();
+			
+			assertEquals("Singleton instances should be equivilent", instance1, instance2);
+			assertTrue("Singleton instances should be equivilent references", instance1 == instance2);
+		} finally {
+			instance1.close();
+		}
+	}
 	
 	@Test
 	public void testSession_SameSession() {
 		SCManager session = SCManager.open();
-		ActorRef instance1 = session.session();
-		ActorRef instance2 = session.session();
 		
-		assertEquals("Session instances should be equivilent", instance1, instance2);
-		assertTrue("Session instances should be equivilent references", instance1 == instance2);
+		try {
+			ActorRef instance1 = session.session();
+			ActorRef instance2 = session.session();
+			
+			assertEquals("Session instances should be equivilent", instance1, instance2);
+			assertTrue("Session instances should be equivilent references", instance1 == instance2);
+		} finally {
+			session.close();
+		}
     }
 	
 	@Test
 	public void testSession_DifferentTheadsDifferentSessions() throws Exception {
 		final SCManager session = SCManager.open();
 		
-		ActorRef instance1 = session.session();
-		
-		final ActorRef[] sessionRef = new ActorRef[1];
-		
-		Thread thread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				sessionRef[0] = session.session();
-			}
-		});
-		thread.start();
-		thread.join();
-		
-		ActorRef instance2 = sessionRef[0];
-
-		assertFalse("Session instances should be different across threads", instance1 == instance2);
+		try {
+			ActorRef instance1 = session.session();
+			
+			final ActorRef[] sessionRef = new ActorRef[1];
+			
+			Thread thread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					sessionRef[0] = session.session();
+				}
+			});
+			thread.start();
+			thread.join();
+			
+			ActorRef instance2 = sessionRef[0];
+	
+			assertFalse("Session instances should be different across threads", instance1 == instance2);
+		} finally {
+			session.close();
+		}
     }
 
 	
@@ -127,50 +140,54 @@ public class SCManagerTests {
 		// obtain an instance of the session
 		final SCManager  session = SCManager.open();
 
-		// a test string that can be used for comparison
-		String TEST_STRING = "Test String A";
-
-		PipeTestObj testPipe = createTestPipe(TEST_STRING);
-		
-		// submit the pipe as a worker to the session on the session
-		Worker        worker     = new PipeWorker(testPipe.pipe);
-		final String  workerName = session.addWorker(TEST_STRING, worker);
-
-		final String EXPECTED = TEST_STRING.replaceAll(" ","_")+"-1";
-		// ensure that the response contains the worker name since a future is returned from the submit
-		assertEquals("we expect the worker name returned from addWorker", EXPECTED, workerName);
-		
-		// this is a holder to pass data between threads.
-		final Message[] response = new Message[1];
-		
-		// wait for worker to complete
-		session.send(workerName, Control.onComplete, new Callback(){
-    		// This is called with a null response if the Patterns.ask timeout expires
-	        public void onComplete(Throwable t, Message resp) {
-	        	// get a reference to the message
-	    		response[0] = resp;
-	        }
-	    });
-		// start the worker (from cDAT point of view, from AKKA it is already running)
-		session.send(workerName, Control.Start);
-
-		// wait some time for the worker to finish
-		int count = TestUtils.waitAlittleWhileForResponse(response);
-		
-    	// this send the message that this worker is no longer needed
-		session.send(workerName, Control.Stop);
-		
-		// lets just see the count
-		TestUtils.log("wait cycle count:", count);
-		
-		assertTrue("Expect count to be must less than 100", count<100);
-		
-		// now test that the message is as we expect
-		assertFalse("Message from on complete should not be null", response[0]==null );
-		assertEquals("OnComplete Message from on complete should be 'done'", "done",  response[0].get(Control.onComplete) );
-		
-		// test that the data was pumped from producer to consumer
-		assertEquals("Expected output: " + TEST_STRING, TEST_STRING, testPipe.results() );
+		try {
+			// a test string that can be used for comparison
+			String TEST_STRING = "Test String A";
+	
+			PipeTestObj testPipe = createTestPipe(TEST_STRING);
+			
+			// submit the pipe as a worker to the session on the session
+			Worker        worker     = new PipeWorker(testPipe.pipe);
+			final String  workerName = session.addWorker(TEST_STRING, worker);
+	
+			final String EXPECTED = TEST_STRING.replaceAll(" ","_")+"-1";
+			// ensure that the response contains the worker name since a future is returned from the submit
+			assertEquals("we expect the worker name returned from addWorker", EXPECTED, workerName);
+			
+			// this is a holder to pass data between threads.
+			final Message[] response = new Message[1];
+			
+			// wait for worker to complete
+			session.send(workerName, Control.onComplete, new Callback(){
+	    		// This is called with a null response if the Patterns.ask timeout expires
+		        public void onComplete(Throwable t, Message resp) {
+		        	// get a reference to the message
+		    		response[0] = resp;
+		        }
+		    });
+			// start the worker (from cDAT point of view, from AKKA it is already running)
+			session.send(workerName, Control.Start);
+	
+			// wait some time for the worker to finish
+			int count = TestUtils.waitAlittleWhileForResponse(response);
+			
+	    	// this send the message that this worker is no longer needed
+			session.send(workerName, Control.Stop);
+			
+			// lets just see the count
+			TestUtils.log("wait cycle count:", count);
+			
+			assertTrue("Expect count to be must less than 100", count<100);
+			
+			// now test that the message is as we expect
+			assertFalse("Message from on complete should not be null", response[0]==null );
+			assertEquals("OnComplete Message from on complete should be 'done'", "done",  response[0].get(Control.onComplete) );
+			
+			// test that the data was pumped from producer to consumer
+			assertEquals("Expected output: " + TEST_STRING, TEST_STRING, testPipe.results() );
+		} finally {
+			session.close();
+		}
     }
 		
 	
@@ -183,48 +200,52 @@ public class SCManagerTests {
 		// obtain an instance of the session
 		final SCManager  session = SCManager.open();
 
-		// a test string that can be used for comparison
-		String TEST_STRING = "Test String B";
-
-		PipeTestObj testPipe = createTestPipe(TEST_STRING);
-
-		// submit the pipe as a worker to the session on the session
-		Worker        worker     = new PipeWorker(testPipe.pipe);
-		final String  workerName = session.addWorker(TEST_STRING, worker);
-
-		// this is a holder to pass data between threads.
-		final Message[] response = new Message[1];
-		
-		// wait for worker to complete
-		session.send(workerName, Control.onComplete, new Callback(){
-    		// This is called with a null response if the Patterns.ask timeout expires
-	        public void onComplete(Throwable t, Message resp) {
-	        	// get a reference to the message
-	    		response[0] = resp;
-	        }
-	    });
-		// start the worker (from cDAT point of view, from AKKA it is already running)
-		session.send(workerName, Control.Start);
-		
-		// wait some time for the worker to finish
-		TestUtils.waitAlittleWhileForResponse(response);
-
-    	// this send the message that this worker is no longer needed
-		session.send(workerName, Control.Stop);
-
-		TestUtils.log("Issuing second start");
-		
-		// clear out the consumer to see if it gets refilled
-		testPipe.consumer.reset();
-		
-		// try to start it up again
-		session.send(workerName, Control.Start);
-		
-		// wait some time for the worker to finish
-		TestUtils.waitAlittleWhileForResponse(response);
-		
-		// now test that the consumer remains empty
-		assertEquals("Expect that the disposed worker does not execute", "", testPipe.results() );
+		try {
+			// a test string that can be used for comparison
+			String TEST_STRING = "Test String B";
+	
+			PipeTestObj testPipe = createTestPipe(TEST_STRING);
+	
+			// submit the pipe as a worker to the session on the session
+			Worker        worker     = new PipeWorker(testPipe.pipe);
+			final String  workerName = session.addWorker(TEST_STRING, worker);
+	
+			// this is a holder to pass data between threads.
+			final Message[] response = new Message[1];
+			
+			// wait for worker to complete
+			session.send(workerName, Control.onComplete, new Callback(){
+	    		// This is called with a null response if the Patterns.ask timeout expires
+		        public void onComplete(Throwable t, Message resp) {
+		        	// get a reference to the message
+		    		response[0] = resp;
+		        }
+		    });
+			// start the worker (from cDAT point of view, from AKKA it is already running)
+			session.send(workerName, Control.Start);
+			
+			// wait some time for the worker to finish
+			TestUtils.waitAlittleWhileForResponse(response);
+	
+	    	// this send the message that this worker is no longer needed
+			session.send(workerName, Control.Stop);
+	
+			TestUtils.log("Issuing second start");
+			
+			// clear out the consumer to see if it gets refilled
+			testPipe.consumer.reset();
+			
+			// try to start it up again
+			session.send(workerName, Control.Start);
+			
+			// wait some time for the worker to finish
+			TestUtils.waitAlittleWhileForResponse(response);
+			
+			// now test that the consumer remains empty
+			assertEquals("Expect that the disposed worker does not execute", "", testPipe.results() );
+		} finally {
+			session.close();
+		}
     }
 	
 	@Test
@@ -234,34 +255,38 @@ public class SCManagerTests {
 		// obtain an instance of the session
 		final SCManager  session = SCManager.open();
 
-		// a test string that can be used for comparison
-		String TEST_STRING = "Test String C";
-
-		PipeTestObj testPipe = createTestPipe(TEST_STRING);
-		
-		// this is a holder to pass data between threads.
-		final Message[] response = new Message[1];
-		
-		// submit the pipe as a worker to the session on the session
-		Worker        worker     = new PipeWorker(testPipe.pipe);
-		session.addWorker(TEST_STRING, worker, new Callback(){
-    		// This is called with a null response if the Patterns.ask timeout expires
-	        public void onComplete(Throwable t, Message resp) {
-	        	// get a reference to the message
-	    		response[0] = resp;
-	        }
-	    });
-
-		// wait some time for the worker to finish
-		TestUtils.waitAlittleWhileForResponse(response);
-		
-		final String EXPECTED = TEST_STRING.replaceAll(" ","_")+"-1";
-		final String workerName = response[0].get(Naming.WORKER_NAME);
-		// ensure that the response contains the worker name since a future is returned from the submit
-		assertEquals("we expect the worker name in the Callback response Message", EXPECTED, workerName);
-		
-    	// this send the message that this worker is no longer needed
-		session.send(workerName, Control.Stop);
+		try {
+			// a test string that can be used for comparison
+			String TEST_STRING = "Test String C";
+	
+			PipeTestObj testPipe = createTestPipe(TEST_STRING);
+			
+			// this is a holder to pass data between threads.
+			final Message[] response = new Message[1];
+			
+			// submit the pipe as a worker to the session on the session
+			Worker        worker     = new PipeWorker(testPipe.pipe);
+			session.addWorker(TEST_STRING, worker, new Callback(){
+	    		// This is called with a null response if the Patterns.ask timeout expires
+		        public void onComplete(Throwable t, Message resp) {
+		        	// get a reference to the message
+		    		response[0] = resp;
+		        }
+		    });
+	
+			// wait some time for the worker to finish
+			TestUtils.waitAlittleWhileForResponse(response);
+			
+			final String EXPECTED = TEST_STRING.replaceAll(" ","_")+"-1";
+			final String workerName = response[0].get(Naming.WORKER_NAME);
+			// ensure that the response contains the worker name since a future is returned from the submit
+			assertEquals("we expect the worker name in the Callback response Message", EXPECTED, workerName);
+			
+	    	// this send the message that this worker is no longer needed
+			session.send(workerName, Control.Stop);
+		} finally {
+			session.close();
+		}
     }
 	
 	@Test
@@ -270,12 +295,16 @@ public class SCManagerTests {
 		// obtain an instance of the session
 		SCManager  session     = SCManager.open();
 		
-		final String RAW_LABEL = "a b c";
-		final String EXPECT    = "a_b_c-1";
-		
-		String result    = session.createNameFromLabel(RAW_LABEL);
-		
-		assertEquals("we expect that a label spaces are transposed to underscores '_'", EXPECT, result);
+		try {
+			final String RAW_LABEL = "a b c";
+			final String EXPECT    = "a_b_c-1";
+			
+			String result    = session.createNameFromLabel(RAW_LABEL);
+			
+			assertEquals("we expect that a label spaces are transposed to underscores '_'", EXPECT, result);
+		} finally {
+			session.close();
+		}
 	}
 	
 	
@@ -285,12 +314,16 @@ public class SCManagerTests {
 		// obtain an instance of the session
 		SCManager  session     = SCManager.open();
 		
-		final String RAW_LABEL = "abc";
-		final String EXPECT    = "abc-1";
-		
-		String result    = session.createNameFromLabel(RAW_LABEL);
-		
-		assertEquals("we expect that a label is ensured unique with a suffix", EXPECT, result);
+		try {
+			final String RAW_LABEL = "abc";
+			final String EXPECT    = "abc-1";
+			
+			String result    = session.createNameFromLabel(RAW_LABEL);
+			
+			assertEquals("we expect that a label is ensured unique with a suffix", EXPECT, result);
+		} finally {
+			session.close(); // asdf not closed
+		}
 	}
 	
 	@Test
@@ -299,17 +332,21 @@ public class SCManagerTests {
 		// obtain an instance of the session
 		SCManager  session      = SCManager.open();
 		
-		final String RAW_LABEL1 = "qrs";
-		final String EXPECT1    = "qrs-1";
-		
-		final String RAW_LABEL2 = "xyz";
-		final String EXPECT2    = "xyz-1";
-		
-		String result1    = session.createNameFromLabel(RAW_LABEL1);
-		String result2    = session.createNameFromLabel(RAW_LABEL2);
-		
-		assertEquals(EXPECT1, result1);
-		assertEquals("we expect that each new label has its own suffix count", EXPECT2, result2);
+		try {
+			final String RAW_LABEL1 = "qrs";
+			final String EXPECT1    = "qrs-1";
+			
+			final String RAW_LABEL2 = "xyz";
+			final String EXPECT2    = "xyz-1";
+			
+			String result1    = session.createNameFromLabel(RAW_LABEL1);
+			String result2    = session.createNameFromLabel(RAW_LABEL2);
+			
+			assertEquals(EXPECT1, result1);
+			assertEquals("we expect that each new label has its own suffix count", EXPECT2, result2);
+		} finally {
+			session.close();
+		}
 	}
 	
 	@Test
@@ -318,20 +355,24 @@ public class SCManagerTests {
 		// obtain an instance of the session
 		SCManager  session      = SCManager.open();
 		
-		final String RAW_LABEL = "www";
-		final String EXPECT1    = "www-1";
-		final String EXPECT2    = "www-2";
-		final String EXPECT3    = "www-3";
-		
-		String result1    = session.createNameFromLabel(RAW_LABEL);
-		String result2    = session.createNameFromLabel(RAW_LABEL);
-		String result3    = session.createNameFromLabel(RAW_LABEL);
-		
-		assertEquals("we always expect the first suffix to be '-1' ", EXPECT1, result1);
-		assertEquals("we expect that each subsequent name request for the same label has an incremented suffix - should be '-2' ",
-				EXPECT2, result2);
-		assertEquals("we expect that each subsequent name request for the same label has an incremented suffix - should be '-3' ",
-				EXPECT3, result3);
+		try {
+			final String RAW_LABEL = "www";
+			final String EXPECT1    = "www-1";
+			final String EXPECT2    = "www-2";
+			final String EXPECT3    = "www-3";
+			
+			String result1    = session.createNameFromLabel(RAW_LABEL);
+			String result2    = session.createNameFromLabel(RAW_LABEL);
+			String result3    = session.createNameFromLabel(RAW_LABEL);
+			
+			assertEquals("we always expect the first suffix to be '-1' ", EXPECT1, result1);
+			assertEquals("we expect that each subsequent name request for the same label has an incremented suffix - should be '-2' ",
+					EXPECT2, result2);
+			assertEquals("we expect that each subsequent name request for the same label has an incremented suffix - should be '-3' ",
+					EXPECT3, result3);
+		} finally {
+			session.close();
+		}
 	}
 	
 	@Test
@@ -340,21 +381,25 @@ public class SCManagerTests {
 		// obtain an instance of the session
 		SCManager  session     = SCManager.open();
 		
-		final String RAW_LABEL = "aaa";
-		final String EXPECT    = "aaa-1";
-		
-		final DataPipe pipe    = new DataPipe(null, null);
-		
-		Worker worker          = new PipeWorker(pipe);
-		AddWorkerMessage msg   = session.createAddWorkerMessage(RAW_LABEL, worker);
-				
-		assertEquals("we expect that an Add Worker Message name be related to the given label", EXPECT, msg.getName());
-
-		// reflection access is a bit wonky - this is way many of my classes are package access
-		// cannot do it this time because the PipeWorker is a subclass of Worker which does not have a pipe member variable
-		Object workerPipe      = TestUtils.reflectValue(msg.getWorker(), "pipe");
-		
-		assertEquals("we expect that an Add Worker Message pipe be the given pipe", pipe, workerPipe);
+		try {
+			final String RAW_LABEL = "aaa";
+			final String EXPECT    = "aaa-1";
+			
+			final DataPipe pipe    = new DataPipe(null, null);
+			
+			Worker worker          = new PipeWorker(pipe);
+			AddWorkerMessage msg   = session.createAddWorkerMessage(RAW_LABEL, worker);
+					
+			assertEquals("we expect that an Add Worker Message name be related to the given label", EXPECT, msg.getName());
+	
+			// reflection access is a bit wonky - this is way many of my classes are package access
+			// cannot do it this time because the PipeWorker is a subclass of Worker which does not have a pipe member variable
+			Object workerPipe      = TestUtils.reflectValue(msg.getWorker(), "pipe");
+			
+			assertEquals("we expect that an Add Worker Message pipe be the given pipe", pipe, workerPipe);
+		} finally {
+			session.close();
+		}
 	}
 	
 	@Test
@@ -418,21 +463,22 @@ public class SCManagerTests {
 		// obtain an instance of the session
 		SCManager  session     = SCManager.open();
 
-		SCManager.wrapCallback(future, session.workerPool.dispatcher(), callback);
-
-		assertTrue("Callback should have been attached to the Future", onCompleteCalled_future[0]);
-		
-		assertTrue("An OnComplete function wrapper should have been passed into the OnComplete Future attachment", null != onCompleteRef[0]);
-		assertTrue("An AKKA context should have been passed into the OnComplete Future attachment", null != contextRef[0]);
-		
-		assertFalse("OnComplete should NOT have been called yet", onCompleteCalled_callback[0]);
-		onCompleteRef[0].onComplete(null, null);
-		// this tests that the Callback instance has been wrapped
-		assertTrue("OnComplete should HAVE been called", onCompleteCalled_callback[0]);
+		try {
+			SCManager.wrapCallback(future, session.workerPool.dispatcher(), callback);
+	
+			assertTrue("Callback should have been attached to the Future", onCompleteCalled_future[0]);
+			
+			assertTrue("An OnComplete function wrapper should have been passed into the OnComplete Future attachment", null != onCompleteRef[0]);
+			assertTrue("An AKKA context should have been passed into the OnComplete Future attachment", null != contextRef[0]);
+			
+			assertFalse("OnComplete should NOT have been called yet", onCompleteCalled_callback[0]);
+			onCompleteRef[0].onComplete(null, null);
+			// this tests that the Callback instance has been wrapped
+			assertTrue("OnComplete should HAVE been called", onCompleteCalled_callback[0]);
+		} finally {
+			session.close();
+		}
 	}
 	
 	// TODO should test the SCManager.shutdown method; however, it would invalidate other tests at this time. Need to isolate each test.
-	
-	// TODO should the manager have an feature to auto start and stop workers?
-	// TODO need to check why the callback has a different thread. it could be a junit thing
 }

@@ -96,43 +96,47 @@ public class DBTesting {
 
 		
 		SCManager session = SCManager.open();
-		Worker    worker  = new Worker() {
-			DbReader<Pojo> dbReader;
-			@Override
-			public void begin() throws CdatException {
-				super.begin();
-				producer.open();
-			}
-			@Override
-			public boolean process() throws CdatException {
-				super.process();
-				boolean hasMore = producer.read();
-				System.out.println("dbReader has more? " + hasMore);
-				return hasMore;
-			}
-			@Override
-			public void end() {
-				super.end();
-				Closer.close(dbReader);
-				Closer.close(producer);
-			}
-		};
-		
-		
-		String workerName = session.addWorker("SelectAllPeople", worker);
-		session.send(workerName, Control.Start);
-//		manager.shutdown();
-		//prod.open().read().close();
-				
 		final String[] result = new String[1];
-		session.send(workerName, Control.onComplete, new Callback() {			
-			@Override
-			public void onComplete(Throwable t, Message response) {
-				result[0] =  new String(target.toByteArray());
-			}
-		});
-		
-		TestUtils.waitAlittleWhileForResponse(result);
+
+		try {
+			
+			Worker    worker  = new Worker() {
+				DbReader<Pojo> dbReader;
+				@Override
+				public void begin() throws CdatException {
+					super.begin();
+					producer.open();
+				}
+				@Override
+				public boolean process() throws CdatException {
+					super.process();
+					boolean hasMore = producer.read();
+					System.out.println("dbReader has more? " + hasMore);
+					return hasMore;
+				}
+				@Override
+				public void end() {
+					super.end();
+					Closer.close(dbReader);
+					Closer.close(producer);
+				}
+			};
+			
+			
+			String workerName = session.addWorker("SelectAllPeople", worker);
+			session.send(workerName, Control.Start);
+					
+			session.send(workerName, Control.onComplete, new Callback() {			
+				@Override
+				public void onComplete(Throwable t, Message response) {
+					result[0] =  new String(target.toByteArray());
+				}
+			});
+			
+			TestUtils.waitAlittleWhileForResponse(result);
+		} finally {
+			session.close();
+		}
 
 		String csv = result[0];
 		System.out.println( csv );

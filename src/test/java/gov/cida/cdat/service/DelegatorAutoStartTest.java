@@ -41,8 +41,7 @@ public class DelegatorAutoStartTest {
 			session.send(workerName, Control.Stop);
 			
 		} finally {
-			// TODO this is why I would like a session reset/dispose after leaving scope or similar
-			session.setAutoStart(false);
+			session.close();
 		}
 	}
 }

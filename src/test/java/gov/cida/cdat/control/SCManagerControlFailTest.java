@@ -25,52 +25,48 @@ public class SCManagerControlFailTest {
 
 	private static ByteArrayOutputStream target;
 	private static String workerName;
-	private static SCManager session;
 	
 	@Test
 	public void testFailResponse() throws Exception {
-		session = SCManager.open();
+		SCManager session = SCManager.open();
 
-		// consumer
-		target = new ByteArrayOutputStream(1024*10);
-		SimpleStreamContainer<OutputStream>     out = new SimpleStreamContainer<OutputStream>(target);
-		
-		// producer
-		InputStream error = new InputStream() {
-			@Override
-			public int read() throws IOException {
-				throw new IOException();
-			}
-		};
-		SimpleStreamContainer<InputStream> in = new SimpleStreamContainer<InputStream>(error);
-		
-		// pipe
-		DataPipe pipe = new DataPipe(in, out);
-		Worker worker = new PipeWorker(pipe);
-
-		workerName = session.addWorker("error", worker);
-		
-		session.send(workerName, Message.create("Message", "Test"));
-		session.send(workerName, Control.Start);
-		
-		final Message[] message = new Message[1];
-		session.send(workerName, Control.onComplete, new Callback(){
-	        public void onComplete(Throwable t, Message response){
-	        	message[0] = response;
-	            report(response);
-	        }
-	    });
-
-		session.send(workerName, Control.Stop, new Callback() {
-			public void onComplete(Throwable t, Message response) {
-//				TestUtils.log("service shutdown");
-//				manager.shutdown();
-			}
-		});
-		
-		TestUtils.waitAlittleWhileForResponse(message);
-		
-		Assert.assertTrue("", message[0].toString().contains("Error reading from producer stream"));
+		try {
+			// consumer
+			target = new ByteArrayOutputStream(1024*10);
+			SimpleStreamContainer<OutputStream>     out = new SimpleStreamContainer<OutputStream>(target);
+			
+			// producer
+			InputStream error = new InputStream() {
+				@Override
+				public int read() throws IOException {
+					throw new IOException();
+				}
+			};
+			SimpleStreamContainer<InputStream> in = new SimpleStreamContainer<InputStream>(error);
+			
+			// pipe
+			DataPipe pipe = new DataPipe(in, out);
+			Worker worker = new PipeWorker(pipe);
+	
+			workerName = session.addWorker("error", worker);
+			
+			session.send(workerName, Message.create("Message", "Test"));
+			session.send(workerName, Control.Start);
+			
+			final Message[] message = new Message[1];
+			session.send(workerName, Control.onComplete, new Callback(){
+		        public void onComplete(Throwable t, Message response){
+		        	message[0] = response;
+		            report(response);
+		        }
+		    });
+			
+			TestUtils.waitAlittleWhileForResponse(message);
+			
+			Assert.assertTrue("", message[0].toString().contains("Error reading from producer stream"));
+		} finally {
+			session.close();
+		}
 	}
 	
 	

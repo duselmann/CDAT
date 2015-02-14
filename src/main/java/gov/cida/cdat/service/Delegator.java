@@ -117,11 +117,7 @@ public class Delegator extends UntypedActor {
 		// handle the stop message
 		} else if (msg.contains(Control.Stop)) {
 			logger.trace("Delegator recieved message {}",  Control.Stop);
-			try {
-				done( msg.get(Control.Stop) );
-			} finally {
-				context().stop( self() );
-			}
+			done( msg.get(Control.Stop) );
 			response = Message.create(Control.Stop, true);
 		
 		// handle continue processing requests
@@ -274,11 +270,11 @@ public class Delegator extends UntypedActor {
 				logger.trace("delegator sending message to CONTINUE");
 				self().tell(CONTINUE, self()); // .noSender() ?
 			} else {
-				done(" called from process when there was no more");
+				self().tell(Message.create(Control.Stop,"normal"), self());
 			}
 		} catch (Exception e) {
 			setCurrentError(e);
-			done("error");
+			self().tell(Message.create(Control.Stop,"error"), self());
 		}
 	}
 	
@@ -305,9 +301,9 @@ public class Delegator extends UntypedActor {
 				sendCompleted(needToKnow);
 			}
 			onComplete.clear();
+			context().stop( self() );
 		}
 	}
-	
 	
 	/**
 	 * Helper method that creates an onComplete:done/error message and sends it

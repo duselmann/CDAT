@@ -34,80 +34,83 @@ public class SCManagerControlInterruptTest {
 	@Test
 	public void testInterruptedStream() throws Exception {
 		SCManager session = SCManager.open();
-
-		final boolean[] closeCalled = new boolean[2];
-		// consumer
-		ByteArrayOutputStream      target = new ByteArrayOutputStream(1024*10) {
-			@Override
-			public void close() throws IOException {
-				closeCalled[0] = true;
-				super.close();
-			}
-		};
-		SimpleStreamContainer<OutputStream> consumer = new SimpleStreamContainer<OutputStream>(target);
-		
-		// producer
-		StreamContainer<InputStream> producer = new StreamContainer<InputStream>(){
-			int readCount=1;
-			InputStream  source = new InputStream() {
-				
-				@Override
-				public int read() throws IOException {
-					throw new RuntimeException("Should not be called");
-				}
-				@Override
-				public synchronized int read(byte[] b, int off, int len) throws IOException {
-					TestUtils.log("read(byte[],off,len) called", off, len);
- 					return super.read(b, off, len);
-				}
-				@Override
-				public synchronized int read(byte[] b) {
-					TestUtils.log("test read(byte[]) called - to read a small byte count");
-					String readString = "part" + readCount++;
-			        System.arraycopy(readString.getBytes(), 0, b, 0, readString.length());
-
-					return readString.length();
-				}
+		try {
+			final boolean[] closeCalled = new boolean[2];
+			// consumer
+			ByteArrayOutputStream      target = new ByteArrayOutputStream(1024*10) {
 				@Override
 				public void close() throws IOException {
-					closeCalled[1] = true;
+					closeCalled[0] = true;
 					super.close();
 				}
 			};
-			@Override
-			protected String getName() {
-				return "TestingProducerContainer";
-			}
-			@Override
-			public InputStream init() throws StreamInitException {
-				return source;
-			}
-		};
-		
-		// pipe
-		final DataPipe pipe = new DataPipe(producer, consumer);
-		Worker worker       = new PipeWorker(pipe){
-			@Override
-			public boolean process() throws CdatException {
-				TestUtils.log("test process() called - to set a small read time window");
-				boolean isMore = pipe.process(1);
-				return isMore;
-			}
-		};
-		
-		String workerName = session.addWorker("Interrupted", worker);
-		
-		session.send(workerName, Message.create(Control.Start));
-		session.send(workerName, Message.create(Control.Stop));
-//		manager.shutdown();
-		
-		Thread.sleep(100);
-		String results =  new String(target.toByteArray());
-		TestUtils.log("Loaded Stream: ", results);
-		TestUtils.log("pipe results: loaded ", target.size());
-		
-		Assert.assertTrue("Expect to be more than zero.", results.length()>0);
-		Assert.assertTrue("Expect the consumer to be closed.", closeCalled[0]);
-		Assert.assertTrue("Expect the producer to be closed.", closeCalled[1]);
+			SimpleStreamContainer<OutputStream> consumer = new SimpleStreamContainer<OutputStream>(target);
+			
+			// producer
+			StreamContainer<InputStream> producer = new StreamContainer<InputStream>(){
+				int readCount=1;
+				InputStream  source = new InputStream() {
+					
+					@Override
+					public int read() throws IOException {
+						throw new RuntimeException("Should not be called");
+					}
+					@Override
+					public synchronized int read(byte[] b, int off, int len) throws IOException {
+						TestUtils.log("read(byte[],off,len) called", off, len);
+	 					return super.read(b, off, len);
+					}
+					@Override
+					public synchronized int read(byte[] b) {
+						TestUtils.log("test read(byte[]) called - to read a small byte count");
+						String readString = "part" + readCount++;
+				        System.arraycopy(readString.getBytes(), 0, b, 0, readString.length());
+	
+						return readString.length();
+					}
+					@Override
+					public void close() throws IOException {
+						closeCalled[1] = true;
+						super.close();
+					}
+				};
+				@Override
+				protected String getName() {
+					return "TestingProducerContainer";
+				}
+				@Override
+				public InputStream init() throws StreamInitException {
+					return source;
+				}
+			};
+			
+			// pipe
+			final DataPipe pipe = new DataPipe(producer, consumer);
+			Worker worker       = new PipeWorker(pipe){
+				@Override
+				public boolean process() throws CdatException {
+					TestUtils.log("test process() called - to set a small read time window");
+					boolean isMore = pipe.process(1);
+					return isMore;
+				}
+			};
+			
+			String workerName = session.addWorker("Interrupted", worker);
+			
+			session.send(workerName, Message.create(Control.Start));
+			session.send(workerName, Message.create(Control.Stop));
+	//		manager.shutdown();
+			
+			Thread.sleep(100);
+			String results =  new String(target.toByteArray());
+			TestUtils.log("Loaded Stream: ", results);
+			TestUtils.log("pipe results: loaded ", target.size());
+			
+			Assert.assertTrue("Expect to be more than zero.", results.length()>0);
+			Assert.assertTrue("Expect the consumer to be closed.", closeCalled[0]);
+			Assert.assertTrue("Expect the producer to be closed.", closeCalled[1]);
+		} finally {
+			session.close();
+		}
 	}
 }
