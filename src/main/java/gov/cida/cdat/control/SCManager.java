@@ -119,7 +119,7 @@ public class SCManager {
 	public void close(boolean force) {
 		try {
 			// this tells the session to stop processing workers
-			setAutoStart(false); // this is for completeness
+			setAutoStart(false); // this is for completeness // TODO make configurable
 			
 			if (force) {
 				// hard stop
@@ -481,7 +481,10 @@ public class SCManager {
 	 * TODO need a force/wait versions of this for the option to wait for workers to finish
 	 * TODO investigate a means to have session NOT able to call this - not likely - I would like only the container to call this on shutdown
 	 */
-	public void shutdown() {
+	public static void shutdown() {
+		final ActorSystem workerPool = instance().workerPool;
+		final Logger logger = LoggerFactory.getLogger(instance().getClass());
+		
 		workerPool.scheduler().scheduleOnce( Time.HALF_MIN, // TODO make configurable
 			new Runnable() {
 				@Override
