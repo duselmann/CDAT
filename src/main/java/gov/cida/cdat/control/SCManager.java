@@ -401,9 +401,7 @@ public class SCManager {
 	 * @return a future containing a return message as to how the action executed
 	 */
 	public Future<Object> send(String workerName, Control ctrl, final Callback callback) {
-		Future<Object> response = send(workerName, ctrl);
-		wrapCallback(response, workerPool.dispatcher(), callback);
-		return response;
+		return send(workerName, Message.create(ctrl), callback);
 	}
 	/**
 	 * <p>Enumerated status message (blocking of a limited time)</p>
@@ -442,7 +440,10 @@ public class SCManager {
 	 * @see SCManager.send(String workerName, Message message)
 	 */
 	public Future<Object> send(String workerName, Status status, final Callback callback) {
-		Future<Object> response = send(workerName, Message.create(status));
+		return send(workerName, Message.create(status), callback);
+	}
+	public Future<Object> send(String workerName, Message msg, final Callback callback) {
+		Future<Object> response = send(workerName, msg);
 		wrapCallback(response, workerPool.dispatcher(), callback);
 		return response;
 	}
