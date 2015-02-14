@@ -1,7 +1,6 @@
 package gov.cida.cdat.service;
 
-import static akka.actor.SupervisorStrategy.*;
-
+import static akka.actor.SupervisorStrategy.stop;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.control.Status;
@@ -11,6 +10,8 @@ import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.message.Message;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,9 +96,20 @@ public class Session extends UntypedActor {
 //		}
 		
 		delegates.setStatus(workerName, status);
+		
+		// remove finished workers
+		if (Status.isDisposed.equals(status)
+				|| Status.isDone.equals(status)
+				|| Status.isError.equals(status)) {
+			ActorRef worker = delegates.get(workerName);
+			if (worker != null) {
+				getContext().unwatch(worker);
+			}
+		}
+
 	}
 	/**
-	 * The helper method that manages the exposed framework messages.
+	 * The helper method that manages the exposed cDAT framework messages.
 	 * @param msg the message to act on
 	 */
 	void onReceive(final Message msg) {
@@ -109,6 +121,11 @@ public class Session extends UntypedActor {
 		}
 		if ( SCManager.SESSION.equals( msg.get(Control.Stop) ) ) {
 			stopSession(msg);
+			return;
+		}
+		if ( SCManager.SESSION.equals( msg.get(Status.info) ) ) {
+			response = info();
+			sender().tell(response, self());
 			return;
 		}
 		
@@ -147,12 +164,26 @@ public class Session extends UntypedActor {
 			logger.trace("worker full name: {}", worker.path());
 			// workers only read message keys that pertain to them
 			// it is okay to pass the original message along
-			if (msg.contains(Control.Start)) {
+			if (autoStart || msg.contains(Control.Start)) {
 				delegates.setStatus(workerName, Status.isStarted);
 			} 
 			// forward is better than telling in this case. worker.tell(msg, self());
 			worker.forward(msg, context());
 		}
+	}
+	
+	/**
+	 * Creates a message containing of all the info a user might want to know about the session.
+	 * @return message containing session information
+	 */
+	Message info() {
+		Map<String,String> response = new HashMap<String,String>();
+		
+		for (String name : delegates.workers.keySet()) {			
+			response.put(name, delegates.getStatus(name));
+		}
+		
+		return Message.create(response);
 	}
 	
 	/**
@@ -235,6 +266,10 @@ public class Session extends UntypedActor {
         getContext().watch(delegate); // watch the delegate for termination handling
         
         delegates.put(workerName, delegate); // maintain a convenient reference
+
+        if (autoStart) {
+			delegates.setStatus(workerName, Status.isStarted);
+		} 
 	}
 	
 	/**
@@ -261,7 +296,7 @@ public class Session extends UntypedActor {
 			throws CdatException {
 		
 		for (ActorRef child : getContext().getChildren()) {
-			context().unwatch(child); // stop watching all the children
+			getContext().unwatch(child); // stop watching all the children
 			context().stop(child);
 		}
 		postStop();

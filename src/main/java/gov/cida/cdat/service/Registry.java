@@ -59,20 +59,29 @@ public class Registry {
 
 	
 	public void setStatus(String name, String status) {
+		if (stati.get(name) != null) {
+			Status current = Status.valueOf(stati.get(name));
+			Status update  = Status.valueOf(status);
+			if (update.ordinal() < current.ordinal()) {
+				// we only accept status further towards dispose
+				return;
+			}
+		}
+		
 		stati.remove(name);
 		stati.put(name, status);
 		
-		// remove finished workers
-		if (Status.isDisposed.equals(status)
-				|| Status.isDone.equals(status)
-				|| Status.isError.equals(status)) {
-			workers.remove(name);
-		}
+//		// remove finished workers
+//		if (Status.isDisposed.equals(status)
+//				|| Status.isDone.equals(status)
+//				|| Status.isError.equals(status)) {
+//			WeakReference<ActorRef> ref = workers.remove(name);
+//			if (ref != null && ref.get() != null) {
+//				
+//			}
+//		}
 	}
 	public void setStatus(String name, Status status) {
-		if ( Status.isDone.equals(status) ) {
-			workers.remove(name);
-		}
 		setStatus(name, status.toString());
 	}
 	public String getStatus(String name) {
