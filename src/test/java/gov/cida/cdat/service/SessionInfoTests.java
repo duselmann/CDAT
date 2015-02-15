@@ -25,7 +25,7 @@ public class SessionInfoTests {
 			String nameB = session.addWorker("workerB", workerB);
 			
 			final Message[] message = new Message[1];
-			Message getInfo = Message.create(Status.info, SCManager.SESSION);
+			Message getInfo = Message.create(Control.info, SCManager.SESSION);
 			session.send(SCManager.SESSION, getInfo, new Callback() {
 				@Override
 				public void onComplete(Throwable t, Message response) {
@@ -58,7 +58,7 @@ public class SessionInfoTests {
 			String nameB = session.addWorker("workerB", workerB);
 			
 			final Message[] message = new Message[1];
-			Message getInfo = Message.create(Status.info, SCManager.SESSION);
+			Message getInfo = Message.create(Control.info, SCManager.SESSION);
 			
 			session.send(nameA, Control.Start);
 			session.send(nameB, Control.Start);
@@ -120,7 +120,7 @@ public class SessionInfoTests {
 			String nameB = session.addWorker("workerB", workerB);
 			
 			final Message[] message = new Message[1];
-			Message getInfo = Message.create(Status.info, SCManager.SESSION);
+			Message getInfo = Message.create(Control.info, SCManager.SESSION);
 			
 			
 			session.send(SCManager.SESSION, getInfo, new Callback() {

@@ -388,6 +388,17 @@ public class SCManager {
 		Message msg = Message.create(ctrl);
 		return send(workerName, msg);
 	}
+	public Message request(String workerName, Message msg) {
+		Future<Object> future = send(workerName, msg);
+		Object result = null;
+		try {
+			result = Await.result(future, Time.SECOND); // TODO make configure
+		} catch (Exception e) {
+			result = Message.create("error",e.getMessage());
+		}
+		return (Message)result;
+	}
+	
 	/**
 	 * <p>Enumerated control message</p>
 	 * <p>A convenience send for Control enum standard messages. It saves the user from requiring
@@ -417,14 +428,7 @@ public class SCManager {
 	 */
 	public Message send(String workerName, Status status) {
 		Message msg = Message.create(status);
-		Future<Object> future = send(workerName, msg);
-		Object result = null;
-		try {
-			result = Await.result(future, Time.SECOND); // TODO make configure
-		} catch (Exception e) {
-			result = Message.create("error",e.getMessage());
-		}
-		return (Message)result;
+		return request(workerName, msg);
 	}
 	/**
 	 * <p>Enumerated status message (non-blocking)</p>

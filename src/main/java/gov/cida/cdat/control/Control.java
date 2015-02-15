@@ -13,5 +13,5 @@ import gov.cida.cdat.message.Message;
  * @see Status
  */
 public enum Control {
-	Start, Stop, onComplete;
+	Start, Stop, onComplete, info, CurrentStatus;
 }

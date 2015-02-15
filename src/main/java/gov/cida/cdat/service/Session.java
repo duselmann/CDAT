@@ -91,22 +91,14 @@ public class Session extends UntypedActor {
 		logger.trace("{} recieved termination for {}", self().path().name(), workerName);
 		Status status = Status.isDisposed;
 		
-//		if (false) { // TODO check for something to set this status
+		// TODO check for something to set error status
+//		if (false) {
 //			status = Status.isError;
+//		} else {
+			// remove finished workers but not errors
+			delegates.remove(workerName);
 //		}
-		
 		delegates.setStatus(workerName, status);
-		
-		// remove finished workers
-		if (Status.isDisposed.equals(status)
-				|| Status.isDone.equals(status)
-				|| Status.isError.equals(status)) {
-			ActorRef worker = delegates.get(workerName);
-			if (worker != null) {
-				getContext().unwatch(worker);
-			}
-		}
-
 	}
 	/**
 	 * The helper method that manages the exposed cDAT framework messages.
@@ -123,7 +115,7 @@ public class Session extends UntypedActor {
 			stopSession(msg);
 			return;
 		}
-		if ( SCManager.SESSION.equals( msg.get(Status.info) ) ) {
+		if ( SCManager.SESSION.equals( msg.get(Control.info) ) ) {
 			response = info();
 			sender().tell(response, self());
 			return;
@@ -143,9 +135,9 @@ public class Session extends UntypedActor {
 			} else if (msg.contains(Status.isDisposed)) {
 				response = Message.create(Status.isDisposed, true);
 				
-			} else if (msg.contains(Status.CurrentStatus)) {
-				String currentSatus = delegates.getStatus(workerName);
-				response = Message.create(Status.CurrentStatus, currentSatus);
+			} else if (msg.contains(Control.CurrentStatus)) {
+				Status currentStatus = delegates.getStatus(workerName);
+				response = Message.create(Control.CurrentStatus, currentStatus);
 			}
 			if (response != null) {
 				sender().tell(response, self());
@@ -179,8 +171,12 @@ public class Session extends UntypedActor {
 	Message info() {
 		Map<String,String> response = new HashMap<String,String>();
 		
-		for (String name : delegates.workers.keySet()) {			
-			response.put(name, delegates.getStatus(name));
+		// TODO this is not done, nulls need handling and more info provided
+		for (String name : delegates.names()) {
+			Status status = delegates.getStatus(name);
+			if (status != null) {
+				response.put(name, status.toString());
+			}
 		}
 		
 		return Message.create(response);

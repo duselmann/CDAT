@@ -5,7 +5,9 @@ import gov.cida.cdat.control.Status;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 import akka.actor.ActorRef;
@@ -14,12 +16,12 @@ import akka.actor.ActorRef;
 public class Registry {
 	
 	final Map<String,WeakReference<ActorRef>> workers;
-	final Map<String,String>   stati;
+	final Map<String,Status>   stati;
 	
 	public Registry() {
 		// when objects get GC'ed they will not be held in this registry
 		workers = new WeakHashMap<String, WeakReference<ActorRef>>();
-		stati   = new HashMap<String, String>();
+		stati   = new HashMap<String, Status>();
 	}
 	
 	public ActorRef get(String name) {
@@ -42,47 +44,43 @@ public class Registry {
 
 		return name;
 	}
+	
+	public void remove(String name) {
+		workers.remove(name);
+	}
 
-	public void setStatus(String name, String status) {
+	public void setStatus(String name, Status newStatus) {
 		if (stati.get(name) != null) {
-			Status current = Status.valueOf(stati.get(name));
-			Status update  = Status.valueOf(status);
-			if (update.ordinal() < current.ordinal()) {
+			Status current = stati.get(name);
+			if (newStatus.ordinal() < current.ordinal()) {
 				// we only accept status further towards dispose
 				return;
 			}
 		}
 		
 		stati.remove(name);
-		stati.put(name, status);
+		stati.put(name, newStatus);
 		
-//		// remove finished workers
-//		if (Status.isDisposed.equals(status)
-//				|| Status.isDone.equals(status)
-//				|| Status.isError.equals(status)) {
+		// remove not alive workers
+//		if ( ! Status.isAlive(newStatus) ) {
 //			WeakReference<ActorRef> ref = workers.remove(name);
 //			if (ref != null && ref.get() != null) {
 //				
 //			}
 //		}
 	}
-	public void setStatus(String name, Status status) {
-		setStatus(name, status.toString());
-	}
-	public String getStatus(String name) {
+	
+	public Status getStatus(String name) {
 		return stati.get(name);
 	}
 	public boolean isAlive(String name) {
-		Status status = Status.valueOf( getStatus(name) );
-		
-		if (Status.isDone.equals(status)
-				||  Status.isDisposed.equals(status)
-				||  Status.isError.equals(status) ) {
-			// we do not need to check for isAlive because that is not a set-able status
-			// isAlive is a status used to request if the worker is alive
-			return false;
-		}
-		return true; // it is more clear in this case to return true explicitly
+		return Status.isAlive( getStatus(name) );
 	}
 	
+	public Set<String> names() {
+		Set<String> names = new HashSet<String>(stati.keySet());
+		names.addAll(workers.keySet());
+		
+		return names;
+	}
 }

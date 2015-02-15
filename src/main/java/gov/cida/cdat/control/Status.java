@@ -13,7 +13,7 @@ import gov.cida.cdat.message.Message;
  * @see Control
  */
 public enum Status {
-	info,CurrentStatus,isNew,isStarted,isAlive,isDone,isError,isDisposed;
+	isNew,isStarted,isAlive,isDone,isError,isDisposed;
 	
 	// cannot override equals
 	public boolean is(Object other) {
@@ -24,5 +24,12 @@ public enum Status {
 			return toString().equalsIgnoreCase((String)other);
 		}
 		return super.equals(other);
+	}
+
+	public static boolean isAlive(Status status) {
+		if (status == null) {
+			return false;
+		}
+		return (Status.isAlive.ordinal() >= status.ordinal());
 	}
 }

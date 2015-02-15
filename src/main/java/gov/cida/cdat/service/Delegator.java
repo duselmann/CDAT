@@ -137,8 +137,8 @@ public class Delegator extends UntypedActor {
 			response = Message.create(Status.isAlive, true);
 		} else if (msg.contains(Status.isDone)) {
 			response = createStatusMessage(Status.isDone);
-		} else if (msg.contains(Status.CurrentStatus)) {
-			response = Message.create(Status.CurrentStatus, status);
+		} else if (msg.contains(Control.CurrentStatus)) {
+			response = Message.create(Control.CurrentStatus, status);
 		}
 		
 		// handle onComplete requests
