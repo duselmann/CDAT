@@ -37,27 +37,12 @@ public class Registry {
 	}
 	
 	public String put(String name, ActorRef actor) {
-		String uniqueName = createUniqueName(name);
-		workers.put(uniqueName, new WeakReference<ActorRef>(actor));
+		workers.put(name, new WeakReference<ActorRef>(actor));
 		setStatus(name, Status.isNew);
 
 		return name;
 	}
 
-	// package access for testing
-	String createUniqueName(String name) {
-		int count = 0; // internal count auto-named entries
-		
-		String uniqueName = name;
-		
-		while ( workers.containsKey(uniqueName) || stati.containsKey(uniqueName) ) {
-			uniqueName = name + (count++);
-		}
-		
-		return uniqueName;
-	}
-
-	
 	public void setStatus(String name, String status) {
 		if (stati.get(name) != null) {
 			Status current = Status.valueOf(stati.get(name));
