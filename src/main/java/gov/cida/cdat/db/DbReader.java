@@ -16,7 +16,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class DbReader<T> implements Closeable, Openable<OutputStream> {
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	protected Connection conn;
 	protected int fetchSize;
@@ -41,7 +45,7 @@ public abstract class DbReader<T> implements Closeable, Openable<OutputStream> {
 	
 	@Override
 	public OutputStream open() throws StreamInitException {
-		System.out.println("DbReader open");
+		logger.trace("DbReader open");
 		
 		target = transformer.open();
 		try {
@@ -58,7 +62,7 @@ public abstract class DbReader<T> implements Closeable, Openable<OutputStream> {
 	
 	
 	public boolean read() throws CdatException {
-		System.out.println("DbReader read");
+		logger.trace("DbReader read");
 
 		if (target == null) {
 			throw new StreamInitException("Must call open before reading");
@@ -83,7 +87,7 @@ public abstract class DbReader<T> implements Closeable, Openable<OutputStream> {
 	
 	@Override
 	public void close() throws IOException {
-		System.out.println("DbReader close");
+		logger.trace("DbReader close");
 		
 		Closer.close(transformer);
 		Closer.close(target);
