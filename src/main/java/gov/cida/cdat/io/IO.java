@@ -111,7 +111,6 @@ public final class IO {
 	}
 	private static int read(InputStream source, byte[] buffer) throws ProducerException {
 		try {
-			//Thread.sleep(250); // TODO this is here for testing
 			return source.read(buffer);
 		} catch (Exception e) {
 			throw new ProducerException("Error reading from producer stream", e);

@@ -191,7 +191,7 @@ public class Delegator extends UntypedActor {
 	@Override
 	public void preStart() throws Exception {
 		if (autoStart) {
-			logger.debug("Delegate AUTOSTART worker");
+			logger.trace("Delegate AUTOSTART worker");
 			start();
 		}
 	}
@@ -245,7 +245,7 @@ public class Delegator extends UntypedActor {
 	 */
 	Message start() throws CdatException {
 		if ( ! Status.isNew.equals(status) ) {
-			logger.debug("Ignoring multistart worker {}", name);
+			logger.trace("Ignoring multistart worker {}", name);
 			setCurrentError(new StreamInitException("May only start new workers"));
 			return Message.create(Control.Start,false);
 		}
@@ -299,7 +299,7 @@ public class Delegator extends UntypedActor {
 	 * @param qualifier
 	 */
 	void done(String qualifier) {
-		logger.debug("delegator done called with: {}", qualifier);
+		logger.trace("delegator done called with: {}", qualifier);
 		try {
 			worker.end();
 			setStatus(Status.isDone);
@@ -380,7 +380,7 @@ public class Delegator extends UntypedActor {
 	 * @param currentError
 	 */
 	void setCurrentError(Exception error) {
-		logger.debug("Exception running worker", error);
+		logger.trace("Exception running worker", error);
 		setStatus(Status.isError);
 		this.currentError = error;
 		worker.setCurrentError(error);

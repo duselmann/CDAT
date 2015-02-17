@@ -62,7 +62,8 @@ public class SCManagerControlInterruptTest {
 					}
 					@Override
 					public synchronized int read(byte[] b) {
-						TestUtils.log("test read(byte[]) called - to read a small byte count");
+						TestUtils.sleepQuietly(1);
+//						TestUtils.log("test read(byte[]) called - to read a small byte count");
 						String readString = "part" + readCount++;
 				        System.arraycopy(readString.getBytes(), 0, b, 0, readString.length());
 	

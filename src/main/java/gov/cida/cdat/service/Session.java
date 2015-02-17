@@ -236,6 +236,7 @@ public class Session extends UntypedActor {
 			// TODO this could be a while loop instead of a message loop if we find this is too noisy
 			if (delegates>0  &&  attempts++<100) {
 				logger.trace("jobs remain running on {}", self().path().name());
+				// give some time for children to finish
 				Thread.sleep( Time.MILLIS.toMillis() ); // TODO make configurable
 				msg = msg.extend("attempts", ""+attempts);
 				self().tell(msg, self());

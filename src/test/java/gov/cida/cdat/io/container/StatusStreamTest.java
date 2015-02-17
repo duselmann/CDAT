@@ -67,7 +67,7 @@ public class StatusStreamTest {
 				}
 				@Override
 				public synchronized int read(byte[] b) throws IOException {
-					TestUtils.log("test read(byte[]) called - to read a small byte count");
+//					TestUtils.log("test read(byte[]) called - to read a small byte count");
  					return dataRefStream.read(b, 0, 5);
 				}
 				@Override
@@ -114,10 +114,10 @@ public class StatusStreamTest {
 				System.out.println("status thread");
 				while (status.getChainedStream() == null) {
 					status(status.getChainedStream());
-					try {Thread.sleep(50); } catch (InterruptedException e) {}
+					TestUtils.sleepQuietly(50);
 				}
 				status(status.getChainedStream());
-				try {Thread.sleep(50); } catch (InterruptedException e) {}
+				TestUtils.sleepQuietly(50);
 				status(status.getChainedStream());
 			}
 

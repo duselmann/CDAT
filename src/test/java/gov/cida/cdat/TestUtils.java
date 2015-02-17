@@ -82,4 +82,13 @@ public class TestUtils {
 		return buf.toString().getBytes();
 	}
 	
+	// sleep with swallowed exceptions for tests
+	public static void sleepQuietly(int milliseconds) {
+		try {
+			Thread.sleep(milliseconds);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
 }

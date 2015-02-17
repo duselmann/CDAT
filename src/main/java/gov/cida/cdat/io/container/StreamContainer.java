@@ -76,7 +76,7 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 	 */
 	@Override
 	public final S open() throws StreamInitException {
-		logger.debug("Open called: {} ", getName());
+		logger.trace("Open called: {} ", getName());
 		// TODO test that this is correct, works, and sufficient
 		// TODO could be that we need a new boolean hasBeenOpened or like mechanism
 		if ( stream != null ) {
@@ -91,7 +91,7 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 	 */
 	@Override
 	public final void close() throws IOException {
-		logger.debug("Close called: {} ", getName());
+		logger.trace("Close called: {} ", getName());
 		try {
 			if (getStream() instanceof Flushable) {
 				((Flushable)getStream()).flush();
@@ -100,7 +100,7 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 //				Method flush;
 //				Class<?> streamClass = getStream().getClass();
 //				if ( null != ( flush = streamClass.getMethod("flush") ) ) {
-//					logger.debug("Flush called: {} ", streamClass.getName());
+//					logger.trace("Flush called: {} ", streamClass.getName());
 //					flush.invoke(getStream());
 //				}
 			}
@@ -155,7 +155,7 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 		S oldStream = getStream();
 		stream = null;
 		if (oldStream != null) {
-			logger.debug("Close stream: {} ", oldStream.getClass().getName());
+			logger.trace("Close stream: {} ", oldStream.getClass().getName());
 			Closer.close(oldStream);
 		}
 	}
