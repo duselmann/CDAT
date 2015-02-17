@@ -120,6 +120,11 @@ public class Session extends UntypedActor {
 			sender().tell(response, self());
 			return;
 		}
+		if ( msg.contains(Delegator.PROCESS_STATUS) ) {
+			Status status = Status.valueOf(msg.get(Delegator.PROCESS_STATUS));
+			delegates.setStatus(msg.get(Naming.WORKER_NAME), status);
+			return;
+		}
 		
 		String workerName = msg.get(Naming.WORKER_NAME);
 
