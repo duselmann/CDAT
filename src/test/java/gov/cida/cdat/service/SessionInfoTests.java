@@ -136,7 +136,7 @@ public class SessionInfoTests {
 			
 			assertEquals("Expect info on workerA to be "+Status.isStarted,
 					Status.isStarted.toString(), message[0].get(nameA));
-			assertEquals("Expect info on workerB to be "+Status.isDisposed,
+			assertEquals("Expect info on workerB to be "+Status.isStarted,
 					Status.isStarted.toString(), message[0].get(nameB));
 		} finally {
 			session.close();
