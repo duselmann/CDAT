@@ -91,22 +91,14 @@ public class Session extends UntypedActor {
 		logger.trace("{} recieved termination for {}", self().path().name(), workerName);
 		Status status = Status.isDisposed;
 		
-//		if (false) { // TODO check for something to set this status
+		// TODO check for something to set error status
+//		if (false) {
 //			status = Status.isError;
+//		} else {
+			// remove finished workers but not errors
+			delegates.remove(workerName);
 //		}
-		
 		delegates.setStatus(workerName, status);
-		
-		// remove finished workers
-		if (Status.isDisposed.equals(status)
-				|| Status.isDone.equals(status)
-				|| Status.isError.equals(status)) {
-			ActorRef worker = delegates.get(workerName);
-			if (worker != null) {
-				getContext().unwatch(worker);
-			}
-		}
-
 	}
 	/**
 	 * The helper method that manages the exposed cDAT framework messages.
@@ -123,9 +115,19 @@ public class Session extends UntypedActor {
 			stopSession(msg);
 			return;
 		}
-		if ( SCManager.SESSION.equals( msg.get(Status.info) ) ) {
+		if ( SCManager.SESSION.equals( msg.get(Control.info) ) ) {
 			response = info();
 			sender().tell(response, self());
+			return;
+		}
+		if ( msg.contains(Control.history) ) {
+			response = history(msg.get(Naming.WORKER_NAME));
+			sender().tell(response, self());
+			return;
+		}
+		if ( msg.contains(Delegator.PROCESS_STATUS) ) {
+			Status status = Status.valueOf(msg.get(Delegator.PROCESS_STATUS));
+			delegates.setStatus(msg.get(Naming.WORKER_NAME), status);
 			return;
 		}
 		
@@ -143,9 +145,9 @@ public class Session extends UntypedActor {
 			} else if (msg.contains(Status.isDisposed)) {
 				response = Message.create(Status.isDisposed, true);
 				
-			} else if (msg.contains(Status.CurrentStatus)) {
-				String currentSatus = delegates.getStatus(workerName);
-				response = Message.create(Status.CurrentStatus, currentSatus);
+			} else if (msg.contains(Control.CurrentStatus)) {
+				Status currentStatus = delegates.getStatus(workerName);
+				response = Message.create(Control.CurrentStatus, currentStatus);
 			}
 			if (response != null) {
 				sender().tell(response, self());
@@ -173,14 +175,49 @@ public class Session extends UntypedActor {
 	}
 	
 	/**
+	 * Helper method that creates the worker status history message.
+	 * The status names and times are converted to strings. The time is the
+	 * long milliseconds as a string.
+	 * @param name the worker name
+	 * @return the worker history message <status-name, event-time>
+	 */
+	Message history(String name) {
+		logger.trace("SESSION history for {}", name);
+		
+		Map<String,String> historyMsg  = new HashMap<String,String>();
+		Map<Status,Long> workerHistory = delegates.getHistory(name);
+		
+		if (name != null) {
+			for (Status stat : workerHistory.keySet()) {
+				if (workerHistory.get(stat) != null) {
+					historyMsg.put(stat.toString(), workerHistory.get(stat).toString());
+				}
+			}
+			if (null != workerHistory.get(Status.isDone)) {
+				Long runtime = workerHistory.get(Status.isDone)-workerHistory.get(Status.isStarted);
+				historyMsg.put("runtime", runtime.toString());
+			}
+			if (null != workerHistory.get(Status.isDisposed)) {
+				Long lifespan = workerHistory.get(Status.isDisposed)-workerHistory.get(Status.isNew);
+				historyMsg.put("lifespan", lifespan.toString());
+			}
+		}
+		return Message.create(historyMsg);
+	}
+	
+	/**
 	 * Creates a message containing of all the info a user might want to know about the session.
 	 * @return message containing session information
 	 */
 	Message info() {
 		Map<String,String> response = new HashMap<String,String>();
 		
-		for (String name : delegates.workers.keySet()) {			
-			response.put(name, delegates.getStatus(name));
+		// TODO this is not done, nulls need handling and more info provided
+		for (String name : delegates.names()) {
+			Status status = delegates.getStatus(name);
+			if (status != null) {
+				response.put(name, status.toString());
+			}
 		}
 		
 		return Message.create(response);
@@ -200,7 +237,7 @@ public class Session extends UntypedActor {
 			if (delegates>0  &&  attempts++<100) {
 				logger.trace("jobs remain running on {}", self().path().name());
 				Thread.sleep( Time.MILLIS.toMillis() ); // TODO make configurable
-				msg = Message.extend(msg, "attempts", ""+attempts);
+				msg = msg.extend("attempts", ""+attempts);
 				self().tell(msg, self());
 			} else {
 				logger.trace("no works waiting to finish - stopping session {}", self().path().name());

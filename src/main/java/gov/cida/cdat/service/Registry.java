@@ -2,10 +2,13 @@ package gov.cida.cdat.service;
 
 
 import gov.cida.cdat.control.Status;
+import gov.cida.cdat.control.Time;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 import akka.actor.ActorRef;
@@ -14,12 +17,40 @@ import akka.actor.ActorRef;
 public class Registry {
 	
 	final Map<String,WeakReference<ActorRef>> workers;
-	final Map<String,String>   stati;
+	final Map<String,Status>   stati;
+	final Map<String,Map<Status,Long>>   history;
 	
 	public Registry() {
 		// when objects get GC'ed they will not be held in this registry
 		workers = new WeakHashMap<String, WeakReference<ActorRef>>();
-		stati   = new HashMap<String, String>();
+		stati   = new HashMap<String, Status>();
+		history = new HashMap<String, Map<Status,Long>>(){
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public String toString() {
+				StringBuilder buff = new StringBuilder().append("history::");
+				for (String name : keySet()) {
+					buff.append(name).append(" :\n");
+					for (Status stat : Status.values()) {
+						Long time = get(name).get(stat);
+						buff.append('\t').append(stat.toString())
+							.append(" - ").append(time==null?"":time.toString())
+							.append('\n');
+					}
+					if (null != get(name).get(Status.isDone)) {
+						long runtime = get(name).get(Status.isDone)-get(name).get(Status.isStarted);
+						buff.append('\t').append("runtime - ").append(runtime).append('\n');
+					}
+					if (null != get(name).get(Status.isDisposed)) {
+						long lifespan = get(name).get(Status.isDisposed)-get(name).get(Status.isNew);
+						buff.append('\t').append("lifespan - ").append(lifespan).append('\n');
+					}
+				}
+				
+				return buff.toString();
+			}
+		};
 	}
 	
 	public ActorRef get(String name) {
@@ -37,67 +68,58 @@ public class Registry {
 	}
 	
 	public String put(String name, ActorRef actor) {
-		String uniqueName = createUniqueName(name);
-		workers.put(uniqueName, new WeakReference<ActorRef>(actor));
+		workers.put(name, new WeakReference<ActorRef>(actor));
+		history.put(name, new HashMap<Status,Long>());
 		setStatus(name, Status.isNew);
 
 		return name;
 	}
-
-	// package access for testing
-	String createUniqueName(String name) {
-		int count = 0; // internal count auto-named entries
-		
-		String uniqueName = name;
-		
-		while ( workers.containsKey(uniqueName) || stati.containsKey(uniqueName) ) {
-			uniqueName = name + (count++);
-		}
-		
-		return uniqueName;
+	
+	public void remove(String name) {
+		workers.remove(name);
 	}
 
-	
-	public void setStatus(String name, String status) {
+	public void setStatus(String name, Status newStatus) {
 		if (stati.get(name) != null) {
-			Status current = Status.valueOf(stati.get(name));
-			Status update  = Status.valueOf(status);
-			if (update.ordinal() < current.ordinal()) {
-				// we only accept status further towards dispose
-				return;
+			Status current = stati.get(name);
+			if (newStatus.ordinal() < current.ordinal()) {
+				return; // we only accept after the current status, closer to dispose
 			}
 		}
 		
 		stati.remove(name);
-		stati.put(name, status);
+		stati.put(name, newStatus);
+		history.get(name).put(newStatus, Time.now());
 		
-//		// remove finished workers
-//		if (Status.isDisposed.equals(status)
-//				|| Status.isDone.equals(status)
-//				|| Status.isError.equals(status)) {
+		// remove not alive workers
+//		if ( ! Status.isAlive(newStatus) ) {
 //			WeakReference<ActorRef> ref = workers.remove(name);
 //			if (ref != null && ref.get() != null) {
 //				
 //			}
 //		}
 	}
-	public void setStatus(String name, Status status) {
-		setStatus(name, status.toString());
-	}
-	public String getStatus(String name) {
+	
+	public Status getStatus(String name) {
 		return stati.get(name);
 	}
 	public boolean isAlive(String name) {
-		Status status = Status.valueOf( getStatus(name) );
-		
-		if (Status.isDone.equals(status)
-				||  Status.isDisposed.equals(status)
-				||  Status.isError.equals(status) ) {
-			// we do not need to check for isAlive because that is not a set-able status
-			// isAlive is a status used to request if the worker is alive
-			return false;
-		}
-		return true; // it is more clear in this case to return true explicitly
+		return Status.isAlive( getStatus(name) );
 	}
 	
+	public Set<String> names() {
+		Set<String> names = new HashSet<String>(stati.keySet());
+		names.addAll(workers.keySet());
+		
+		return names;
+	}
+	
+	public Map<Status,Long> getHistory(String name) {
+		Map<Status, Long> workerHistory = new HashMap<Status, Long>();
+		
+		if (history.get(name) != null) {
+			workerHistory.putAll( history.get(name) );
+		}
+		return workerHistory;
+	}
 }

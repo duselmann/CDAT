@@ -113,6 +113,9 @@ public class Message implements Serializable {
 		msg.message.put(name.toString(), value);
 		return msg;
 	}
+	public Message extend(Object name, String value) {
+		return extend(this,name,value);
+	}
 	/**
 	 * convenience method for creating a boolean qualifier
 	 * @param name message name
@@ -212,5 +215,9 @@ public class Message implements Serializable {
 		String caller = last.getClassName() +"."+ last.getMethodName() 
 				+":"+ last.getLineNumber();
 		message.put("TRACE", caller);
+	}
+	
+	public int size() {
+		return message.size();
 	}
 }

@@ -30,11 +30,20 @@ public class Delegator extends UntypedActor {
 	/**
 	 * The message name for processing more or CONTINUE
 	 */
-	private static final String  PROCESS_MORE = "process.more";
+	private static final String  PROCESS_MORE   = "process.more";
 	/**
 	 * The message to continue processing more data
 	 */
-	private static final Message CONTINUE     = Message.create(PROCESS_MORE);
+	private static final Message CONTINUE       = Message.create(PROCESS_MORE);
+
+	/**
+	 * The message name for processing status update
+	 */
+	public static final String  PROCESS_STATUS = "STATUS";
+	/**
+	 * The message to update process status DONE
+	 */
+	private static final Message DONE           = Message.create(PROCESS_STATUS,Status.isDone);
 
 	/**
 	 * This is the unique name given when the delegate worker.
@@ -137,8 +146,8 @@ public class Delegator extends UntypedActor {
 			response = Message.create(Status.isAlive, true);
 		} else if (msg.contains(Status.isDone)) {
 			response = createStatusMessage(Status.isDone);
-		} else if (msg.contains(Status.CurrentStatus)) {
-			response = Message.create(Status.CurrentStatus, status);
+		} else if (msg.contains(Control.CurrentStatus)) {
+			response = Message.create(Control.CurrentStatus, status);
 		}
 		
 		// handle onComplete requests
@@ -294,6 +303,7 @@ public class Delegator extends UntypedActor {
 		try {
 			worker.end();
 			setStatus(Status.isDone);
+			context().parent().tell(DONE.extend(Naming.WORKER_NAME, getName()), self());
 		} catch (Exception e) {
 			setCurrentError(e);
 		} finally {
@@ -322,7 +332,7 @@ public class Delegator extends UntypedActor {
 		if (currentError != null) {
 			value = "error";
 			String exceptionMessage = createExceptionMessage(currentError);
-			completed = Message.extend(completed, Status.isError, exceptionMessage);
+			completed = completed.extend(Status.isError, exceptionMessage);
 		}
 		completed = Message.extend(completed, Control.onComplete, value);
 		needsToKnow.tell(completed, self());

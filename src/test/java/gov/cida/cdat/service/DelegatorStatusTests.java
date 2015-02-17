@@ -40,12 +40,12 @@ public class DelegatorStatusTests {
 			assertTrue("Expect the delegate be NEW", 
 					response.get(Status.isNew).equals("true"));
 			
-			response = session.send(workerName, Status.CurrentStatus);
+			response = session.request(workerName, Message.create(Control.CurrentStatus));
 			TestUtils.log("send status CurrentStatus - expect isNew", response);
 			assertTrue("Expect the delegate respond with CurrentStatus message", 
-					response.contains(Status.CurrentStatus));
+					response.contains(Control.CurrentStatus));
 			assertTrue("Expect the delegate be isNew", 
-					response.get(Status.CurrentStatus).equals("isNew"));
+					response.get(Control.CurrentStatus).equals("isNew"));
 			
 			response = session.send(workerName, Status.isStarted);
 			TestUtils.log("send status isStarted - expect false", response);
@@ -79,12 +79,12 @@ public class DelegatorStatusTests {
 			assertTrue("Expect the delegate be NEW", 
 					response.get(Status.isNew).equals("false"));
 			
-			response = session.send(workerName, Status.CurrentStatus);
+			response = session.request(workerName, Message.create(Control.CurrentStatus));
 			TestUtils.log("send status CurrentStatus - expect isStarted", response);
 			assertTrue("Expect the delegate respond with CurrentStatus message", 
-					response.contains(Status.CurrentStatus));
+					response.contains(Control.CurrentStatus));
 			assertTrue("Expect the delegate be isStarted", 
-					response.get(Status.CurrentStatus).equals("isStarted"));
+					response.get(Control.CurrentStatus).equals("isStarted"));
 			
 			response = session.send(workerName, Status.isStarted);
 			TestUtils.log("send status isStarted - expect true", response);
