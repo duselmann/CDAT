@@ -120,6 +120,11 @@ public class Session extends UntypedActor {
 			sender().tell(response, self());
 			return;
 		}
+		if ( msg.contains(Control.history) ) {
+			response = history(msg.get(Naming.WORKER_NAME));
+			sender().tell(response, self());
+			return;
+		}
 		if ( msg.contains(Delegator.PROCESS_STATUS) ) {
 			Status status = Status.valueOf(msg.get(Delegator.PROCESS_STATUS));
 			delegates.setStatus(msg.get(Naming.WORKER_NAME), status);
@@ -167,6 +172,37 @@ public class Session extends UntypedActor {
 			// forward is better than telling in this case. worker.tell(msg, self());
 			worker.forward(msg, context());
 		}
+	}
+	
+	/**
+	 * Helper method that creates the worker status history message.
+	 * The status names and times are converted to strings. The time is the
+	 * long milliseconds as a string.
+	 * @param name the worker name
+	 * @return the worker history message <status-name, event-time>
+	 */
+	Message history(String name) {
+		logger.trace("SESSION history for {}", name);
+		
+		Map<String,String> historyMsg  = new HashMap<String,String>();
+		Map<Status,Long> workerHistory = delegates.getHistory(name);
+		
+		if (name != null) {
+			for (Status stat : workerHistory.keySet()) {
+				if (workerHistory.get(stat) != null) {
+					historyMsg.put(stat.toString(), workerHistory.get(stat).toString());
+				}
+			}
+			if (null != workerHistory.get(Status.isDone)) {
+				Long runtime = workerHistory.get(Status.isDone)-workerHistory.get(Status.isStarted);
+				historyMsg.put("runtime", runtime.toString());
+			}
+			if (null != workerHistory.get(Status.isDisposed)) {
+				Long lifespan = workerHistory.get(Status.isDisposed)-workerHistory.get(Status.isNew);
+				historyMsg.put("lifespan", lifespan.toString());
+			}
+		}
+		return Message.create(historyMsg);
 	}
 	
 	/**
