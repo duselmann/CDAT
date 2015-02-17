@@ -368,7 +368,7 @@ public class SCManager {
 	 * @return a future that contains a Message response from the worker upon completion or exception
 	 */
 	public Future<Object> send(String workerName, Message message, Timeout waitTime) {
-		message = Message.extend(message, Naming.WORKER_NAME, workerName);
+		message = message.extend(Naming.WORKER_NAME, workerName);
 	    return Patterns.ask(session(workerName), message, waitTime);
 	}
 	

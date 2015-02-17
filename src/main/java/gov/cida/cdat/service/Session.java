@@ -196,7 +196,7 @@ public class Session extends UntypedActor {
 			if (delegates>0  &&  attempts++<100) {
 				logger.trace("jobs remain running on {}", self().path().name());
 				Thread.sleep( Time.MILLIS.toMillis() ); // TODO make configurable
-				msg = Message.extend(msg, "attempts", ""+attempts);
+				msg = msg.extend("attempts", ""+attempts);
 				self().tell(msg, self());
 			} else {
 				logger.trace("no works waiting to finish - stopping session {}", self().path().name());

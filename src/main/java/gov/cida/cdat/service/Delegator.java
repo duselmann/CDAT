@@ -322,7 +322,7 @@ public class Delegator extends UntypedActor {
 		if (currentError != null) {
 			value = "error";
 			String exceptionMessage = createExceptionMessage(currentError);
-			completed = Message.extend(completed, Status.isError, exceptionMessage);
+			completed = completed.extend(Status.isError, exceptionMessage);
 		}
 		completed = Message.extend(completed, Control.onComplete, value);
 		needsToKnow.tell(completed, self());
