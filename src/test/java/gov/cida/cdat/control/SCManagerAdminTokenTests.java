@@ -5,7 +5,6 @@ import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.exception.CdatException;
-import gov.cida.cdat.service.Worker;
 
 import java.net.MalformedURLException;
 import java.util.HashSet;

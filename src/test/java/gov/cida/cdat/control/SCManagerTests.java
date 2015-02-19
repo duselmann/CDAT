@@ -7,10 +7,8 @@ import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.message.AddWorkerMessage;
-import gov.cida.cdat.message.Message;
 import gov.cida.cdat.service.Naming;
 import gov.cida.cdat.service.PipeWorker;
-import gov.cida.cdat.service.Worker;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

@@ -7,9 +7,7 @@ import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
-import gov.cida.cdat.message.Message;
 import gov.cida.cdat.service.PipeWorker;
-import gov.cida.cdat.service.Worker;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

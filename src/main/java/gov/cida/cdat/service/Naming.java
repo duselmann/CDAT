@@ -1,6 +1,6 @@
 package gov.cida.cdat.service;
 
-import gov.cida.cdat.message.Message;
+import gov.cida.cdat.control.Message;
 
 import java.util.HashSet;
 import java.util.Set;

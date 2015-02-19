@@ -1,11 +1,12 @@
 package gov.cida.cdat.service;
 
 import gov.cida.cdat.control.Control;
+import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Status;
+import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.message.AddWorkerMessage;
-import gov.cida.cdat.message.Message;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -89,7 +90,7 @@ public class Delegator extends UntypedActor {
 	public Delegator(AddWorkerMessage worker) {
 		this.name      = worker.getName();
 		this.worker    = worker.getWorker();
-		this.worker.name = this.name;
+		this.worker.setName(this.name);
 		this.autoStart = worker.isAutoStart();
 		setStatus(Status.isNew);
 		logger.trace("new Delegator for worker:{} with autostart:{}", name, autoStart);

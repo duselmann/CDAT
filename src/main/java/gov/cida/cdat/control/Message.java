@@ -1,4 +1,4 @@
-package gov.cida.cdat.message;
+package gov.cida.cdat.control;
 
 
 import java.io.Serializable;

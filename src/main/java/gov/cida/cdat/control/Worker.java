@@ -1,7 +1,6 @@
-package gov.cida.cdat.service;
+package gov.cida.cdat.control;
 
 import gov.cida.cdat.exception.CdatException;
-import gov.cida.cdat.message.Message;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +26,9 @@ public abstract class Worker {
 	 *  It is just an initial impl from initial specs and might not be used
 	 */
 	private final long id = (long)(Math.random() * 10000000000000L);
-	String name;
+	private String name;
+	
+	
 	/**
 	 * Set to true by end() to indicate that it was called - this worker is done 
 	 */
@@ -101,7 +102,7 @@ public abstract class Worker {
 	 * The delegate will set this exception if one is detected.
 	 * @param currentError
 	 */
-	final void setCurrentError(Throwable currentError) {
+	public final void setCurrentError(Throwable currentError) {
 		this.currentError = currentError;
 	}
 	
@@ -111,6 +112,9 @@ public abstract class Worker {
 	 */
 	public final long getId() {
 		return id;
+	}
+	public final String getName() {
+		return name;
 	}
 	
 	/**
@@ -129,5 +133,12 @@ public abstract class Worker {
 	 */
 	public boolean isTerminateOnError(Exception error) {
 		return false;
+	}
+	
+	public final void setName(String name) {
+		if (name != null) {
+			return;
+		}
+		this.name = name;
 	}
 }

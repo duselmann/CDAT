@@ -1,6 +1,5 @@
 package gov.cida.cdat.control;
 
-import gov.cida.cdat.message.Message;
 import akka.dispatch.OnComplete;
 
 /**

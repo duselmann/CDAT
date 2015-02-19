@@ -3,13 +3,13 @@ package gov.cida.cdat.db;
 import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
+import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.io.container.TransformStreamContainer;
-import gov.cida.cdat.message.Message;
-import gov.cida.cdat.service.Worker;
 import gov.cida.cdat.transform.Transformer;
 
 import java.io.ByteArrayOutputStream;

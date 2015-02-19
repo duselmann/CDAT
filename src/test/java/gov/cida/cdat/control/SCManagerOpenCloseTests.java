@@ -2,7 +2,6 @@ package gov.cida.cdat.control;
 
 import static org.junit.Assert.*;
 import gov.cida.cdat.TestUtils;
-import gov.cida.cdat.service.Worker;
 
 import org.junit.Test;
 

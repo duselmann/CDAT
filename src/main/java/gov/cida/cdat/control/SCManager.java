@@ -1,11 +1,9 @@
 package gov.cida.cdat.control;
 
 import gov.cida.cdat.message.AddWorkerMessage;
-import gov.cida.cdat.message.Message;
 import gov.cida.cdat.service.DeadLetterLogger;
 import gov.cida.cdat.service.Naming;
 import gov.cida.cdat.service.Session;
-import gov.cida.cdat.service.Worker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

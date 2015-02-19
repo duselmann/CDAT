@@ -9,9 +9,7 @@ import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.io.container.StreamContainer;
-import gov.cida.cdat.message.Message;
 import gov.cida.cdat.service.PipeWorker;
-import gov.cida.cdat.service.Worker;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
