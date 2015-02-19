@@ -7,6 +7,7 @@ import gov.cida.cdat.io.Openable;
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,16 +94,16 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 	public final void close() throws IOException {
 		logger.trace("Close called: {} ", getName());
 		try {
+			Class<?> streamClass = getStream().getClass();
 			if (getStream() instanceof Flushable) {
+				logger.trace("Flush called: {} ", streamClass.getName());
 				((Flushable)getStream()).flush();
-			// This used to be used prior to Flushable interface
-//			} else {
-//				Method flush;
-//				Class<?> streamClass = getStream().getClass();
-//				if ( null != ( flush = streamClass.getMethod("flush") ) ) {
-//					logger.trace("Flush called: {} ", streamClass.getName());
-//					flush.invoke(getStream());
-//				}
+			} else { // try reflection in case flush is available
+				Method flush;
+				if ( null != ( flush = streamClass.getMethod("flush") ) ) {
+					logger.trace("Flush, via reflection, called: {} ", streamClass.getName());
+					flush.invoke(getStream());
+				}
 			}
 		} catch (Exception e) {
 			// does not matter, if flush not available then do not do it
