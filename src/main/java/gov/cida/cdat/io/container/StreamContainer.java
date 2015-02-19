@@ -108,11 +108,10 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 		} catch (Exception e) {
 			// does not matter, if flush not available then do not do it
 		} finally {
-			cleanup(); // TODO determine ideal calling location for this method
-			closeStream();
-			if (downstream != null) {
-				downstream.close();
-				downstream = null;
+			try {
+				cleanup(); // TODO determine ideal calling location for this method
+			} finally {
+				closeStream();
 			}
 		}
 	}
@@ -155,9 +154,14 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 	private void closeStream() {
 		S oldStream = getStream();
 		stream = null;
+		Closer.close(oldStream); // this method does not throw exceptions
+		
+		Closer.close(downstream);// because the previous does not throw, this will be called
+		downstream = null;
+		
+		// logg after to ensure above closes are called
 		if (oldStream != null) {
 			logger.trace("Close stream: {} ", oldStream.getClass().getName());
-			Closer.close(oldStream);
 		}
 	}
 	
