@@ -18,7 +18,7 @@ public class TransformOutputStream extends OutputStream {
 	@Override
 	public void write(byte[] bytes, int off, int len) throws IOException {
 		byte[] newBytes = transform.transform(bytes, off, len);
-		target.write(newBytes, off, len);
+		target.write(newBytes);
 	}
 	
 	@Override
