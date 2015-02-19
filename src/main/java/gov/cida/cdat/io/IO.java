@@ -57,12 +57,10 @@ public final class IO {
 		long total = 0;
 		int  count = 0;
 
-		while (count >= 0) {
+		while ((count = read(source, buffer)) >= 0) {
 			write(target, buffer, count);
-			count = read(source, buffer);
 			total += count;
 		}
-		write(target, buffer, count);
 		
 		logger.trace("total bytes read {}", total);
 		return total;
@@ -88,14 +86,12 @@ public final class IO {
 		long total = 0;
 		int  count = 0;
 
-		while (count >= 0 && Time.now() < endTime) {
+		while (Time.now() < endTime && (count = read(source, buffer)) >= 0) {
 			write(target, buffer, count);
-			count = read(source, buffer);
 			total += count;
 		}
-		write(target, buffer, count);
 		
-		logger.trace("total bytes read {}", total);
+		logger.trace("total read bytes {}", total);
 		return count >= 0;
 	}
 
