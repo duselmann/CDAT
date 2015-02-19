@@ -7,9 +7,13 @@ import java.io.OutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class HttpResponseContainer extends StreamContainer<OutputStream> {
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
-	private final HttpServletResponse response;
+	protected final HttpServletResponse response;
 	
 	public HttpResponseContainer(HttpServletResponse response) {
 		this.response = response;
@@ -27,6 +31,7 @@ public class HttpResponseContainer extends StreamContainer<OutputStream> {
 	 */
 	@Override
 	public OutputStream init() throws StreamInitException {
+		logger.trace("httpservletresponse init");
 		try {
 			apply();
 			return response.getOutputStream();
