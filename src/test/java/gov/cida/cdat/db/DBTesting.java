@@ -59,8 +59,8 @@ public class DBTesting {
 		SimpleStreamContainer<OutputStream> targetContainer = new SimpleStreamContainer<OutputStream>(target);
 		
 		// Transformer
-		Transformer<Pojo> transform = new PojoTransformer(",");
-		TransformStreamContainer<Pojo> transContainer = new TransformStreamContainer<Pojo>(transform, targetContainer);
+		Transformer transform = new PojoTransformer(",");
+		TransformStreamContainer transContainer = new TransformStreamContainer(transform, targetContainer);
 
 		// Producer
 		final PojoDbReader producer = new PojoDbReader(conn, transContainer);
@@ -87,8 +87,8 @@ public class DBTesting {
 		SimpleStreamContainer<OutputStream> targetContainer = new SimpleStreamContainer<OutputStream>(target);
 		
 		// Transformer
-		Transformer<Pojo> transform = new PojoTransformer(",");
-		TransformStreamContainer<Pojo> transContainer = new TransformStreamContainer<Pojo>(transform, targetContainer);
+		Transformer transform = new PojoTransformer(",");
+		TransformStreamContainer transContainer = new TransformStreamContainer(transform, targetContainer);
 
 		// Producer
 		final PojoDbReader producer = new PojoDbReader(conn, transContainer);

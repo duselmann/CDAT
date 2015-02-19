@@ -5,12 +5,12 @@ import gov.cida.cdat.transform.Transformer;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class TransformOutputStream<T> extends OutputStream {
+public class TransformOutputStream extends OutputStream {
 
 	private OutputStream target;
-	private Transformer<T> transform;
+	private Transformer transform;
 	
-	public TransformOutputStream(OutputStream target, Transformer<T> transform) {
+	public TransformOutputStream(OutputStream target, Transformer transform) {
 		this.target = target;
 		this.transform = transform;
 	}
@@ -26,7 +26,7 @@ public class TransformOutputStream<T> extends OutputStream {
 		throw new RuntimeException("Writing a single byte is not supported");
 	}
 	
-	public void write(T obj) throws IOException {
+	public void write(Object obj) throws IOException {
 		byte[] bytes = transform.transform(obj);
 		target.write(bytes);
 	}

@@ -15,11 +15,11 @@ public class DataPipe implements Openable<InputStream>, Closeable {
 	public static final int DEFAULT_DURATION = 10000; // TODO make configurable
 	public static final int FULL_DURATION    = -1;
 	
-	private final StreamContainer<InputStream>  producer;
-	private final StreamContainer<OutputStream> consumer;
+	private final StreamContainer<? extends InputStream>  producer;
+	private final StreamContainer<? extends OutputStream> consumer;
 	private boolean isComplete;
 	
-	public DataPipe(StreamContainer<InputStream> ins, StreamContainer<OutputStream> out) {
+	public DataPipe(StreamContainer<? extends InputStream> ins, StreamContainer<? extends OutputStream> out) {
 		this.producer = ins;
 		this.consumer = out;
 	}

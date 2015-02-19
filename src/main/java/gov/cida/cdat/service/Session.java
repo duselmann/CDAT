@@ -158,7 +158,7 @@ public class Session extends UntypedActor {
 		ActorRef worker = delegates.get(workerName);
 		// if there was no worker found then the we have no delegate to whom to send a message
 		if (worker == null) {
-			logger.warn("Failed to find worker named {} on session {}", workerName, self().path());
+			logger.warn("Failed to find worker named {} on session {} in msg {}", workerName, self().path(),msg);
 			unhandled(msg);
 			return;
 			

@@ -28,7 +28,7 @@ public class TransformerTest {
 
 		// Transformer
 		RegexTransformer transform = new RegexTransformer("middle","center");
-		TransformOutputStream<Object> tout = new TransformOutputStream<Object>(target, transform);
+		TransformOutputStream tout = new TransformOutputStream(target, transform);
 		SimpleStreamContainer<OutputStream> consumer  = new SimpleStreamContainer<OutputStream>(tout);
 
 		// Producer
@@ -90,12 +90,12 @@ public class TransformerTest {
 
 		// Transformer 1
 		RegexTransformer transform1 = new RegexTransformer("middle","center");
-		TransformOutputStream<Object> tStream1 = new TransformOutputStream<Object>(target, transform1);
+		TransformOutputStream tStream1 = new TransformOutputStream(target, transform1);
 		//SimpleStreamContainer<OutputStream> tContainer  = new SimpleStreamContainer<OutputStream>(tStream1);
 
 		// Transformer 2
 		RegexTransformer transform2 = new RegexTransformer("Z","~");
-		TransformOutputStream<Object> tStream2 = new TransformOutputStream<Object>(tStream1, transform2);
+		TransformOutputStream tStream2 = new TransformOutputStream(tStream1, transform2);
 		SimpleStreamContainer<OutputStream> consumer  = new SimpleStreamContainer<OutputStream>(tStream2);
 
 		// Producer

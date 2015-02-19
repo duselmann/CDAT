@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 public class PojoDbReader extends DbReader<Pojo> {
 	
-	public PojoDbReader(Connection conn, TransformStreamContainer<Pojo> transformer) {
+	public PojoDbReader(Connection conn, TransformStreamContainer transformer) {
 		super(conn, transformer);
 	}
 	
