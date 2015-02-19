@@ -311,14 +311,12 @@ public class SCManager {
 	 * @param pipe the full ETL flow from input stream producer (extractor) to the output stream consumer (loader).
 	 * 					transformers are stream that inject themselves in the consumer flow
 	 * @param onComplete the callback when the worker has completed.
-	 * @return a future for interacting, if necessary, with the the response
 	 */
-	public Future<Object> addWorker(String workerLabel, Worker worker, Callback onComplete) {
+	public void addWorker(String workerLabel, Worker worker, Callback onComplete) {
 		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, worker);
 		// this will stop blocking as soon as the worker finishes and returns an onComplete message
-		Future<Object> response = Patterns.ask(session(), msg, new Timeout(Time.DAY)); // TODO make configurable
-		wrapCallback(response, workerPool.dispatcher(), onComplete);
-		return response;
+		Future<Object> future = Patterns.ask(session(), msg, new Timeout(Time.DAY)); // TODO make configurable
+		wrapCallback(future, workerPool.dispatcher(), onComplete);
 	}
 
 	/**
@@ -334,6 +332,23 @@ public class SCManager {
 		String workerName = createNameFromLabel(workerLabel);
 		AddWorkerMessage msg = AddWorkerMessage.create(workerName, worker);
 		return msg;
+	}
+	
+	// TODO abstract the AKKA and SCALA frameworks out with wrapper classes. see Callback
+	/**
+	 * <p>Sends a message to the given worker name. It swallows the scala future to
+	 * abstract the AKKA framework away from callers. 
+	 * </p>
+	 * Example:<br>
+	 * SCManager manager = SCManager.get();<br>
+	 * Message message = Message.create(Control.start);<br>
+	 * manager.send(workerName, message);<br>
+	 * 
+	 * @param workerName the worker name to respond to the message (must be the unique name return from addWorker)
+	 * @param message the message the worker will receive. status or control
+	 */
+	public void send(String workerName, Message message) {
+		sendWithFuture(workerName,message);
 	}
 	
 	/**
@@ -352,9 +367,10 @@ public class SCManager {
 	 * @param message the message the worker will receive. status or control
 	 * @return a future that contains a Message response from the worker upon completion or exception
 	 */
-	public Future<Object> send(String workerName, Message message) {
+	Future<Object> sendWithFuture(String workerName, Message message) {
 		return send(workerName,message,new Timeout(Time.HALF_MIN)); // TODO make configurable
 	}
+	
 	/**
 	 * This is a similar method with a custom wait time.
 	 * 
@@ -365,7 +381,7 @@ public class SCManager {
 	 * @param waitTime custom time to wait if you have a longer possible wait time
 	 * @return a future that contains a Message response from the worker upon completion or exception
 	 */
-	public Future<Object> send(String workerName, Message message, Timeout waitTime) {
+	Future<Object> send(String workerName, Message message, Timeout waitTime) {
 		message = message.extend(Naming.WORKER_NAME, workerName);
 	    return Patterns.ask(session(workerName), message, waitTime);
 	}
@@ -379,15 +395,14 @@ public class SCManager {
 	 * </p>
 	 * @param workerName the unique work name to receive the message
 	 * @param ctrl an instance of the Control enum name
-	 * @return a future containing a return message as to how the action executed
 	 * @see SCManager.send(String workerName, Message message)
 	 */
-	public Future<Object> send(String workerName, Control ctrl) {
+	public void send(String workerName, Control ctrl) {
 		Message msg = Message.create(ctrl);
-		return send(workerName, msg);
+		send(workerName, msg);
 	}
 	public Message request(String workerName, Message msg) {
-		Future<Object> future = send(workerName, msg);
+		Future<Object> future = sendWithFuture(workerName, msg);
 		Object result = null;
 		try {
 			result = Await.result(future, Time.SECOND); // TODO make configure
@@ -409,8 +424,8 @@ public class SCManager {
 	 * @param callback the action to take when the worker completes
 	 * @return a future containing a return message as to how the action executed
 	 */
-	public Future<Object> send(String workerName, Control ctrl, final Callback callback) {
-		return send(workerName, Message.create(ctrl), callback);
+	public void send(String workerName, Control ctrl, final Callback callback) {
+		send(workerName, Message.create(ctrl), callback);
 	}
 	/**
 	 * <p>Enumerated status message (blocking of a limited time)</p>
@@ -438,16 +453,14 @@ public class SCManager {
 	 * @param workerName the unique work name to receive the message
 	 * @param ctrl an instance of the Status enum name
 	 * @param callback the method to call when the status is processed
-	 * @return a future containing a return message as to how the action executed
 	 * @see SCManager.send(String workerName, Message message)
 	 */
-	public Future<Object> send(String workerName, Status status, final Callback callback) {
-		return send(workerName, Message.create(status), callback);
+	public void send(String workerName, Status status, final Callback callback) {
+		send(workerName, Message.create(status), callback);
 	}
-	public Future<Object> send(String workerName, Message msg, final Callback callback) {
-		Future<Object> response = send(workerName, msg);
-		wrapCallback(response, workerPool.dispatcher(), callback);
-		return response;
+	public void send(String workerName, Message msg, final Callback callback) {
+		Future<Object> future = sendWithFuture(workerName, msg);
+		wrapCallback(future, workerPool.dispatcher(), callback);
 	}
 	
 		
@@ -515,5 +528,71 @@ public class SCManager {
 		Message msg = Message.create(SCManager.AUTOSTART, value);
 		session().tell(msg, ActorRef.noSender());
 		return this; // method chaining
+	}
+	
+	/**
+	 * <p>Submits an onComplete message and waits for it to return for tomcat request thread
+	 * waiting/blocking. If the tomcat thread completes before the worker then the streams
+	 * tomcat manages will be closed prematurely and the user will not receive data.
+	 * </p>
+	 * <p>After the given wait time it will wait up to another 10 seconds for possible unforeseeable
+	 * time variation. It will wait a maximum of 100 times for 100 ms each.
+	 * </p>
+	 * @param workerName the worker to wait for complete
+	 * @param waitTime how many milliseconds to wait
+	 * @return the actual time waited
+	 */
+	public long waitForComplete(String workerName, long waitTime) {
+		return waitForComplete(workerName, waitTime, 100);
+	}
+	/**
+	 * <p>Submits an onComplete message and waits for it to return for tomcat request thread
+	 * waiting/blocking. If the tomcat thread completes before the worker then the streams
+	 * tomcat manages will be closed prematurely and the user will not receive data.
+	 * </p>
+	 * <p>After the given wait time it will wait up to another 100 times the subsequaent wait
+	 * for possible unforeseeable time variation. If you have worker that runs for 20 min then
+	 * an appropriate subsequent wait might be one minute or thirty seconds. However, for short
+	 * jobs a much shorter time my be ideal.
+	 * </p>
+	 * @param workerName the worker to wait for complete
+	 * @param initialWait how many milliseconds to wait initially
+	 * @param subsequentWait how many milliseconds to wait after initial wait
+	 * @return the actual time waited
+	 */
+	public long waitForComplete(String workerName, long initialWait, long subsequentWait) {
+		logger.trace("waiting {}ms for {} to complete", initialWait, workerName);
+
+		// capture the start time for duration math
+		long start = Time.now();
+		// this is an repository for the complete signal
+		final Message[] isComplete = new Message[1];
+		
+		SCManager.instance().send(workerName, Control.onComplete, new Callback(){
+			@Override
+			public void onComplete(Throwable t, Message signal) {
+				isComplete[0] = signal;
+			}
+		});
+		
+		// initially wait for the expected job length
+		try {
+			Thread.sleep(initialWait);
+		} catch (InterruptedException e) {
+			logger.trace("initial wait for {} interrupted, waited for {} ms", workerName, Time.duration(start));
+		}
+
+		// then wait for it to complete with a smaller cycle but not forever
+		int count=100;
+		while (null==isComplete[0] && count++ < 100) {
+			try {
+				Thread.sleep(subsequentWait);
+			} catch (InterruptedException e) {}
+		}
+		
+		// return the duration to the call in case they are interested
+		long duration = Time.duration(start);
+		logger.trace("waited {}ms for {} to complete", duration, workerName);
+		return duration;
 	}
 }
