@@ -41,7 +41,7 @@ import akka.pattern.Patterns;
  * 
  * @author duselman
  */
-public class SCManager {
+public class Service {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
 	/**
@@ -58,9 +58,9 @@ public class SCManager {
 	/**
 	 *  singleton pattern, each user session will have a session worker
 	 */
-	static final SCManager instance;
+	static final Service instance;
 	static {
-		instance = new SCManager();
+		instance = new Service();
 	}
 	/**
 	 * <p>A convenience method to access the instance since
@@ -69,7 +69,7 @@ public class SCManager {
 	 * 
 	 * @return the current SC manager instance
 	 */
-	public static SCManager instance() {
+	public static Service instance() {
 		return instance;
 	}
 	/**
@@ -96,10 +96,10 @@ public class SCManager {
 	 * </pre>
 	 * @return the current SC manager instance
 	 */
-	public static SCManager open() {
+	public static Service open() {
 		return instance();
 	}
-	public static SCManager open(String adminToken) {
+	public static Service open(String adminToken) {
 		instance().token.set(adminToken);
 		return instance();
 	}
@@ -123,7 +123,7 @@ public class SCManager {
 				workerPool.stop(session());
 			} else {
 				// soft stop
-				Message stop = Message.create(Control.Stop, SCManager.SESSION);
+				Message stop = Message.create(Control.Stop, Service.SESSION);
 				session().tell(stop, ActorRef.noSender());
 			}
 		} finally {
@@ -160,7 +160,7 @@ public class SCManager {
 	 *  private constructor for singleton pattern because it is a 
 	 *  thread pool system where multiple instances would be incongruous.
 	 */  
-	private SCManager() {
+	private Service() {
         // Create the 'CDAT' akka actor system
         workerPool = ActorSystem.create("CDAT");
 
@@ -523,8 +523,8 @@ public class SCManager {
 	 * @param value
 	 */
 	// TODO make autoStart DEFAULT state configurable
-	public SCManager setAutoStart(boolean value) {
-		Message msg = Message.create(SCManager.AUTOSTART, value);
+	public Service setAutoStart(boolean value) {
+		Message msg = Message.create(Service.AUTOSTART, value);
 		session().tell(msg, ActorRef.noSender());
 		return this; // method chaining
 	}
@@ -567,7 +567,7 @@ public class SCManager {
 		// this is an repository for the complete signal
 		final Message[] isComplete = new Message[1];
 		
-		SCManager.instance().send(workerName, Control.onComplete, new Callback(){
+		Service.instance().send(workerName, Control.onComplete, new Callback(){
 			@Override
 			public void onComplete(Throwable t, Message signal) {
 				isComplete[0] = signal;

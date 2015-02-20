@@ -4,7 +4,7 @@ import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Service;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.io.Closer;
@@ -95,7 +95,7 @@ public class DBTesting {
 		producer.setFetchSize(1);
 
 		
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		final String[] result = new String[1];
 
 		try {

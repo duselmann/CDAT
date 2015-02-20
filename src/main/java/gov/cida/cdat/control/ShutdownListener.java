@@ -33,7 +33,7 @@ public class ShutdownListener implements ServletContextListener {
 	@Override
 	public void contextDestroyed(ServletContextEvent sce) {
 		logger.info("Shutting down cDAT with container shutdown.");
-		SCManager.shutdown();
+		Service.shutdown();
 		try {
 			// TODO make configurable same value as the SCManager value plus 5 sec
 			Thread.sleep(Time.SECOND.asMS()+100);

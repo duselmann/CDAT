@@ -4,7 +4,7 @@ package gov.cida.cdat.control;
 import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Service;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.service.PipeWorker;
@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // there should be no name conflicts because each thread will have its own session
-public class SCManagerControlThreadedTest {
+public class ServiceControlThreadedTest {
 
 	private static ByteArrayOutputStream consumer;
 	private static String workerLabel = "producer";
@@ -96,7 +96,7 @@ public class SCManagerControlThreadedTest {
 		DataPipe pipe = new DataPipe(in, out);
 		Worker worker = new PipeWorker(pipe);
 		
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		
 		try {
 			final String workerName = session.addWorker(workerLabel, worker);

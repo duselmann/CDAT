@@ -5,7 +5,7 @@ import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Service;
 import gov.cida.cdat.control.Status;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
@@ -16,7 +16,7 @@ public class SessionInfoTests {
 
 	@Test
 	public void testInfoIsNew() {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		
 		try {
 			Worker workerA = new Worker(){};
@@ -26,8 +26,8 @@ public class SessionInfoTests {
 			String nameB = session.addWorker("workerB", workerB);
 			
 			final Message[] message = new Message[1];
-			Message getInfo = Message.create(Control.info, SCManager.SESSION);
-			session.send(SCManager.SESSION, getInfo, new Callback() {
+			Message getInfo = Message.create(Control.info, Service.SESSION);
+			session.send(Service.SESSION, getInfo, new Callback() {
 				@Override
 				public void onComplete(Throwable t, Message response) {
 					message[0] = response;
@@ -49,7 +49,7 @@ public class SessionInfoTests {
 
 	@Test
 	public void testInfoIsDisposed() throws Exception {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		
 		try {
 			Worker workerA = new Worker(){};
@@ -59,14 +59,14 @@ public class SessionInfoTests {
 			String nameB = session.addWorker("workerB", workerB);
 			
 			final Message[] message = new Message[1];
-			Message getInfo = Message.create(Control.info, SCManager.SESSION);
+			Message getInfo = Message.create(Control.info, Service.SESSION);
 			
 			session.send(nameA, Control.Start);
 			session.send(nameB, Control.Start);
 			
 			Thread.sleep(100);
 			
-			session.send(SCManager.SESSION, getInfo, new Callback() {
+			session.send(Service.SESSION, getInfo, new Callback() {
 				@Override
 				public void onComplete(Throwable t, Message response) {
 					message[0] = response;
@@ -89,7 +89,7 @@ public class SessionInfoTests {
 	
 	@Test
 	public void testInfoIsStarted() throws Exception {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		
 		try {
 			session.setAutoStart(true);
@@ -121,10 +121,10 @@ public class SessionInfoTests {
 			String nameB = session.addWorker("workerB", workerB);
 			
 			final Message[] message = new Message[1];
-			Message getInfo = Message.create(Control.info, SCManager.SESSION);
+			Message getInfo = Message.create(Control.info, Service.SESSION);
 			
 			
-			session.send(SCManager.SESSION, getInfo, new Callback() {
+			session.send(Service.SESSION, getInfo, new Callback() {
 				@Override
 				public void onComplete(Throwable t, Message response) {
 					message[0] = response;

@@ -33,7 +33,7 @@ import akka.actor.ActorRef;
 import akka.dispatch.OnComplete;
 
 
-public class SCManagerTests {
+public class ServiceTests {
 
 	/*
 	 * Support Methods
@@ -78,9 +78,9 @@ public class SCManagerTests {
 	
 	@Test
 	public void testSingleton() {
-		SCManager instance1 = SCManager.open();
+		Service instance1 = Service.open();
 		try {
-			SCManager instance2 = SCManager.instance();
+			Service instance2 = Service.instance();
 			
 			assertEquals("Singleton instances should be equivilent", instance1, instance2);
 			assertTrue("Singleton instances should be equivilent references", instance1 == instance2);
@@ -91,7 +91,7 @@ public class SCManagerTests {
 	
 	@Test
 	public void testSession_SameSession() {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		
 		try {
 			ActorRef instance1 = session.session();
@@ -106,7 +106,7 @@ public class SCManagerTests {
 	
 	@Test
 	public void testSession_DifferentTheadsDifferentSessions() throws Exception {
-		final SCManager session = SCManager.open();
+		final Service session = Service.open();
 		
 		try {
 			ActorRef instance1 = session.session();
@@ -136,7 +136,7 @@ public class SCManagerTests {
 	public void testWorker_StartRunCompleteStop() throws Exception {
 		
 		// obtain an instance of the session
-		final SCManager  session = SCManager.open();
+		final Service  session = Service.open();
 
 		try {
 			// a test string that can be used for comparison
@@ -196,7 +196,7 @@ public class SCManagerTests {
 		TestUtils.log("Start testing a second start");
 		
 		// obtain an instance of the session
-		final SCManager  session = SCManager.open();
+		final Service  session = Service.open();
 
 		try {
 			// a test string that can be used for comparison
@@ -251,7 +251,7 @@ public class SCManagerTests {
 	public void testWorker_withCallback() throws Exception {
 		
 		// obtain an instance of the session
-		final SCManager  session = SCManager.open();
+		final Service  session = Service.open();
 
 		try {
 			// a test string that can be used for comparison
@@ -291,7 +291,7 @@ public class SCManagerTests {
 	public void testCreateNameFromLabel_spacesToUnderscore() throws Exception {
 		
 		// obtain an instance of the session
-		SCManager  session     = SCManager.open();
+		Service  session     = Service.open();
 		
 		try {
 			final String RAW_LABEL = "a b c";
@@ -310,7 +310,7 @@ public class SCManagerTests {
 	public void testCreateNameFromLabel_initialSuffix() throws Exception {
 		
 		// obtain an instance of the session
-		SCManager  session     = SCManager.open();
+		Service  session     = Service.open();
 		
 		try {
 			final String RAW_LABEL = "abc";
@@ -328,7 +328,7 @@ public class SCManagerTests {
 	public void testCreateNameFromLabel_secondaryInitialSuffix() throws Exception {
 		
 		// obtain an instance of the session
-		SCManager  session      = SCManager.open();
+		Service  session      = Service.open();
 		
 		try {
 			final String RAW_LABEL1 = "qrs";
@@ -351,7 +351,7 @@ public class SCManagerTests {
 	public void testCreateNameFromLabel_secondarySuffix_ensureUniqueness() throws Exception {
 		
 		// obtain an instance of the session
-		SCManager  session      = SCManager.open();
+		Service  session      = Service.open();
 		
 		try {
 			final String RAW_LABEL = "www";
@@ -377,7 +377,7 @@ public class SCManagerTests {
 	public void testcreateAddWorkerMessage_simpleFactoryMethod_yaRight_ItsNeverSimple_soWeTest() throws Exception {
 		
 		// obtain an instance of the session
-		SCManager  session     = SCManager.open();
+		Service  session     = Service.open();
 		
 		try {
 			final String RAW_LABEL = "aaa";
@@ -459,10 +459,10 @@ public class SCManagerTests {
 		
 		
 		// obtain an instance of the session
-		SCManager  session     = SCManager.open();
+		Service  session     = Service.open();
 
 		try {
-			SCManager.wrapCallback(future, session.workerPool.dispatcher(), callback);
+			Service.wrapCallback(future, session.workerPool.dispatcher(), callback);
 	
 			assertTrue("Callback should have been attached to the Future", onCompleteCalled_future[0]);
 			

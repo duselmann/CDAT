@@ -5,12 +5,12 @@ import gov.cida.cdat.TestUtils;
 
 import org.junit.Test;
 
-public class SCManagerOpenCloseTests {
+public class ServiceOpenCloseTests {
 
 	@Test
 	public void testSessionOpenClose() {
 		
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		final String firstSession = session.sessionName();
 				
 		try {
@@ -22,7 +22,7 @@ public class SCManagerOpenCloseTests {
 			session.close();
 		}
 		
-		session = SCManager.open();
+		session = Service.open();
 		final String secondSession = session.sessionName();
 				
 		try {
@@ -37,7 +37,7 @@ public class SCManagerOpenCloseTests {
 		assertNotEquals("expect new session after session close", firstSession, secondSession);
 	}
 	
-	private String[] runWorker(final String workerLabel, SCManager session) {
+	private String[] runWorker(final String workerLabel, Service session) {
 		final String[] response = new String[1];
 		Worker testWorker = new Worker() {
 			public boolean process() {

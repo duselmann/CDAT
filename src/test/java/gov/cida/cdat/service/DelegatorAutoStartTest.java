@@ -3,7 +3,7 @@ package gov.cida.cdat.service;
 
 import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Service;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
 import static org.junit.Assert.*;
@@ -13,12 +13,12 @@ import org.junit.Test;
 
 public class DelegatorAutoStartTest {
 
-	private static SCManager session;
+	private static Service session;
 	
 	
 	@Test
 	public void testAutoStart() throws Exception {
-		session = SCManager.open();
+		session = Service.open();
 
 		session.setAutoStart(true);
 		

@@ -3,7 +3,7 @@ package gov.cida.cdat.service;
 import static akka.actor.SupervisorStrategy.stop;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Service;
 import gov.cida.cdat.control.Status;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.exception.CdatException;
@@ -108,14 +108,14 @@ public class Session extends UntypedActor {
 		logger.trace("Session recieved message {}", msg);
 		Message response = null;
 		
-		if (msg.contains(SCManager.AUTOSTART)) {
-			autoStart = "true".equals( msg.get(SCManager.AUTOSTART) );
+		if (msg.contains(Service.AUTOSTART)) {
+			autoStart = "true".equals( msg.get(Service.AUTOSTART) );
 		}
-		if ( SCManager.SESSION.equals( msg.get(Control.Stop) ) ) {
+		if ( Service.SESSION.equals( msg.get(Control.Stop) ) ) {
 			stopSession(msg);
 			return;
 		}
-		if ( SCManager.SESSION.equals( msg.get(Control.info) ) ) {
+		if ( Service.SESSION.equals( msg.get(Control.info) ) ) {
 			response = info();
 			sender().tell(response, self());
 			return;

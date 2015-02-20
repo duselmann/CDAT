@@ -5,7 +5,7 @@ import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Service;
 import gov.cida.cdat.control.Status;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
@@ -21,7 +21,7 @@ public class DelegatorStatusTests {
 	
 	@Test
 	public void testStatusLifeCycle() throws Exception {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 
 		try {
 			final String workerName = session.addWorker("statusTests",  new Worker() {
@@ -145,7 +145,7 @@ public class DelegatorStatusTests {
 	
 	@Test
 	public void testMessagesSentToWorkerSimpler() throws Exception {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 
 		try {
 			final Message[] workerMessage = new Message[1];
@@ -175,7 +175,7 @@ public class DelegatorStatusTests {
 	
 	@Test
 	public void testDoubleStartShouldError() throws Exception {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 
 		session.setAutoStart(true);
 		

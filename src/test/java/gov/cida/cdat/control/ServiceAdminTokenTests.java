@@ -3,7 +3,7 @@ package gov.cida.cdat.control;
 
 import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Service;
 import gov.cida.cdat.exception.CdatException;
 
 import java.net.MalformedURLException;
@@ -19,19 +19,19 @@ import org.slf4j.LoggerFactory;
 import akka.actor.ActorRef;
 
 // there should be no name conflicts because each thread will have its own session
-public class SCManagerAdminTokenTests {
+public class ServiceAdminTokenTests {
 
 	private static Set<String> sessionNames = new HashSet<String>();
 	private static Set<String> workerNames  = new HashSet<String>();
-	private static SCManager[] sessions     = new SCManager[1];
+	private static Service[] sessions     = new Service[1];
 	private static Boolean[]  processCalled = new Boolean[1];
 	
 	@Test
 	public void testMultiThreadedRequests() throws Exception {
-		String token = TestUtils.reflectValue(SCManager.class, "TOKEN").toString();
+		String token = TestUtils.reflectValue(Service.class, "TOKEN").toString();
 		
 		// start a 'session' with the admin token
-		SCManager session = SCManager.open(token);
+		Service session = Service.open(token);
 		
 		try {
 			// start another session on another thread that is not ADMIN
@@ -80,7 +80,7 @@ public class SCManagerAdminTokenTests {
 
 
 	private static void submitJob(final String threadName) throws MalformedURLException {
-		final SCManager session = sessions[0] = SCManager.open();
+		final Service session = sessions[0] = Service.open();
 
 		Worker worker = new Worker(){
 			@Override

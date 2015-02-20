@@ -4,7 +4,7 @@ package gov.cida.cdat.control;
 import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Service;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.service.PipeWorker;
@@ -19,14 +19,14 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 
-public class SCManagerControlSuccessTest {
+public class ServiceControlSuccessTest {
 
 	private static ByteArrayOutputStream target;
 	private static byte[] dataRef;
 	
 	@Test
 	public void testSuccessfulJobRun_SubmitStartProcessStopOnCompleteAndCustomMessage() throws Exception {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 
 		try {
 			// consumer
