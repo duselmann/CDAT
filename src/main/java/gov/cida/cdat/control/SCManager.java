@@ -17,7 +17,6 @@ import akka.actor.DeadLetter;
 import akka.actor.Props;
 import akka.dispatch.OnComplete;
 import akka.pattern.Patterns;
-import akka.util.Timeout;
 
 
 /**
@@ -213,12 +212,12 @@ public class SCManager {
     			// find the worker by name
             	String path = "akka://CDAT/user/*/"+workerName;
     			logger.trace("searching for session for worker {}", path);
-    			Future<ActorRef> future = workerPool.actorSelection(path).resolveOne(Time.SECOND);
-				ActorRef worker  = Await.result(future, Time.SECOND);
+    			Future<ActorRef> future = workerPool.actorSelection(path).resolveOne(Time.SECOND.duration);
+				ActorRef worker  = Await.result(future, Time.SECOND.duration);
 				logger.trace("found worker {}", worker.path());
 				// find the session the worker is running
-				future  = workerPool.actorSelection(worker.path().parent()).resolveOne(Time.SECOND);
-				session = Await.result(future, Time.SECOND);
+				future  = workerPool.actorSelection(worker.path().parent()).resolveOne(Time.SECOND.duration);
+				session = Await.result(future, Time.SECOND.duration);
 				logger.trace("found session {} for worker {}", session.path(), worker.path());
 				
 			} catch (Exception e) {
@@ -249,11 +248,11 @@ public class SCManager {
 		String name = label;
 		
 		logger.trace("sending message to creating name from label '{}'", label);
-		Future<Object> future = Patterns.ask(naming, label, new Timeout(Time.MILLIS));
+		Future<Object> future = Patterns.ask(naming, label, Time.MS.asTimeout());
 		try {
 			logger.trace("waiting for name from label '{}'", label);
 			// this stops blocking as soon as a result is returned. this should be plenty of time
-			Object result = Await.result(future, Time.SECOND); // TODO make configurable
+			Object result = Await.result(future, Time.SECOND.duration); // TODO make configurable
 			if (result instanceof Message) {
 				name = ((Message)result).get(Naming.WORKER_NAME);
 			}
@@ -315,7 +314,7 @@ public class SCManager {
 	public void addWorker(String workerLabel, Worker worker, Callback onComplete) {
 		AddWorkerMessage msg = createAddWorkerMessage(workerLabel, worker);
 		// this will stop blocking as soon as the worker finishes and returns an onComplete message
-		Future<Object> future = Patterns.ask(session(), msg, new Timeout(Time.DAY)); // TODO make configurable
+		Future<Object> future = Patterns.ask(session(), msg, Time.DAY.asTimeout()); // TODO make configurable
 		wrapCallback(future, workerPool.dispatcher(), onComplete);
 	}
 
@@ -368,7 +367,7 @@ public class SCManager {
 	 * @return a future that contains a Message response from the worker upon completion or exception
 	 */
 	Future<Object> sendWithFuture(String workerName, Message message) {
-		return send(workerName,message,new Timeout(Time.HALF_MIN)); // TODO make configurable
+		return send(workerName,message,Time.HALF_MINUTE); // TODO make configurable
 	}
 	
 	/**
@@ -381,9 +380,9 @@ public class SCManager {
 	 * @param waitTime custom time to wait if you have a longer possible wait time
 	 * @return a future that contains a Message response from the worker upon completion or exception
 	 */
-	Future<Object> send(String workerName, Message message, Timeout waitTime) {
+	Future<Object> send(String workerName, Message message, Time waitTime) {
 		message = message.extend(Naming.WORKER_NAME, workerName);
-	    return Patterns.ask(session(workerName), message, waitTime);
+	    return Patterns.ask(session(workerName), message, waitTime.asTimeout());
 	}
 	
 	/**
@@ -405,7 +404,7 @@ public class SCManager {
 		Future<Object> future = sendWithFuture(workerName, msg);
 		Object result = null;
 		try {
-			result = Await.result(future, Time.SECOND); // TODO make configure
+			result = Await.result(future, Time.SECOND.duration); // TODO make configure
 		} catch (Exception e) {
 			result = Message.create("error",e.getMessage());
 		}
@@ -473,7 +472,7 @@ public class SCManager {
 	 * @param response the future to add append the callback
 	 * @param callback the callback instance to attach to the Future.onComplete
 	 */
-	public static void wrapCallback(Future<Object> response, ExecutionContext context, final Callback callback) {
+	static void wrapCallback(Future<Object> response, ExecutionContext context, final Callback callback) {
 		if (callback == null) {
 			return;
 		}
@@ -501,7 +500,7 @@ public class SCManager {
 		final ActorSystem workerPool = instance().workerPool;
 		final Logger logger = LoggerFactory.getLogger(instance().getClass());
 		
-		workerPool.scheduler().scheduleOnce( Time.HALF_MIN, // TODO make configurable
+		workerPool.scheduler().scheduleOnce( Time.SECOND.duration, // TODO make configurable
 			new Runnable() {
 				@Override
 				public void run() {

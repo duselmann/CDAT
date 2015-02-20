@@ -36,7 +36,7 @@ public class ShutdownListener implements ServletContextListener {
 		SCManager.shutdown();
 		try {
 			// TODO make configurable same value as the SCManager value plus 5 sec
-			Thread.sleep(Time.HALF_MIN.toMillis());
+			Thread.sleep(Time.SECOND.asMS()+100);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

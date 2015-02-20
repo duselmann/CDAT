@@ -47,7 +47,7 @@ public class Session extends UntypedActor {
 	
 	
 	SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration // TODO make configure
-			Time.MINUTE, // TODO make configure
+			Time.MINUTE.duration, // TODO make configure
 			new Function<Throwable, Directive>() {
 		@Override
 		public Directive apply(Throwable t) {
@@ -237,7 +237,7 @@ public class Session extends UntypedActor {
 			if (delegates>0  &&  attempts++<100) {
 				logger.trace("jobs remain running on {}", self().path().name());
 				// give some time for children to finish
-				Thread.sleep( Time.MILLIS.toMillis() ); // TODO make configurable
+				Thread.sleep( Time.MS.asMS() ); // TODO make configurable
 				msg = msg.extend("attempts", ""+attempts);
 				self().tell(msg, self());
 			} else {

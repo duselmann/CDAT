@@ -1,15 +1,29 @@
 package gov.cida.cdat.control;
 
+import akka.util.Timeout;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
-public class Time {
-	public static final FiniteDuration MILLIS    = Duration.create(100, "milliseconds");
-	public static final FiniteDuration SECOND    = Duration.create(  1, "second");
-	public static final FiniteDuration HALF_MIN  = Duration.create( 30, "seconds");
-	public static final FiniteDuration MINUTE    = Duration.create(  1, "minute");
-	public static final FiniteDuration HOUR      = Duration.create(  1, "hour");
-	public static final FiniteDuration DAY       = Duration.create(  1, "day");
+public enum Time {
+	MS(100, "milliseconds"),
+	SECOND(  1, "second"),
+	HALF_MINUTE( 30, "seconds"),
+	MINUTE(  1, "minute"),
+	HOUR(  1, "hour"),
+	DAY(  1, "day");
+		
+	public final FiniteDuration duration;
+	
+	Time(long amount, String unit) {
+		duration =  Duration.create(amount, unit);
+	}
+	
+	public long asMS() {
+		return duration.toMillis();
+	}
+	public Timeout asTimeout() {
+		return new Timeout(duration);
+	}
 	
 	/**
 	 * @return current time in milliseconds
