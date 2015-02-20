@@ -50,6 +50,15 @@ public class DataPipe implements Openable<InputStream>, Closeable {
 	}
 
 	
+	// this is useful for small test buffers and large big flow buffers
+	public boolean process(long milliseconds, int bufferSize) throws CdatException{
+		try {
+			boolean isMore = IO.copy(producer.getStream(), consumer.getStream(), milliseconds, bufferSize);
+			return isMore;
+		} catch (Exception e) {
+			throw new  StreamInitException("Failed to copy pipe streams", e);
+		}
+	}
 	public boolean process(long milliseconds) throws CdatException{
 		try {
 			boolean isMore = IO.copy(producer.getStream(), consumer.getStream(), milliseconds);
