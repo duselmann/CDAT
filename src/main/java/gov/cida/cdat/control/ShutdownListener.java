@@ -1,5 +1,7 @@
 package gov.cida.cdat.control;
 
+import gov.cida.cdat.service.Service;
+
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 

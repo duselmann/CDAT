@@ -2,10 +2,6 @@ package gov.cida.cdat.control;
 
 
 import gov.cida.cdat.TestUtils;
-import gov.cida.cdat.control.Callback;
-import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.Service;
-import gov.cida.cdat.control.Status;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.service.PipeWorker;
@@ -19,14 +15,14 @@ import org.junit.Assert;
 import org.junit.Test;
 
 // TODO ensure that the fail is handled by the session strategy and that the worker is disposed
-public class ServiceControlFailTest {
+public class SCManagerControlFailTest {
 
 	private static ByteArrayOutputStream target;
 	private static String workerName;
 	
 	@Test
 	public void testFailResponse() throws Exception {
-		Service session = Service.open();
+		SCManager session = SCManager.open();
 
 		try {
 			// consumer

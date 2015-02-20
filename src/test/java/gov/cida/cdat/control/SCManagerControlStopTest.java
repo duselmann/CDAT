@@ -20,14 +20,14 @@ import org.junit.Assert;
 import org.junit.Test;
 
 
-public class ServiceControlStopTest {
+public class SCManagerControlStopTest {
 
 	private static ByteArrayOutputStream target;
 	private static byte[] dataRef;
 
 	@Test
 	public void testThatStopTerminatesWorkers() throws Exception {
-		Service session = Service.open();
+		SCManager session = SCManager.open();
 		
 		try {
 			final Boolean[] closeCalled = new Boolean[2];

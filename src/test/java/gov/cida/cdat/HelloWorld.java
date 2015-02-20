@@ -1,13 +1,13 @@
 package gov.cida.cdat;
 
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.Service;
+import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.control.Worker;
 
 public class HelloWorld {
 	
 	public static void main(String[] args) {
-		Service session = Service.open();
+		SCManager session = SCManager.open();
 		try {
 			Worker helloWorld = new Worker() {
 				public boolean process() {

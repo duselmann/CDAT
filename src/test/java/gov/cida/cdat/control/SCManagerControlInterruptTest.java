@@ -2,8 +2,6 @@ package gov.cida.cdat.control;
 
 
 import gov.cida.cdat.TestUtils;
-import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.Service;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.container.DataPipe;
@@ -20,7 +18,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 
-public class ServiceControlInterruptTest {
+public class SCManagerControlInterruptTest {
 
 	/**
 	 * This sets up an infinite stream that can be interrupted. We pass if it stops.
@@ -31,7 +29,7 @@ public class ServiceControlInterruptTest {
 	 */
 	@Test
 	public void testInterruptedStream() throws Exception {
-		Service session = Service.open();
+		SCManager session = SCManager.open();
 		try {
 			final boolean[] closeCalled = new boolean[2];
 			// consumer

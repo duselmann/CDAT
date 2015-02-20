@@ -5,7 +5,6 @@ import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
-import gov.cida.cdat.control.Service;
 import gov.cida.cdat.control.Status;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;

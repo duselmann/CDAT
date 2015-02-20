@@ -1,10 +1,10 @@
 package gov.cida.cdat.control;
 
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import gov.cida.cdat.TestUtils;
-import gov.cida.cdat.control.Callback;
-import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.Service;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.service.PipeWorker;
@@ -14,19 +14,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 
-public class ServiceControlSuccessTest {
+public class SCManagerControlSuccessTest {
 
 	private static ByteArrayOutputStream target;
 	private static byte[] dataRef;
 	
 	@Test
 	public void testSuccessfulJobRun_SubmitStartProcessStopOnCompleteAndCustomMessage() throws Exception {
-		Service session = Service.open();
+		SCManager session = SCManager.open();
 
 		try {
 			// consumer

@@ -1,14 +1,19 @@
-package gov.cida.cdat.control;
+package gov.cida.cdat.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import gov.cida.cdat.TestUtils;
+import gov.cida.cdat.control.Callback;
+import gov.cida.cdat.control.Control;
+import gov.cida.cdat.control.Message;
+import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.message.AddWorkerMessage;
 import gov.cida.cdat.service.Naming;
 import gov.cida.cdat.service.PipeWorker;
+import gov.cida.cdat.service.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

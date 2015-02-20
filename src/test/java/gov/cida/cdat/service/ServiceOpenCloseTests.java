@@ -1,7 +1,10 @@
-package gov.cida.cdat.control;
+package gov.cida.cdat.service;
 
 import static org.junit.Assert.*;
 import gov.cida.cdat.TestUtils;
+import gov.cida.cdat.control.Control;
+import gov.cida.cdat.control.Worker;
+import gov.cida.cdat.service.Service;
 
 import org.junit.Test;
 

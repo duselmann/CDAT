@@ -1,10 +1,11 @@
-package gov.cida.cdat.control;
+package gov.cida.cdat.service;
 
 
 import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.Service;
+import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
+import gov.cida.cdat.service.Service;
 
 import java.net.MalformedURLException;
 import java.util.HashSet;
