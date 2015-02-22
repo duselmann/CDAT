@@ -220,4 +220,11 @@ public class Message implements Serializable {
 	public int size() {
 		return message.size();
 	}
+
+	/**
+	 * @return protective copy of message entries
+	 */
+	public Map<? extends String, ? extends String> entries() {
+		return new HashMap<String,String>(message);
+	}
 }
