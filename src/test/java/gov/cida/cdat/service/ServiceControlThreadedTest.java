@@ -1,15 +1,13 @@
 package gov.cida.cdat.service;
 
 
-import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
-import gov.cida.cdat.service.PipeWorker;
-import gov.cida.cdat.service.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -54,7 +52,7 @@ public class ServiceControlThreadedTest {
 		}
 
 		// this might not be necessary because of the thread sleeps
-		TestUtils.waitAlittleWhileForResponse(messages);
+		Time.waitForResponse(messages,100);
 		
 		for (Message msg : messages) {
 			Assert.assertEquals("Message for onComplete should be 'done'", 

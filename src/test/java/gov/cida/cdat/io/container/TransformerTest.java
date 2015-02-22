@@ -1,6 +1,7 @@
 package gov.cida.cdat.io.container;
 
 import gov.cida.cdat.TestUtils;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.io.TransformOutputStream;
 import gov.cida.cdat.io.container.DataPipe;
@@ -39,7 +40,7 @@ public class TransformerTest {
 		// Pipe producer to consumer
 		final DataPipe pipe = new DataPipe(producer, consumer);
 		
-		final Object[] done = new Object[1]; 
+		final Object[] completed = new Object[1]; 
 		new Thread() {
 			@Override
 			public void run() {
@@ -47,7 +48,7 @@ public class TransformerTest {
 				try {
 					pipe.open();
 					pipe.processAll();
-					done[0] = pipe;
+					completed[0] = pipe;
 				} catch (CdatException e) {
 					e.printStackTrace();
 				}
@@ -55,7 +56,7 @@ public class TransformerTest {
 		}.start();
 		
 		System.out.println("main waithing for pipe...");
-		TestUtils.waitAlittleWhileForResponse(done);
+		Time.waitForResponse(completed,100);
 		System.out.println("pipe close");
 		pipe.close();
 		
@@ -106,7 +107,7 @@ public class TransformerTest {
 		// Pipe producer to consumer
 		final DataPipe pipe = new DataPipe(producer, consumer);
 		
-		final Object[] done = new Object[1]; 
+		final Object[] completed = new Object[1]; 
 		new Thread() {
 			@Override
 			public void run() {
@@ -114,7 +115,7 @@ public class TransformerTest {
 				try {
 					pipe.open();
 					pipe.processAll();
-					done[0] = pipe;
+					completed[0] = pipe;
 				} catch (CdatException e) {
 					e.printStackTrace();
 				}
@@ -122,7 +123,7 @@ public class TransformerTest {
 		}.start();
 		
 		System.out.println("main waithing for pipe...");
-		TestUtils.waitAlittleWhileForResponse(done);
+		Time.waitForResponse(completed,100);
 		System.out.println("pipe close");
 		pipe.close();
 		

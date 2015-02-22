@@ -6,6 +6,7 @@ import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Status;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.service.PipeWorker;
@@ -113,7 +114,7 @@ public class DelegatorStatusTests {
 					stopped[0] = response;
 				}
 			});
-			TestUtils.waitAlittleWhileForResponse(stopped);
+			Time.waitForResponse(stopped,100);
 			
 			response = session.send(workerName, Status.isDone);
 			TestUtils.log("send status isDone - expect true", response);
@@ -161,7 +162,7 @@ public class DelegatorStatusTests {
 			System.out.println("send custom message to worker");
 			Message testMsg = Message.create("Message", "Test");
 			session.send(workerName, testMsg);
-			TestUtils.waitAlittleWhileForResponse(workerMessage);
+			Time.waitForResponse(workerMessage,100);
 			assertTrue("Expect the worker to receive messages", workerMessage[0].contains("Message"));
 			assertTrue("Expect the worker to receive messages", workerMessage[0].get("Message").equals("Test"));
 			
@@ -192,7 +193,7 @@ public class DelegatorStatusTests {
 			session.send(workerName, Control.Start);
 			session.send(workerName, Control.Start);
 	
-			TestUtils.waitAlittleWhileForResponse(beginCalled);
+			Time.waitForResponse(beginCalled,100);
 			Thread.sleep(500);
 			
 			assertTrue("begin should be called", beginCalled[0]);

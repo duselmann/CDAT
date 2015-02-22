@@ -6,20 +6,6 @@ import java.lang.reflect.Field;
 
 public class TestUtils {
 
-	public static int waitAlittleWhileForResponse(Object response[]) {
-		TestUtils.log("waiting for ", response.length, " responses");
-		
-		int count=0;
-		for (int r=0; r<response.length; r++) {
-			while (null==response[r] && count++ < 100) {
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {}
-			}
-		}
-		return count;
-	}
-
 	public static void log(Object ... objs) {
 		// used to print a result that stands out from the logs
 		// use logging or println itself if this is not needed

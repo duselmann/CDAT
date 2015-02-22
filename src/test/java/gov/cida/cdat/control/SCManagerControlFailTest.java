@@ -55,7 +55,7 @@ public class SCManagerControlFailTest {
 		        }
 		    });
 			
-			TestUtils.waitAlittleWhileForResponse(message);
+			Time.waitForResponse(message,100);
 			
 			Assert.assertTrue("", message[0].toString().contains("Error reading from producer stream"));
 		} finally {

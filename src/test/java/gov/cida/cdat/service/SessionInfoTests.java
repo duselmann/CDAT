@@ -6,6 +6,7 @@ import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Status;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
 
@@ -30,10 +31,11 @@ public class SessionInfoTests {
 				@Override
 				public void onComplete(Throwable t, Message response) {
 					message[0] = response;
+					TestUtils.log(response);
 				}
 			});
 			
-			TestUtils.waitAlittleWhileForResponse(message);
+			Time.waitForResponse(message,100);
 			
 			TestUtils.log(message[0]);
 			
@@ -69,10 +71,11 @@ public class SessionInfoTests {
 				@Override
 				public void onComplete(Throwable t, Message response) {
 					message[0] = response;
+					TestUtils.log(response);
 				}
 			});
 			
-			TestUtils.waitAlittleWhileForResponse(message);
+			Time.waitForResponse(message,100);
 			
 			TestUtils.log(message[0]);
 			
@@ -127,10 +130,11 @@ public class SessionInfoTests {
 				@Override
 				public void onComplete(Throwable t, Message response) {
 					message[0] = response;
+					TestUtils.log(response);
 				}
 			});
 			
-			TestUtils.waitAlittleWhileForResponse(message);
+			Time.waitForResponse(message,100);
 			
 			TestUtils.log(message[0]);
 			

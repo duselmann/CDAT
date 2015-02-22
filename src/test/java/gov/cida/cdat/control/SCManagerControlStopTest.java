@@ -98,7 +98,8 @@ public class SCManagerControlStopTest {
 			session.send(workerName, Message.create(Control.Stop));
 	//		manager.shutdown(); // TODO in order to test this we need tests to run for the wait period
 			
-			TestUtils.waitAlittleWhileForResponse(closeCalled);
+			Time.waitForResponse(closeCalled,100);
+
 			TestUtils.log("pipe results: expect short length and no 'middle' found. bytes:", target.size() );
 			
 			String results =  new String(target.toByteArray());

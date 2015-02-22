@@ -57,7 +57,7 @@ public class SCManagerControlSuccessTest {
 			session.send(workerName, Control.Start);
 			
 			System.out.println("waiting for worker to process");
-			TestUtils.waitAlittleWhileForResponse(completed);
+			Time.waitForResponse(completed,100);
 	
 			assertTrue("DataPipe should be complete when finished", pipe.isComplete());
 			assertEquals("producer stream should be null after close", null, pipe.getProducerStream());

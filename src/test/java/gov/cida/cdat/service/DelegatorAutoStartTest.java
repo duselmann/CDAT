@@ -1,11 +1,11 @@
 package gov.cida.cdat.service;
 
 
-import gov.cida.cdat.TestUtils;
+import static org.junit.Assert.assertTrue;
 import gov.cida.cdat.control.Control;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
-import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -32,7 +32,7 @@ public class DelegatorAutoStartTest {
 				}
 			});
 	
-			TestUtils.waitAlittleWhileForResponse(processCalled);
+			Time.waitForResponse(processCalled,100);
 			
 			assertTrue("process should be called without explicit start message when autostart",
 					processCalled[0]);

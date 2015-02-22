@@ -7,6 +7,7 @@ import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
@@ -172,7 +173,7 @@ public class ServiceTests {
 			session.send(workerName, Control.Start);
 	
 			// wait some time for the worker to finish
-			int count = TestUtils.waitAlittleWhileForResponse(response);
+			int count = Time.waitForResponse(response,100);
 			
 	    	// this send the message that this worker is no longer needed
 			session.send(workerName, Control.Stop);
@@ -228,7 +229,7 @@ public class ServiceTests {
 			session.send(workerName, Control.Start);
 			
 			// wait some time for the worker to finish
-			TestUtils.waitAlittleWhileForResponse(response);
+			Time.waitForResponse(response,100);
 	
 	    	// this send the message that this worker is no longer needed
 			session.send(workerName, Control.Stop);
@@ -242,7 +243,7 @@ public class ServiceTests {
 			session.send(workerName, Control.Start);
 			
 			// wait some time for the worker to finish
-			TestUtils.waitAlittleWhileForResponse(response);
+			Time.waitForResponse(response,100);
 			
 			// now test that the consumer remains empty
 			assertEquals("Expect that the disposed worker does not execute", "", testPipe.results() );
@@ -278,7 +279,7 @@ public class ServiceTests {
 		    });
 	
 			// wait some time for the worker to finish
-			TestUtils.waitAlittleWhileForResponse(response);
+			Time.waitForResponse(response,100);
 			
 			final String EXPECTED = TEST_STRING.replaceAll(" ","_")+"-1";
 			final String workerName = response[0].get(Naming.WORKER_NAME);

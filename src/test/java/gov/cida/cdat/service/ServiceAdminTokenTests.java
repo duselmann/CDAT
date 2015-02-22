@@ -3,6 +3,8 @@ package gov.cida.cdat.service;
 
 import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Control;
+import gov.cida.cdat.control.Message;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.service.Service;
@@ -38,7 +40,7 @@ public class ServiceAdminTokenTests {
 			// start another session on another thread that is not ADMIN
 			spawnThread("OTHER");
 			// wait for the OTHER session to commence with a worker
-			TestUtils.waitAlittleWhileForResponse(sessions);
+			Time.waitForResponse(sessions,100);
 
 			// make sure that the OTHER session is named what we expect
 			assertEquals("Expect 1 unique session name", 1, sessionNames.size());
@@ -47,12 +49,12 @@ public class ServiceAdminTokenTests {
 			String workerName  = workerNames.iterator().next();
 
 			// test that the session for the worker created on the OTHER session can be found
-			ActorRef sesRef = session.session(workerName);
+			ActorRef sesRef = session.sessionForWorker(workerName);
 			assertEquals("Expect " +workerName+ " for be found on SESSION-1", sessionName, sesRef.path().name());
 			
 			// test that the admin token allows control over OTHER session workers
 			session.send(workerName, Control.Start);
-			TestUtils.waitAlittleWhileForResponse(processCalled);
+			Time.waitForResponse(processCalled,100);
 			assertTrue("expect that the admin token allows starting other session workers", processCalled[0]);
 			
 		} finally {

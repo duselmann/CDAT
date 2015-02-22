@@ -1,5 +1,8 @@
 package gov.cida.cdat.control;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import akka.util.Timeout;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
@@ -12,6 +15,8 @@ public enum Time {
 	HOUR(  1, "hour"),
 	DAY(  1, "day");
 		
+	private static final Logger logger = LoggerFactory.getLogger(Time.class);
+	
 	public final FiniteDuration duration;
 	
 	Time(long amount, String unit) {
@@ -55,5 +60,22 @@ public enum Time {
 	 */
 	public static long duration(long timeInMilliseconds) {
 		return now() - timeInMilliseconds;
+	}
+	
+	// then wait for it to complete with a smaller cycle but not forever
+	public static int waitForResponse(Object response[], long interval) {
+		logger.trace("waiting for {} responses", response.length);
+		
+		int count=0;
+		for (int r=0; r<response.length; r++) {
+			while (null==response[r] && count++ < 100) {
+				try {
+					Thread.sleep(interval);
+				} catch (InterruptedException e) {}
+			}
+		}
+		logger.trace("waited {} intervals of {} for responses", count, interval);
+		
+		return count;
 	}
 }

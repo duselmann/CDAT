@@ -1,9 +1,9 @@
 package gov.cida.cdat.db;
 
-import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.io.Closer;
@@ -133,7 +133,7 @@ public class DBTesting {
 				}
 			});
 			
-			TestUtils.waitAlittleWhileForResponse(result);
+			Time.waitForResponse(result,100);
 		} finally {
 			session.close();
 		}

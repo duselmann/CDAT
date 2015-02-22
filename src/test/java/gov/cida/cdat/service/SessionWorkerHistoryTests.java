@@ -6,6 +6,7 @@ import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Status;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
 
@@ -45,7 +46,7 @@ public class SessionWorkerHistoryTests {
 			}
 		});
 		
-		TestUtils.waitAlittleWhileForResponse(messages);
+		Time.waitForResponse(messages,100);
 		
 		TestUtils.log(messages[0]);
 		TestUtils.log(messages[1]);

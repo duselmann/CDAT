@@ -1,10 +1,10 @@
 package gov.cida.cdat.service;
 
-import static org.junit.Assert.*;
-import gov.cida.cdat.TestUtils;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import gov.cida.cdat.control.Control;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
-import gov.cida.cdat.service.Service;
 
 import org.junit.Test;
 
@@ -51,7 +51,7 @@ public class ServiceOpenCloseTests {
 		String name = session.addWorker(workerLabel, testWorker);
 		session.send(name, Control.Start);
 
-		TestUtils.waitAlittleWhileForResponse(response);
+		Time.waitForResponse(response,100);
 		// this is not necessary if session.close() is called so near by
 		session.send(name, Control.Stop);
 		
