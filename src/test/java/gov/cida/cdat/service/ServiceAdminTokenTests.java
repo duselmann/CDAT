@@ -1,12 +1,9 @@
 package gov.cida.cdat.service;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import gov.cida.cdat.TestUtils;
-import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
@@ -58,7 +55,7 @@ public class ServiceAdminTokenTests {
 			String workerName  = workerNames.iterator().next();
 
 			// test that the session for the worker created on the OTHER session can be found
-			ActorRef sesRef = session.sessionForWorker(workerName);
+			ActorRef sesRef = session.session(workerName);
 			assertEquals("Expect " +workerName+ " for be found on SESSION-1", sessionName, sesRef.path().name());
 			
 			// test that the admin token allows control over OTHER session workers
@@ -112,7 +109,7 @@ public class ServiceAdminTokenTests {
 		//session.close();
 	}
 
-	
+/*	
 	@Test
 	public void testInfoIsNew() {
 		String token = TestUtils.reflectValue(Service.class, "TOKEN").toString();
@@ -151,5 +148,6 @@ public class ServiceAdminTokenTests {
 		} finally {
 			session.close();
 		}
-	}	
+	}
+*/
 }

@@ -1,6 +1,7 @@
 package gov.cida.cdat.service;
 
 
+import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
@@ -58,8 +59,13 @@ public class ServiceControlThreadedTest {
 			Assert.assertEquals("Message for onComplete should be 'done'", 
 					"done", msg.get(Control.onComplete));
 		}
+		
+		TestUtils.log(sessionNames);
+		TestUtils.log(workerNames);
 		Assert.assertEquals("Expect four unique session names", 4, sessionNames.size());
 		Assert.assertEquals("Expect four unique worker names", 4, workerNames.size());
+		TestUtils.log(sessionNames);
+		TestUtils.log(workerNames);
 	}
 
 

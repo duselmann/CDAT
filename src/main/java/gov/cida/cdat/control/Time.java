@@ -74,7 +74,7 @@ public enum Time {
 				} catch (InterruptedException e) {}
 			}
 		}
-		logger.trace("waited {} intervals of {} for responses", count, interval);
+		logger.trace("waited {} intervals of {}ms for responses", count, interval);
 		
 		return count;
 	}

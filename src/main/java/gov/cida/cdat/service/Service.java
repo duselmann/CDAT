@@ -23,6 +23,7 @@ import akka.actor.DeadLetter;
 import akka.actor.Props;
 import akka.dispatch.OnComplete;
 import akka.pattern.Patterns;
+import akka.util.Timeout;
 
 
 /**
@@ -123,6 +124,10 @@ public class Service {
 	 * When done with the session call close to release the session
 	 */
 	public void close(boolean force) {
+		token.remove();
+		if (session.get() == null) {
+			return;
+		}
 		try {
 			// this tells the session to stop processing workers
 			setAutoStart(false); // this is for completeness // TODO make configurable
@@ -140,7 +145,6 @@ public class Service {
 			// a new one will be issued upon the next request
 			sessions.remove(sessionName());
 			session.remove();
-			token.remove();
 		}
 	}
 	
@@ -215,21 +219,23 @@ public class Service {
 	// TODO abandoned sessions should be stopped
 	
 	ActorRef session(String workerName) {
+		logger.trace("session for worker:{}", workerName);
 		// if we are an admin session
 		if (TOKEN.equals(token.get())) {
+			logger.trace("admin session for worker:{}", workerName);
 			ActorRef session = null;
 
             try {
     			// find the worker by name
             	String path = "akka://CDAT/user/*/"+workerName;
-    			logger.trace("searching for session for worker {}", path);
-    			Future<ActorRef> future = workerPool.actorSelection(path).resolveOne(Time.SECOND.duration);
-				ActorRef worker  = Await.result(future, Time.SECOND.duration);
-				logger.trace("found worker {}", worker.path());
+    			logger.trace("admin searching for session for worker {}", path);
+    			Future<ActorRef> future = workerPool.actorSelection(path).resolveOne(Time.HALF_MINUTE.duration); // TODO make configure
+				ActorRef worker  = Await.result(future, Time.HALF_MINUTE.duration); // TODO make configure
+				logger.trace("admin found worker {}", worker.path());
 				// find the session the worker is running
-				future  = workerPool.actorSelection(worker.path().parent()).resolveOne(Time.SECOND.duration);
-				session = Await.result(future, Time.SECOND.duration);
-				logger.trace("found session {} for worker {}", session.path(), worker.path());
+				future  = workerPool.actorSelection(worker.path().parent()).resolveOne(Time.HALF_MINUTE.duration); // TODO make configure
+				session = Await.result(future, Time.HALF_MINUTE.duration); // TODO make configure
+				logger.trace("admin found session {} for worker {}", session.path(), worker.path());
 				
 			} catch (Exception e) {
 				e.printStackTrace();

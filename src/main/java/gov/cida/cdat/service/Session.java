@@ -201,6 +201,7 @@ public class Session extends UntypedActor {
 				historyMsg.put("lifespan", lifespan.toString());
 			}
 		}
+		logger.trace("history for {} {}", name, historyMsg);
 		return Message.create(historyMsg);
 	}
 	
