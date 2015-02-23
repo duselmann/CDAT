@@ -211,15 +211,17 @@ public class Session extends UntypedActor {
 	Message info() {
 		Map<String,String> response = new HashMap<String,String>();
 		
+		String sessionName = self().path().name();
 		// TODO this is not done, nulls need handling and more info provided
-		for (String name : delegates.names()) {
-			Status status = delegates.getStatus(name);
+		for (String workerName : delegates.names()) {
+			Status status = delegates.getStatus(workerName);
 			if (status != null) {
-				response.put(name, status.toString());
+				response.put(sessionName+"/"+workerName, status.toString());
 			}
 		}
-		
-		return Message.create(response);
+		Message msg = Message.create(response);
+		logger.trace("SESSION respond to INFO message with {}",msg);
+		return msg;
 	}
 	
 	/**

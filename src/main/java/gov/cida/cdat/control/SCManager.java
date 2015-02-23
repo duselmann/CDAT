@@ -3,35 +3,36 @@ package gov.cida.cdat.control;
 import gov.cida.cdat.service.Service;
 
 public class SCManager {
-	final Service scm;
-	final static ThreadLocal<SCManager> session = new ThreadLocal<SCManager>();
-
 	public final static String SESSION = Service.SESSION;
+
+	private static final Service   scm;
+	private static final SCManager instance;
 	
-	public SCManager(Service scm) {
-		this.scm = scm;
+	static {
+		scm = Service.instance();
+		instance = new SCManager();
+	}
+	
+	private SCManager() {
+//		this.scm = scm;
 	}
 	
 	public static SCManager open() {
 		return open("");
 	}
 	public static SCManager open(String adminToken) {
-		if (session.get() == null) {
-			session.set( new SCManager( Service.open(adminToken) ) );
-		}
-		return session.get();
+	    Service.open(adminToken);
+		return instance;
 	}
 	public static SCManager instance() {
 		return open();
 	}
 	
-
 	public int hashCode() {
 		return scm.hashCode();
 	}
 
 	public void close() {
-		session.remove();
 		scm.close();
 	}
 
@@ -94,5 +95,9 @@ public class SCManager {
 	public long waitForComplete(String workerName, long initialWait,
 			long subsequentWait) {
 		return scm.waitForComplete(workerName, initialWait, subsequentWait);
+	}
+
+	public Message fetchSessionInfo() {
+		return scm.fetchSessionInfo();
 	}
 }

@@ -8,6 +8,9 @@ import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.message.AddWorkerMessage;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,11 +61,14 @@ public class Service {
 
 	private static final String TOKEN    = "012345678910";  // TODO make configurable
 	
+	private static final Registry sessions;
+	
 	/**
 	 *  singleton pattern, each user session will have a session worker
 	 */
 	static final Service instance;
 	static {
+		sessions = new Registry();
 		instance = new Service();
 	}
 	/**
@@ -132,6 +138,7 @@ public class Service {
 		} finally {
 			// this removes the session from the thread 
 			// a new one will be issued upon the next request
+			sessions.remove(sessionName());
 			session.remove();
 			token.remove();
 		}
@@ -198,6 +205,7 @@ public class Service {
 	        ActorRef sessionRef = workerPool.actorOf(
 	        		Props.create(Session.class, new Object[0]), sessionName);
 			if (session.get() == null) {
+				sessions.put(sessionName, sessionRef);
 				session.set(sessionRef);
 			}
 		}
@@ -568,6 +576,8 @@ public class Service {
 		// capture the start time for duration math
 		long start = Time.now();
 		// this is an repository for the complete signal
+		// since we are just waiting for not null we do not need volatile or synchronize
+		// when the system gets to it - it gets to it
 		final Message[] isComplete = new Message[1];
 		
 		Service.instance().send(workerName, Control.onComplete, new Callback(){
@@ -584,17 +594,72 @@ public class Service {
 			logger.trace("initial wait for {} interrupted, waited for {} ms", workerName, Time.duration(start));
 		}
 
-		// then wait for it to complete with a smaller cycle but not forever
-		int count=100;
-		while (null==isComplete[0] && count++ < 100) {
-			try {
-				Thread.sleep(subsequentWait);
-			} catch (InterruptedException e) {}
-		}
+		Time.waitForResponse(isComplete, subsequentWait);
 		
 		// return the duration to the call in case they are interested
 		long duration = Time.duration(start);
 		logger.trace("waited {}ms for {} to complete", duration, workerName);
 		return duration;
 	}
+	
+	
+	
+	/**
+	 * 
+	 * @param message
+	 * @param timeout
+	 * @return
+	 */
+	public Message fetchSessionInfo() {
+		Map<String, ActorRef> activeSessions = new HashMap<String,ActorRef>();
+
+		// if we are an admin session
+		if (TOKEN.equals(token.get())) {
+			// find all sessions
+			logger.trace("Admin session sending Control.info to ALL sessions");
+
+			// find all active sessions
+			for (String sessionName : sessions.workers.keySet()) {
+				ActorRef session =  sessions.get(sessionName);
+				if (session != null) {
+					activeSessions.put(sessionName, session);
+				}
+			}
+			logger.trace("Of the {} registers session, {} are active: {}", sessions.workers.size(), activeSessions.size(), activeSessions.keySet());
+			
+		} else {
+			// if normal session then use only this session
+			activeSessions.put(sessionName(), session());
+		}
+		
+		int msgCount = 0;
+		final Message[] sessionInfo = new Message[activeSessions.size()];
+		final Message message = Message.create(Control.info,SESSION);
+		final Timeout timeout = Time.SECOND.asTimeout();
+		
+		// now ask each active session for its info
+		for (String sessionName : activeSessions.keySet()) {
+			ActorRef session = activeSessions.get(sessionName);
+			Future<Object> ask = Patterns.ask(session, message, timeout);
+	
+			final int thisMsg = msgCount++;
+			wrapCallback(ask, workerPool.dispatcher(), new Callback(){
+				@Override
+				public void onComplete(Throwable t, Message response) {
+					sessionInfo[thisMsg] = response;
+				}
+			});
+		}
+		Time.waitForResponse(sessionInfo, 100);
+
+		// combine messages
+		Map<String,String> fullInfo = new HashMap<String,String>();
+		for (Message info : sessionInfo) {
+			if (info != null) {
+				fullInfo.putAll(info.entries());
+			}
+		}
+		
+		return Message.create(fullInfo);
+	}	
 }

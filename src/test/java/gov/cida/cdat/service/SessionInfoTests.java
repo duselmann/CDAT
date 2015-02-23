@@ -39,10 +39,12 @@ public class SessionInfoTests {
 			
 			TestUtils.log(message[0]);
 			
+			String prefix = session.sessionName()+"/";
+			
 			assertEquals("Expect info on workerA to be "+Status.isNew,
-					Status.isNew.toString(), message[0].get(nameA));
+					Status.isNew.toString(), message[0].get(prefix+nameA));
 			assertEquals("Expect info on workerB to be "+Status.isNew,
-					Status.isNew.toString(), message[0].get(nameB));
+					Status.isNew.toString(), message[0].get(prefix+nameB));
 		} finally {
 			session.close();
 		}
@@ -79,10 +81,12 @@ public class SessionInfoTests {
 			
 			TestUtils.log(message[0]);
 			
+			String prefix = session.sessionName()+"/";
+			
 			assertEquals("Expect info on workerA to be "+Status.isDisposed,
-					Status.isDisposed.toString(), message[0].get(nameA));
+					Status.isDisposed.toString(), message[0].get(prefix+nameA));
 			assertEquals("Expect info on workerB to be "+Status.isDisposed,
-					Status.isDisposed.toString(), message[0].get(nameB));
+					Status.isDisposed.toString(), message[0].get(prefix+nameB));
 		} finally {
 			session.close();
 		}
@@ -138,10 +142,12 @@ public class SessionInfoTests {
 			
 			TestUtils.log(message[0]);
 			
+			String prefix = session.sessionName()+"/";
+			
 			assertEquals("Expect info on workerA to be "+Status.isStarted,
-					Status.isStarted.toString(), message[0].get(nameA));
+					Status.isStarted.toString(), message[0].get(prefix+nameA));
 			assertEquals("Expect info on workerB to be "+Status.isStarted,
-					Status.isStarted.toString(), message[0].get(nameB));
+					Status.isStarted.toString(), message[0].get(prefix+nameB));
 		} finally {
 			session.close();
 		}

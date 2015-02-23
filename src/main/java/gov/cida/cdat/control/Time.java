@@ -78,4 +78,17 @@ public enum Time {
 		
 		return count;
 	}
+	
+	public static void slumber(long milliseconds) {
+		long later = later(milliseconds);
+		
+		while (now() < later) {
+			try {
+				Thread.sleep(milliseconds);
+			} catch (Exception e) {
+				// if interrupted then wait the remaining time
+				milliseconds = later - now();
+			}
+		}
+	}
 }

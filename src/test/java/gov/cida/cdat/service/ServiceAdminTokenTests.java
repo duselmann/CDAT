@@ -1,20 +1,21 @@
 package gov.cida.cdat.service;
 
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import gov.cida.cdat.TestUtils;
+import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
-import gov.cida.cdat.service.Service;
 
 import java.net.MalformedURLException;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
-
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +25,18 @@ import akka.actor.ActorRef;
 // there should be no name conflicts because each thread will have its own session
 public class ServiceAdminTokenTests {
 
-	private static Set<String> sessionNames = new HashSet<String>();
-	private static Set<String> workerNames  = new HashSet<String>();
-	private static Service[] sessions     = new Service[1];
-	private static Boolean[]  processCalled = new Boolean[1];
+	private static Set<String> sessionNames;
+	private static Set<String> workerNames;
+	private static Service[] sessions;
+	private static Boolean[]  processCalled;
+	
+	@Before
+	public void setup() {
+		sessionNames = new HashSet<String>();
+		workerNames  = new HashSet<String>();
+		sessions     = new Service[1];
+		processCalled = new Boolean[1];
+	}
 	
 	@Test
 	public void testMultiThreadedRequests() throws Exception {
@@ -103,4 +112,44 @@ public class ServiceAdminTokenTests {
 		//session.close();
 	}
 
+	
+	@Test
+	public void testInfoIsNew() {
+		String token = TestUtils.reflectValue(Service.class, "TOKEN").toString();
+		
+		// start a 'session' with the admin token
+		Service session = Service.open(token);
+		
+		try {
+//			Worker workerA = new Worker(){};
+//			Worker workerB = new Worker(){};
+//			
+//			String nameA = session.addWorker("workerA", workerA);
+//			String nameB = session.addWorker("workerB", workerB);
+
+			spawnThread("workerA");
+			spawnThread("workerB");
+			
+			final Message[] message = new Message[1];
+			Message getInfo = Message.create(Control.info, Service.SESSION);
+			session.send(Service.SESSION, getInfo, new Callback() {
+				@Override
+				public void onComplete(Throwable t, Message response) {
+					message[0] = response;
+					TestUtils.log(response);
+				}
+			});
+			
+			Time.waitForResponse(message,100);
+			
+			TestUtils.log(message[0]);
+			
+//			assertEquals("Expect info on workerA to be "+Status.isNew,
+//					Status.isNew.toString(), message[0].get(nameA));
+//			assertEquals("Expect info on workerB to be "+Status.isNew,
+//					Status.isNew.toString(), message[0].get(nameB));
+		} finally {
+			session.close();
+		}
+	}	
 }
