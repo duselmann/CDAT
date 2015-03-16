@@ -225,12 +225,6 @@ public class Delegator extends UntypedActor {
 	public String getName() {
 		return name;
 	}
-	/**
-	 * @return the worker Id - part of the initial spec but currently unused
-	 */
-	public long getId() {
-		return worker.getId();
-	}
 	
 	
 	/**
@@ -328,6 +322,7 @@ public class Delegator extends UntypedActor {
 	 * @param needsToKnow
 	 */
 	void sendCompleted(ActorRef needsToKnow) {
+		logger.trace("Sending message onComplete to all listeners");
 		String value = "done";
 		Message completed = Message.create(Naming.WORKER_NAME, name);
 		if (currentError != null) {
@@ -337,6 +332,7 @@ public class Delegator extends UntypedActor {
 		}
 		completed = Message.extend(completed, Control.onComplete, value);
 		needsToKnow.tell(completed, self());
+		logger.trace("Sent message onComplete to all listeners");
 	}
 
 	/**
