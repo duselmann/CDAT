@@ -238,8 +238,8 @@ public class Service {
 				logger.trace("admin found session {} for worker {}", session.path(), worker.path());
 				
 			} catch (Exception e) {
-				e.printStackTrace();
 				// since we want to return null if not found we need not do anything else
+				return session;
 			}
 			return session;
 		}
@@ -493,7 +493,6 @@ public class Service {
 		if (callback == null) {
 			return;
 		}
-//		logger.trace("wrapping onComplete with typed cast (Message) response {}", callback);
 		
 		// this is wrapper in order to allow the user a typed Message callback
 		OnComplete<Object> wrapper = new OnComplete<Object>() {
