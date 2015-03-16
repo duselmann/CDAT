@@ -1,22 +1,18 @@
 package gov.cida.cdat.control;
 
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import gov.cida.cdat.TestUtils;
-import gov.cida.cdat.control.Callback;
-import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
-import gov.cida.cdat.message.Message;
 import gov.cida.cdat.service.PipeWorker;
-import gov.cida.cdat.service.Worker;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -61,7 +57,7 @@ public class SCManagerControlSuccessTest {
 			session.send(workerName, Control.Start);
 			
 			System.out.println("waiting for worker to process");
-			TestUtils.waitAlittleWhileForResponse(completed);
+			Time.waitForResponse(completed,100);
 	
 			assertTrue("DataPipe should be complete when finished", pipe.isComplete());
 			assertEquals("producer stream should be null after close", null, pipe.getProducerStream());

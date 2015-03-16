@@ -7,6 +7,7 @@ import gov.cida.cdat.io.Openable;
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +77,7 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 	 */
 	@Override
 	public final S open() throws StreamInitException {
-		logger.debug("Open called: {} ", getName());
+		logger.trace("Open called: {} ", getName());
 		// TODO test that this is correct, works, and sufficient
 		// TODO could be that we need a new boolean hasBeenOpened or like mechanism
 		if ( stream != null ) {
@@ -91,27 +92,26 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 	 */
 	@Override
 	public final void close() throws IOException {
-		logger.debug("Close called: {} ", getName());
+		logger.trace("Close called: {} ", getName());
 		try {
+			Class<?> streamClass = getStream().getClass();
 			if (getStream() instanceof Flushable) {
+				logger.trace("Flush called: {} ", streamClass.getName());
 				((Flushable)getStream()).flush();
-			// This used to be used prior to Flushable interface
-//			} else {
-//				Method flush;
-//				Class<?> streamClass = getStream().getClass();
-//				if ( null != ( flush = streamClass.getMethod("flush") ) ) {
-//					logger.debug("Flush called: {} ", streamClass.getName());
-//					flush.invoke(getStream());
-//				}
+			} else { // try reflection in case flush is available
+				Method flush;
+				if ( null != ( flush = streamClass.getMethod("flush") ) ) {
+					logger.trace("Flush, via reflection, called: {} ", streamClass.getName());
+					flush.invoke(getStream());
+				}
 			}
 		} catch (Exception e) {
 			// does not matter, if flush not available then do not do it
 		} finally {
-			cleanup(); // TODO determine ideal calling location for this method
-			closeStream();
-			if (downstream != null) {
-				downstream.close();
-				downstream = null;
+			try {
+				cleanup(); // TODO determine ideal calling location for this method
+			} finally {
+				closeStream();
 			}
 		}
 	}
@@ -154,9 +154,14 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 	private void closeStream() {
 		S oldStream = getStream();
 		stream = null;
+		Closer.close(oldStream); // this method does not throw exceptions
+		
+		Closer.close(downstream);// because the previous does not throw, this will be called
+		downstream = null;
+		
+		// logg after to ensure above closes are called
 		if (oldStream != null) {
-			logger.debug("Close stream: {} ", oldStream.getClass().getName());
-			Closer.close(oldStream);
+			logger.trace("Close stream: {} ", oldStream.getClass().getName());
 		}
 	}
 	

@@ -28,11 +28,11 @@ public abstract class DbReader<T> implements Closeable, Openable<OutputStream> {
 	protected ResultSet rs;
 	protected Statement st;
 	
-	protected TransformStreamContainer<T> transformer;
-	protected TransformOutputStream<T> target;
+	protected TransformStreamContainer transformer;
+	protected TransformOutputStream target;
 		
 	
-	protected DbReader(Connection conn, TransformStreamContainer<T> transformer) {
+	protected DbReader(Connection conn, TransformStreamContainer transformer) {
 		this.transformer = transformer;
 		this.conn = conn;
 		fetchSize = 1024; // TODO make configure

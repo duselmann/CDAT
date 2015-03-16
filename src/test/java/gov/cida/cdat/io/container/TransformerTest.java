@@ -1,6 +1,7 @@
 package gov.cida.cdat.io.container;
 
 import gov.cida.cdat.TestUtils;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.io.TransformOutputStream;
 import gov.cida.cdat.io.container.DataPipe;
@@ -28,7 +29,7 @@ public class TransformerTest {
 
 		// Transformer
 		RegexTransformer transform = new RegexTransformer("middle","center");
-		TransformOutputStream<Object> tout = new TransformOutputStream<Object>(target, transform);
+		TransformOutputStream tout = new TransformOutputStream(target, transform);
 		SimpleStreamContainer<OutputStream> consumer  = new SimpleStreamContainer<OutputStream>(tout);
 
 		// Producer
@@ -39,7 +40,7 @@ public class TransformerTest {
 		// Pipe producer to consumer
 		final DataPipe pipe = new DataPipe(producer, consumer);
 		
-		final Object[] done = new Object[1]; 
+		final Object[] completed = new Object[1]; 
 		new Thread() {
 			@Override
 			public void run() {
@@ -47,7 +48,7 @@ public class TransformerTest {
 				try {
 					pipe.open();
 					pipe.processAll();
-					done[0] = pipe;
+					completed[0] = pipe;
 				} catch (CdatException e) {
 					e.printStackTrace();
 				}
@@ -55,7 +56,7 @@ public class TransformerTest {
 		}.start();
 		
 		System.out.println("main waithing for pipe...");
-		TestUtils.waitAlittleWhileForResponse(done);
+		Time.waitForResponse(completed,100);
 		System.out.println("pipe close");
 		pipe.close();
 		
@@ -90,12 +91,12 @@ public class TransformerTest {
 
 		// Transformer 1
 		RegexTransformer transform1 = new RegexTransformer("middle","center");
-		TransformOutputStream<Object> tStream1 = new TransformOutputStream<Object>(target, transform1);
+		TransformOutputStream tStream1 = new TransformOutputStream(target, transform1);
 		//SimpleStreamContainer<OutputStream> tContainer  = new SimpleStreamContainer<OutputStream>(tStream1);
 
 		// Transformer 2
 		RegexTransformer transform2 = new RegexTransformer("Z","~");
-		TransformOutputStream<Object> tStream2 = new TransformOutputStream<Object>(tStream1, transform2);
+		TransformOutputStream tStream2 = new TransformOutputStream(tStream1, transform2);
 		SimpleStreamContainer<OutputStream> consumer  = new SimpleStreamContainer<OutputStream>(tStream2);
 
 		// Producer
@@ -106,7 +107,7 @@ public class TransformerTest {
 		// Pipe producer to consumer
 		final DataPipe pipe = new DataPipe(producer, consumer);
 		
-		final Object[] done = new Object[1]; 
+		final Object[] completed = new Object[1]; 
 		new Thread() {
 			@Override
 			public void run() {
@@ -114,7 +115,7 @@ public class TransformerTest {
 				try {
 					pipe.open();
 					pipe.processAll();
-					done[0] = pipe;
+					completed[0] = pipe;
 				} catch (CdatException e) {
 					e.printStackTrace();
 				}
@@ -122,7 +123,7 @@ public class TransformerTest {
 		}.start();
 		
 		System.out.println("main waithing for pipe...");
-		TestUtils.waitAlittleWhileForResponse(done);
+		Time.waitForResponse(completed,100);
 		System.out.println("pipe close");
 		pipe.close();
 		

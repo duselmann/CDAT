@@ -2,12 +2,11 @@ package gov.cida.cdat.service;
 
 import static akka.actor.SupervisorStrategy.stop;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Status;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.message.AddWorkerMessage;
-import gov.cida.cdat.message.Message;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -47,7 +46,7 @@ public class Session extends UntypedActor {
 	
 	
 	SupervisorStrategy supervisor = new OneForOneStrategy(10, // TEN errors in duration // TODO make configure
-			Time.MINUTE, // TODO make configure
+			Time.MINUTE.duration, // TODO make configure
 			new Function<Throwable, Directive>() {
 		@Override
 		public Directive apply(Throwable t) {
@@ -108,14 +107,14 @@ public class Session extends UntypedActor {
 		logger.trace("Session recieved message {}", msg);
 		Message response = null;
 		
-		if (msg.contains(SCManager.AUTOSTART)) {
-			autoStart = "true".equals( msg.get(SCManager.AUTOSTART) );
+		if (msg.contains(Service.AUTOSTART)) {
+			autoStart = "true".equals( msg.get(Service.AUTOSTART) );
 		}
-		if ( SCManager.SESSION.equals( msg.get(Control.Stop) ) ) {
+		if ( Service.SESSION.equals( msg.get(Control.Stop) ) ) {
 			stopSession(msg);
 			return;
 		}
-		if ( SCManager.SESSION.equals( msg.get(Control.info) ) ) {
+		if ( Service.SESSION.equals( msg.get(Control.info) ) ) {
 			response = info();
 			sender().tell(response, self());
 			return;
@@ -158,7 +157,7 @@ public class Session extends UntypedActor {
 		ActorRef worker = delegates.get(workerName);
 		// if there was no worker found then the we have no delegate to whom to send a message
 		if (worker == null) {
-			logger.warn("Failed to find worker named {} on session {}", workerName, self().path());
+			logger.warn("Failed to find worker named {} on session {} in msg {}", workerName, self().path(),msg);
 			unhandled(msg);
 			return;
 			
@@ -202,6 +201,7 @@ public class Session extends UntypedActor {
 				historyMsg.put("lifespan", lifespan.toString());
 			}
 		}
+		logger.trace("history for {} {}", name, historyMsg);
 		return Message.create(historyMsg);
 	}
 	
@@ -212,15 +212,17 @@ public class Session extends UntypedActor {
 	Message info() {
 		Map<String,String> response = new HashMap<String,String>();
 		
+		String sessionName = self().path().name();
 		// TODO this is not done, nulls need handling and more info provided
-		for (String name : delegates.names()) {
-			Status status = delegates.getStatus(name);
+		for (String workerName : delegates.names()) {
+			Status status = delegates.getStatus(workerName);
 			if (status != null) {
-				response.put(name, status.toString());
+				response.put(sessionName+"/"+workerName, status.toString());
 			}
 		}
-		
-		return Message.create(response);
+		Message msg = Message.create(response);
+		logger.trace("SESSION respond to INFO message with {}",msg);
+		return msg;
 	}
 	
 	/**
@@ -236,7 +238,8 @@ public class Session extends UntypedActor {
 			// TODO this could be a while loop instead of a message loop if we find this is too noisy
 			if (delegates>0  &&  attempts++<100) {
 				logger.trace("jobs remain running on {}", self().path().name());
-				Thread.sleep( Time.MILLIS.toMillis() ); // TODO make configurable
+				// give some time for children to finish
+				Thread.sleep( Time.MS.asMS() ); // TODO make configurable
 				msg = msg.extend("attempts", ""+attempts);
 				self().tell(msg, self());
 			} else {

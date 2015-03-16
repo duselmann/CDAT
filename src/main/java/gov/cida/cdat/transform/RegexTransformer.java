@@ -1,6 +1,6 @@
 package gov.cida.cdat.transform;
 
-public class RegexTransformer extends Transformer<Object> {
+public class RegexTransformer extends Transformer {
 
 	String pattern;
 	String replace;
@@ -16,7 +16,6 @@ public class RegexTransformer extends Transformer<Object> {
 
 		String buff = new String(bytes, off, len);
 		return buff.replaceAll(pattern, replace).getBytes();
-		
 	}
 
 }

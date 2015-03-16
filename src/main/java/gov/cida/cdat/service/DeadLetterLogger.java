@@ -25,7 +25,7 @@ import akka.actor.UntypedActor;
  * source line for further debugging.
  * </p>
  * 
- * @see gov.cida.cdat.message.Message
+ * @see gov.cida.cdat.control.Message
  * 
  * @author duselmann
  */

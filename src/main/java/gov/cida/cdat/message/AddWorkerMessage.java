@@ -1,6 +1,6 @@
 package gov.cida.cdat.message;
 
-import gov.cida.cdat.service.Worker;
+import gov.cida.cdat.control.Worker;
 
 import java.io.Serializable;
 

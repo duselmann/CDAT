@@ -1,17 +1,19 @@
-package gov.cida.cdat.control;
+package gov.cida.cdat.service;
 
-import static org.junit.Assert.*;
-import gov.cida.cdat.TestUtils;
-import gov.cida.cdat.service.Worker;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import gov.cida.cdat.control.Control;
+import gov.cida.cdat.control.Time;
+import gov.cida.cdat.control.Worker;
 
 import org.junit.Test;
 
-public class SCManagerOpenCloseTests {
+public class ServiceOpenCloseTests {
 
 	@Test
 	public void testSessionOpenClose() {
 		
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		final String firstSession = session.sessionName();
 				
 		try {
@@ -23,7 +25,7 @@ public class SCManagerOpenCloseTests {
 			session.close();
 		}
 		
-		session = SCManager.open();
+		session = Service.open();
 		final String secondSession = session.sessionName();
 				
 		try {
@@ -38,7 +40,7 @@ public class SCManagerOpenCloseTests {
 		assertNotEquals("expect new session after session close", firstSession, secondSession);
 	}
 	
-	private String[] runWorker(final String workerLabel, SCManager session) {
+	private String[] runWorker(final String workerLabel, Service session) {
 		final String[] response = new String[1];
 		Worker testWorker = new Worker() {
 			public boolean process() {
@@ -49,7 +51,7 @@ public class SCManagerOpenCloseTests {
 		String name = session.addWorker(workerLabel, testWorker);
 		session.send(name, Control.Start);
 
-		TestUtils.waitAlittleWhileForResponse(response);
+		Time.waitForResponse(response,100);
 		// this is not necessary if session.close() is called so near by
 		session.send(name, Control.Stop);
 		

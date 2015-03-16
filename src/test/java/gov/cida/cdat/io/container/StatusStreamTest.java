@@ -67,7 +67,7 @@ public class StatusStreamTest {
 				}
 				@Override
 				public synchronized int read(byte[] b) throws IOException {
-					TestUtils.log("test read(byte[]) called - to read a small byte count");
+//					TestUtils.log("test read(byte[]) called - to read a small byte count");
  					return dataRefStream.read(b, 0, 5);
 				}
 				@Override
@@ -114,10 +114,10 @@ public class StatusStreamTest {
 				System.out.println("status thread");
 				while (status.getChainedStream() == null) {
 					status(status.getChainedStream());
-					try {Thread.sleep(50); } catch (InterruptedException e) {}
+					TestUtils.sleepQuietly(50);
 				}
 				status(status.getChainedStream());
-				try {Thread.sleep(50); } catch (InterruptedException e) {}
+				TestUtils.sleepQuietly(50);
 				status(status.getChainedStream());
 			}
 
@@ -153,7 +153,7 @@ public class StatusStreamTest {
 		Assert.assertFalse("status should not be open: ", statusStream.isOpen());
 		Assert.assertTrue("status should be done: ", statusStream.isDone());
 		Assert.assertEquals("status byteCount should be 20014: ", dataRef.length, statusStream.getByteCount());
-		Assert.assertTrue("status time since last write should be less than 1sec: ", 1000 > statusStream.getMsSinceLastWrite());
+		Assert.assertTrue("status time since last write should be less than 1.5sec: ", 1500 > statusStream.getMsSinceLastWrite());
 		Assert.assertTrue("status time since last write should be greater than 200ms: ", 200 < statusStream.getMsSinceLastWrite());
 		Assert.assertTrue("status is open for less than 1.5sec: ", 1500 > statusStream.getOpenTime());
 		Assert.assertTrue("status is open for greater than 200 ms: ", 200 < statusStream.getOpenTime());

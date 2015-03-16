@@ -1,11 +1,12 @@
 package gov.cida.cdat.service;
 
 import gov.cida.cdat.control.Control;
+import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Status;
+import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.message.AddWorkerMessage;
-import gov.cida.cdat.message.Message;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -89,7 +90,7 @@ public class Delegator extends UntypedActor {
 	public Delegator(AddWorkerMessage worker) {
 		this.name      = worker.getName();
 		this.worker    = worker.getWorker();
-		this.worker.name = this.name;
+		this.worker.setName(this.name);
 		this.autoStart = worker.isAutoStart();
 		setStatus(Status.isNew);
 		logger.trace("new Delegator for worker:{} with autostart:{}", name, autoStart);
@@ -191,7 +192,7 @@ public class Delegator extends UntypedActor {
 	@Override
 	public void preStart() throws Exception {
 		if (autoStart) {
-			logger.debug("Delegate AUTOSTART worker");
+			logger.trace("Delegate AUTOSTART worker");
 			start();
 		}
 	}
@@ -224,12 +225,6 @@ public class Delegator extends UntypedActor {
 	public String getName() {
 		return name;
 	}
-	/**
-	 * @return the worker Id - part of the initial spec but currently unused
-	 */
-	public long getId() {
-		return worker.getId();
-	}
 	
 	
 	/**
@@ -245,7 +240,7 @@ public class Delegator extends UntypedActor {
 	 */
 	Message start() throws CdatException {
 		if ( ! Status.isNew.equals(status) ) {
-			logger.debug("Ignoring multistart worker {}", name);
+			logger.trace("Ignoring multistart worker {}", name);
 			setCurrentError(new StreamInitException("May only start new workers"));
 			return Message.create(Control.Start,false);
 		}
@@ -299,7 +294,7 @@ public class Delegator extends UntypedActor {
 	 * @param qualifier
 	 */
 	void done(String qualifier) {
-		logger.debug("delegator done called with: {}", qualifier);
+		logger.trace("delegator done called with: {}", qualifier);
 		try {
 			worker.end();
 			setStatus(Status.isDone);
@@ -327,6 +322,7 @@ public class Delegator extends UntypedActor {
 	 * @param needsToKnow
 	 */
 	void sendCompleted(ActorRef needsToKnow) {
+		logger.trace("Sending message onComplete to all listeners");
 		String value = "done";
 		Message completed = Message.create(Naming.WORKER_NAME, name);
 		if (currentError != null) {
@@ -336,6 +332,7 @@ public class Delegator extends UntypedActor {
 		}
 		completed = Message.extend(completed, Control.onComplete, value);
 		needsToKnow.tell(completed, self());
+		logger.trace("Sent message onComplete to all listeners");
 	}
 
 	/**
@@ -380,7 +377,7 @@ public class Delegator extends UntypedActor {
 	 * @param currentError
 	 */
 	void setCurrentError(Exception error) {
-		logger.debug("Exception running worker", error);
+		logger.trace("Exception running worker", error);
 		setStatus(Status.isError);
 		this.currentError = error;
 		worker.setCurrentError(error);

@@ -1,7 +1,5 @@
 package gov.cida.cdat.control;
 
-import gov.cida.cdat.message.Message;
-import akka.dispatch.OnComplete;
 
 /**
  * The callback for the message return onComplete. The motivation for this is to change
@@ -12,7 +10,7 @@ import akka.dispatch.OnComplete;
  * @author duselman
  *
  */
-public abstract class Callback extends OnComplete<Message>{
+public abstract class Callback {
 
 	/**
 	 * Called after a worker is known to be completed.
@@ -21,7 +19,6 @@ public abstract class Callback extends OnComplete<Message>{
 	 * TODO Implement the Delegate and Worker actors if they can be used for a better OnComplete determination
 	 * TODO Implement other callback method types. AKKA has others like OnError and OnSuccess (I think)
 	 */
-	@Override
 	abstract public void onComplete(Throwable t, Message response);
 
 }

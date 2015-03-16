@@ -1,18 +1,18 @@
-package gov.cida.cdat.control;
+package gov.cida.cdat.service;
 
 
+import static org.junit.Assert.*;
 import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Time;
+import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
-import gov.cida.cdat.service.Worker;
 
 import java.net.MalformedURLException;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
-
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,25 +20,33 @@ import org.slf4j.LoggerFactory;
 import akka.actor.ActorRef;
 
 // there should be no name conflicts because each thread will have its own session
-public class SCManagerAdminTokenTests {
+public class ServiceAdminTokenTests {
 
-	private static Set<String> sessionNames = new HashSet<String>();
-	private static Set<String> workerNames  = new HashSet<String>();
-	private static SCManager[] sessions     = new SCManager[1];
-	private static Boolean[]  processCalled = new Boolean[1];
+	private static Set<String> sessionNames;
+	private static Set<String> workerNames;
+	private static Service[] sessions;
+	private static Boolean[]  processCalled;
+	
+	@Before
+	public void setup() {
+		sessionNames = new HashSet<String>();
+		workerNames  = new HashSet<String>();
+		sessions     = new Service[1];
+		processCalled = new Boolean[1];
+	}
 	
 	@Test
 	public void testMultiThreadedRequests() throws Exception {
-		String token = TestUtils.reflectValue(SCManager.class, "TOKEN").toString();
+		String token = TestUtils.reflectValue(Service.class, "TOKEN").toString();
 		
 		// start a 'session' with the admin token
-		SCManager session = SCManager.open(token);
+		Service session = Service.open(token);
 		
 		try {
 			// start another session on another thread that is not ADMIN
 			spawnThread("OTHER");
 			// wait for the OTHER session to commence with a worker
-			TestUtils.waitAlittleWhileForResponse(sessions);
+			Time.waitForResponse(sessions,100);
 
 			// make sure that the OTHER session is named what we expect
 			assertEquals("Expect 1 unique session name", 1, sessionNames.size());
@@ -52,7 +60,7 @@ public class SCManagerAdminTokenTests {
 			
 			// test that the admin token allows control over OTHER session workers
 			session.send(workerName, Control.Start);
-			TestUtils.waitAlittleWhileForResponse(processCalled);
+			Time.waitForResponse(processCalled,100);
 			assertTrue("expect that the admin token allows starting other session workers", processCalled[0]);
 			
 		} finally {
@@ -81,7 +89,7 @@ public class SCManagerAdminTokenTests {
 
 
 	private static void submitJob(final String threadName) throws MalformedURLException {
-		final SCManager session = sessions[0] = SCManager.open();
+		final Service session = sessions[0] = Service.open();
 
 		Worker worker = new Worker(){
 			@Override
@@ -101,4 +109,45 @@ public class SCManagerAdminTokenTests {
 		//session.close();
 	}
 
+/*	
+	@Test
+	public void testInfoIsNew() {
+		String token = TestUtils.reflectValue(Service.class, "TOKEN").toString();
+		
+		// start a 'session' with the admin token
+		Service session = Service.open(token);
+		
+		try {
+//			Worker workerA = new Worker(){};
+//			Worker workerB = new Worker(){};
+//			
+//			String nameA = session.addWorker("workerA", workerA);
+//			String nameB = session.addWorker("workerB", workerB);
+
+			spawnThread("workerA");
+			spawnThread("workerB");
+			
+			final Message[] message = new Message[1];
+			Message getInfo = Message.create(Control.info, Service.SESSION);
+			session.send(Service.SESSION, getInfo, new Callback() {
+				@Override
+				public void onComplete(Throwable t, Message response) {
+					message[0] = response;
+					TestUtils.log(response);
+				}
+			});
+			
+			Time.waitForResponse(message,100);
+			
+			TestUtils.log(message[0]);
+			
+//			assertEquals("Expect info on workerA to be "+Status.isNew,
+//					Status.isNew.toString(), message[0].get(nameA));
+//			assertEquals("Expect info on workerB to be "+Status.isNew,
+//					Status.isNew.toString(), message[0].get(nameB));
+		} finally {
+			session.close();
+		}
+	}
+*/
 }

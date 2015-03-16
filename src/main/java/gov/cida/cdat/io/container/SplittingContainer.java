@@ -28,7 +28,9 @@ public abstract class SplittingContainer extends StreamContainer<SplitOutputStre
 	 * @param stream the given the stream of the chained 'parent'
 	 * @return should return the stream this container is designed
 	 */
-	protected abstract OutputStream chain(OutputStream stream);
+	protected OutputStream chain(OutputStream stream) {
+		return stream;
+	}
 	
 	
 	@Override

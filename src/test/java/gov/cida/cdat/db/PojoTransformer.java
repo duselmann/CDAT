@@ -2,7 +2,7 @@ package gov.cida.cdat.db;
 
 import gov.cida.cdat.transform.Transformer;
 
-public class PojoTransformer extends Transformer<Pojo> {
+public class PojoTransformer extends Transformer {
 	
 	private String  separator = ",";
 	private String  newline   = "\n";
@@ -19,7 +19,11 @@ public class PojoTransformer extends Transformer<Pojo> {
 	
 	
 	@Override
-	public byte[] transform(Pojo person) {
+	public byte[] transform(Object obj) {
+		if ( ! (obj instanceof  Pojo) ) {
+			return new byte[0];
+		}
+		Pojo person = (Pojo)obj;
 		System.out.println("transform person pojo to bytes");
 		
 		StringBuilder buf = new StringBuilder(200);

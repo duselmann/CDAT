@@ -1,6 +1,7 @@
 package gov.cida.cdat.io.container;
 
 import gov.cida.cdat.TestUtils;
+import gov.cida.cdat.control.Time;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.container.DataPipe;
@@ -44,7 +45,7 @@ public class DataPipeTest {
 		// pipe
 		final DataPipe pipe = new DataPipe(producer, consumer);
 		
-		final Object[] done = new Object[1]; 
+		final Object[] completed = new Object[1]; 
 		new Thread() {
 			@Override
 			public void run() {
@@ -52,7 +53,7 @@ public class DataPipeTest {
 				try {
 					pipe.open();
 					pipe.processAll();
-					done[0] = pipe;
+					completed[0] = pipe;
 				} catch (CdatException e) {
 					e.printStackTrace();
 				}
@@ -60,7 +61,8 @@ public class DataPipeTest {
 		}.start();
 		
 		System.out.println("main waithing for pipe...");
-		TestUtils.waitAlittleWhileForResponse(done);
+		Time.waitForResponse(completed,100);
+
 		System.out.println("main closing pipe");
 		pipe.close();
 		

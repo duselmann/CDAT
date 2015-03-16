@@ -1,5 +1,6 @@
 package gov.cida.cdat.service;
 
+import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.io.container.DataPipe;
 

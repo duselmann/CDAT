@@ -15,11 +15,11 @@ public class DataPipe implements Openable<InputStream>, Closeable {
 	public static final int DEFAULT_DURATION = 10000; // TODO make configurable
 	public static final int FULL_DURATION    = -1;
 	
-	private final StreamContainer<InputStream>  producer;
-	private final StreamContainer<OutputStream> consumer;
+	private final StreamContainer<? extends InputStream>  producer;
+	private final StreamContainer<? extends OutputStream> consumer;
 	private boolean isComplete;
 	
-	public DataPipe(StreamContainer<InputStream> ins, StreamContainer<OutputStream> out) {
+	public DataPipe(StreamContainer<? extends InputStream> ins, StreamContainer<? extends OutputStream> out) {
 		this.producer = ins;
 		this.consumer = out;
 	}
@@ -50,6 +50,15 @@ public class DataPipe implements Openable<InputStream>, Closeable {
 	}
 
 	
+	// this is useful for small test buffers and large big flow buffers
+	public boolean process(long milliseconds, int bufferSize) throws CdatException{
+		try {
+			boolean isMore = IO.copy(producer.getStream(), consumer.getStream(), milliseconds, bufferSize);
+			return isMore;
+		} catch (Exception e) {
+			throw new  StreamInitException("Failed to copy pipe streams", e);
+		}
+	}
 	public boolean process(long milliseconds) throws CdatException{
 		try {
 			boolean isMore = IO.copy(producer.getStream(), consumer.getStream(), milliseconds);

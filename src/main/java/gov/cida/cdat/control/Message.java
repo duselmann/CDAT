@@ -1,4 +1,4 @@
-package gov.cida.cdat.message;
+package gov.cida.cdat.control;
 
 
 import java.io.Serializable;
@@ -219,5 +219,12 @@ public class Message implements Serializable {
 	
 	public int size() {
 		return message.size();
+	}
+
+	/**
+	 * @return protective copy of message entries
+	 */
+	public Map<? extends String, ? extends String> entries() {
+		return new HashMap<String,String>(message);
 	}
 }

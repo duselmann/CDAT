@@ -4,10 +4,11 @@ import static org.junit.Assert.*;
 import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Status;
+import gov.cida.cdat.control.Time;
+import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
-import gov.cida.cdat.message.Message;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +29,7 @@ public class SessionWorkerHistoryTests {
 	}
 	
 	
-	private Message[] getWorkerHostory(SCManager session, String nameA, String nameB) {
+	private Message[] getWorkerHistory(Service session, String nameA, String nameB) {
 		final Message[] messages = new Message[2];
 		Message getHistoryA = Message.create(Control.history, nameA);
 		session.send(nameA, getHistoryA, new Callback() {
@@ -45,7 +46,7 @@ public class SessionWorkerHistoryTests {
 			}
 		});
 		
-		TestUtils.waitAlittleWhileForResponse(messages);
+		Time.waitForResponse(messages,100);
 		
 		TestUtils.log(messages[0]);
 		TestUtils.log(messages[1]);
@@ -55,7 +56,7 @@ public class SessionWorkerHistoryTests {
 	
 	@Test
 	public void testInfoIsNew() {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		
 		try {
 			Worker workerA = new Worker(){};
@@ -64,7 +65,7 @@ public class SessionWorkerHistoryTests {
 			String nameA = session.addWorker("workerA", workerA);
 			String nameB = session.addWorker("workerB", workerB);
 			
-			Message[] history = getWorkerHostory(session, nameA, nameB);
+			Message[] history = getWorkerHistory(session, nameA, nameB);
 				
 			
 			assertEquals("Expect workerA history contain only "+Status.isNew,
@@ -84,7 +85,7 @@ public class SessionWorkerHistoryTests {
 
 	@Test
 	public void testInfoIsDisposed() throws Exception {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		
 		try {
 			Worker workerA = new Worker(){};
@@ -97,7 +98,7 @@ public class SessionWorkerHistoryTests {
 			
 			Thread.sleep(100);
 			
-			Message[] history = getWorkerHostory(session, nameA, nameB);
+			Message[] history = getWorkerHistory(session, nameA, nameB);
 			
 			assertEquals("Expect workerA history contain status - isNew,isStarted,isDone,isDispose,lifespan,runtime",
 					 6+traceEntry, history[0].size());
@@ -126,7 +127,7 @@ public class SessionWorkerHistoryTests {
 	
 	@Test
 	public void testInfoIsStarted() throws Exception {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		
 		try {			
 			Worker workerA = new Worker(){
@@ -147,7 +148,7 @@ public class SessionWorkerHistoryTests {
 			session.setAutoStart(false);
 			String nameB = session.addWorker("workerB", workerB);
 			
-			Message[] history = getWorkerHostory(session, nameA, nameB);
+			Message[] history = getWorkerHistory(session, nameA, nameB);
 			
 			assertEquals("Expect workerA history contain status - isNew,isStarted",
 					 2+traceEntry, history[0].size());

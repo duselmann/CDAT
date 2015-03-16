@@ -1,15 +1,34 @@
 package gov.cida.cdat.control;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import akka.util.Timeout;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
-public class Time {
-	public static final FiniteDuration MILLIS    = Duration.create(100, "milliseconds");
-	public static final FiniteDuration SECOND    = Duration.create(  1, "second");
-	public static final FiniteDuration HALF_MIN  = Duration.create( 30, "seconds");
-	public static final FiniteDuration MINUTE    = Duration.create(  1, "minute");
-	public static final FiniteDuration HOUR      = Duration.create(  1, "hour");
-	public static final FiniteDuration DAY       = Duration.create(  1, "day");
+public enum Time {
+	MS(100, "milliseconds"),
+	SECOND(  1, "second"),
+	HALF_MINUTE( 30, "seconds"),
+	MINUTE(  1, "minute"),
+	HOUR(  1, "hour"),
+	DAY(  1, "day");
+		
+	private static final Logger logger = LoggerFactory.getLogger(Time.class);
+	
+	public final FiniteDuration duration;
+	
+	Time(long amount, String unit) {
+		duration =  Duration.create(amount, unit);
+	}
+	
+	public long asMS() {
+		return duration.toMillis();
+	}
+	public Timeout asTimeout() {
+		return new Timeout(duration);
+	}
 	
 	/**
 	 * @return current time in milliseconds
@@ -41,5 +60,35 @@ public class Time {
 	 */
 	public static long duration(long timeInMilliseconds) {
 		return now() - timeInMilliseconds;
+	}
+	
+	// then wait for it to complete with a smaller cycle but not forever
+	public static int waitForResponse(Object response[], long interval) {
+		logger.trace("waiting for {} responses", response.length);
+		
+		int count=0;
+		for (int r=0; r<response.length; r++) {
+			while (null==response[r] && count++ < 100) {
+				try {
+					Thread.sleep(interval);
+				} catch (InterruptedException e) {}
+			}
+		}
+		logger.trace("waited {} intervals of {}ms for responses", count, interval);
+		
+		return count;
+	}
+	
+	public static void slumber(long milliseconds) {
+		long later = later(milliseconds);
+		
+		while (now() < later) {
+			try {
+				Thread.sleep(milliseconds);
+			} catch (Exception e) {
+				// if interrupted then wait the remaining time
+				milliseconds = later - now();
+			}
+		}
 	}
 }

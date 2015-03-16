@@ -2,7 +2,7 @@ package gov.cida.cdat;
 
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.SCManager;
-import gov.cida.cdat.service.Worker;
+import gov.cida.cdat.control.Worker;
 
 public class HelloWorld {
 	

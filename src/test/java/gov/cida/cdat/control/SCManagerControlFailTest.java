@@ -2,15 +2,9 @@ package gov.cida.cdat.control;
 
 
 import gov.cida.cdat.TestUtils;
-import gov.cida.cdat.control.Callback;
-import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.SCManager;
-import gov.cida.cdat.control.Status;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
-import gov.cida.cdat.message.Message;
 import gov.cida.cdat.service.PipeWorker;
-import gov.cida.cdat.service.Worker;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -61,7 +55,7 @@ public class SCManagerControlFailTest {
 		        }
 		    });
 			
-			TestUtils.waitAlittleWhileForResponse(message);
+			Time.waitForResponse(message,100);
 			
 			Assert.assertTrue("", message[0].toString().contains("Error reading from producer stream"));
 		} finally {

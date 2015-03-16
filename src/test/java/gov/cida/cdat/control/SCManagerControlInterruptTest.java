@@ -2,16 +2,12 @@ package gov.cida.cdat.control;
 
 
 import gov.cida.cdat.TestUtils;
-import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.SCManager;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.exception.StreamInitException;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.io.container.StreamContainer;
-import gov.cida.cdat.message.Message;
 import gov.cida.cdat.service.PipeWorker;
-import gov.cida.cdat.service.Worker;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -62,7 +58,8 @@ public class SCManagerControlInterruptTest {
 					}
 					@Override
 					public synchronized int read(byte[] b) {
-						TestUtils.log("test read(byte[]) called - to read a small byte count");
+						TestUtils.sleepQuietly(1);
+//						TestUtils.log("test read(byte[]) called - to read a small byte count");
 						String readString = "part" + readCount++;
 				        System.arraycopy(readString.getBytes(), 0, b, 0, readString.length());
 	

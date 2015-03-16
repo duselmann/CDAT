@@ -31,13 +31,18 @@ public final class IO {
 		return copy(source, target, DEFAULT_BUFFER_SIZE);
 	}
 	public static boolean copy(InputStream source, OutputStream target, long duration) throws CdatException {
+		return copy(source,target,duration,DEFAULT_BUFFER_SIZE);
+	}
+	public static boolean copy(InputStream source, OutputStream target, long duration, int bufferSize) throws CdatException {
 		// if duration is zero or less that is the signal to copy all
 		// otherwise we copy for the given duration
 		if (duration < 0) {
-			copy(source, target);
+			logger.trace("IO copy source to target with no duration");
+			copy(source, target, bufferSize);
 			return false; // there is no more
 		} else {
-			return copy(source, target, DEFAULT_BUFFER_SIZE, duration);
+			logger.trace("IO copy source to target with duration {}", duration);
+			return copy(source, target, bufferSize, duration);
 		}
 	}
 
@@ -57,12 +62,10 @@ public final class IO {
 		long total = 0;
 		int  count = 0;
 
-		while (count >= 0) {
+		while ((count = read(source, buffer)) >= 0) {
 			write(target, buffer, count);
-			count = read(source, buffer);
 			total += count;
 		}
-		write(target, buffer, count);
 		
 		logger.trace("total bytes read {}", total);
 		return total;
@@ -88,14 +91,13 @@ public final class IO {
 		long total = 0;
 		int  count = 0;
 
-		while (count >= 0 && Time.now() < endTime) {
+		while (Time.now() < endTime && (count = read(source, buffer)) >= 0) {
+			logger.trace("read duration remaining {}", endTime-Time.now());
 			write(target, buffer, count);
-			count = read(source, buffer);
 			total += count;
 		}
-		write(target, buffer, count);
 		
-		logger.trace("total bytes read {}", total);
+		logger.trace("total read bytes {}", total);
 		return count >= 0;
 	}
 
@@ -111,7 +113,6 @@ public final class IO {
 	}
 	private static int read(InputStream source, byte[] buffer) throws ProducerException {
 		try {
-			//Thread.sleep(250); // TODO this is here for testing
 			return source.read(buffer);
 		} catch (Exception e) {
 			throw new ProducerException("Error reading from producer stream", e);

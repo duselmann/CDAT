@@ -1,15 +1,15 @@
 package gov.cida.cdat.db;
 
-import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Message;
+import gov.cida.cdat.control.Time;
+import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.io.container.TransformStreamContainer;
-import gov.cida.cdat.message.Message;
-import gov.cida.cdat.service.Worker;
+import gov.cida.cdat.service.Service;
 import gov.cida.cdat.transform.Transformer;
 
 import java.io.ByteArrayOutputStream;
@@ -59,8 +59,8 @@ public class DBTesting {
 		SimpleStreamContainer<OutputStream> targetContainer = new SimpleStreamContainer<OutputStream>(target);
 		
 		// Transformer
-		Transformer<Pojo> transform = new PojoTransformer(",");
-		TransformStreamContainer<Pojo> transContainer = new TransformStreamContainer<Pojo>(transform, targetContainer);
+		Transformer transform = new PojoTransformer(",");
+		TransformStreamContainer transContainer = new TransformStreamContainer(transform, targetContainer);
 
 		// Producer
 		final PojoDbReader producer = new PojoDbReader(conn, transContainer);
@@ -87,15 +87,15 @@ public class DBTesting {
 		SimpleStreamContainer<OutputStream> targetContainer = new SimpleStreamContainer<OutputStream>(target);
 		
 		// Transformer
-		Transformer<Pojo> transform = new PojoTransformer(",");
-		TransformStreamContainer<Pojo> transContainer = new TransformStreamContainer<Pojo>(transform, targetContainer);
+		Transformer transform = new PojoTransformer(",");
+		TransformStreamContainer transContainer = new TransformStreamContainer(transform, targetContainer);
 
 		// Producer
 		final PojoDbReader producer = new PojoDbReader(conn, transContainer);
 		producer.setFetchSize(1);
 
 		
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		final String[] result = new String[1];
 
 		try {
@@ -133,7 +133,7 @@ public class DBTesting {
 				}
 			});
 			
-			TestUtils.waitAlittleWhileForResponse(result);
+			Time.waitForResponse(result,100);
 		} finally {
 			session.close();
 		}

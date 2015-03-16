@@ -4,10 +4,11 @@ import static org.junit.Assert.*;
 import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.control.Callback;
 import gov.cida.cdat.control.Control;
-import gov.cida.cdat.control.SCManager;
+import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Status;
+import gov.cida.cdat.control.Time;
+import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
-import gov.cida.cdat.message.Message;
 
 import org.junit.Test;
 
@@ -15,7 +16,7 @@ public class SessionInfoTests {
 
 	@Test
 	public void testInfoIsNew() {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		
 		try {
 			Worker workerA = new Worker(){};
@@ -25,22 +26,25 @@ public class SessionInfoTests {
 			String nameB = session.addWorker("workerB", workerB);
 			
 			final Message[] message = new Message[1];
-			Message getInfo = Message.create(Control.info, SCManager.SESSION);
-			session.send(SCManager.SESSION, getInfo, new Callback() {
+			Message getInfo = Message.create(Control.info, Service.SESSION);
+			session.send(Service.SESSION, getInfo, new Callback() {
 				@Override
 				public void onComplete(Throwable t, Message response) {
 					message[0] = response;
+					TestUtils.log(response);
 				}
 			});
 			
-			TestUtils.waitAlittleWhileForResponse(message);
+			Time.waitForResponse(message,100);
 			
 			TestUtils.log(message[0]);
 			
+			String prefix = session.sessionName()+"/";
+			
 			assertEquals("Expect info on workerA to be "+Status.isNew,
-					Status.isNew.toString(), message[0].get(nameA));
+					Status.isNew.toString(), message[0].get(prefix+nameA));
 			assertEquals("Expect info on workerB to be "+Status.isNew,
-					Status.isNew.toString(), message[0].get(nameB));
+					Status.isNew.toString(), message[0].get(prefix+nameB));
 		} finally {
 			session.close();
 		}
@@ -48,7 +52,7 @@ public class SessionInfoTests {
 
 	@Test
 	public void testInfoIsDisposed() throws Exception {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		
 		try {
 			Worker workerA = new Worker(){};
@@ -58,28 +62,31 @@ public class SessionInfoTests {
 			String nameB = session.addWorker("workerB", workerB);
 			
 			final Message[] message = new Message[1];
-			Message getInfo = Message.create(Control.info, SCManager.SESSION);
+			Message getInfo = Message.create(Control.info, Service.SESSION);
 			
 			session.send(nameA, Control.Start);
 			session.send(nameB, Control.Start);
 			
 			Thread.sleep(100);
 			
-			session.send(SCManager.SESSION, getInfo, new Callback() {
+			session.send(Service.SESSION, getInfo, new Callback() {
 				@Override
 				public void onComplete(Throwable t, Message response) {
 					message[0] = response;
+					TestUtils.log(response);
 				}
 			});
 			
-			TestUtils.waitAlittleWhileForResponse(message);
+			Time.waitForResponse(message,100);
 			
 			TestUtils.log(message[0]);
 			
+			String prefix = session.sessionName()+"/";
+			
 			assertEquals("Expect info on workerA to be "+Status.isDisposed,
-					Status.isDisposed.toString(), message[0].get(nameA));
+					Status.isDisposed.toString(), message[0].get(prefix+nameA));
 			assertEquals("Expect info on workerB to be "+Status.isDisposed,
-					Status.isDisposed.toString(), message[0].get(nameB));
+					Status.isDisposed.toString(), message[0].get(prefix+nameB));
 		} finally {
 			session.close();
 		}
@@ -88,7 +95,7 @@ public class SessionInfoTests {
 	
 	@Test
 	public void testInfoIsStarted() throws Exception {
-		SCManager session = SCManager.open();
+		Service session = Service.open();
 		
 		try {
 			session.setAutoStart(true);
@@ -120,24 +127,27 @@ public class SessionInfoTests {
 			String nameB = session.addWorker("workerB", workerB);
 			
 			final Message[] message = new Message[1];
-			Message getInfo = Message.create(Control.info, SCManager.SESSION);
+			Message getInfo = Message.create(Control.info, Service.SESSION);
 			
 			
-			session.send(SCManager.SESSION, getInfo, new Callback() {
+			session.send(Service.SESSION, getInfo, new Callback() {
 				@Override
 				public void onComplete(Throwable t, Message response) {
 					message[0] = response;
+					TestUtils.log(response);
 				}
 			});
 			
-			TestUtils.waitAlittleWhileForResponse(message);
+			Time.waitForResponse(message,100);
 			
 			TestUtils.log(message[0]);
 			
+			String prefix = session.sessionName()+"/";
+			
 			assertEquals("Expect info on workerA to be "+Status.isStarted,
-					Status.isStarted.toString(), message[0].get(nameA));
+					Status.isStarted.toString(), message[0].get(prefix+nameA));
 			assertEquals("Expect info on workerB to be "+Status.isStarted,
-					Status.isStarted.toString(), message[0].get(nameB));
+					Status.isStarted.toString(), message[0].get(prefix+nameB));
 		} finally {
 			session.close();
 		}
