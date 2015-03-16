@@ -37,11 +37,10 @@ public class ShutdownListener implements ServletContextListener {
 		logger.info("Shutting down cDAT with container shutdown.");
 		Service.shutdown();
 		try {
-			// TODO make configurable same value as the SCManager value plus 5 sec
+			// TODO make configurable same value as the SCManager value plus 
 			Thread.sleep(Time.SECOND.asMS()+100);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			// no we do not need to worry about this.
 		}
 	}
 

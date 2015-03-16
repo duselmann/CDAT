@@ -13,9 +13,6 @@ public class SCManager {
 		instance = new SCManager();
 	}
 	
-	private SCManager() {
-//		this.scm = scm;
-	}
 	
 	public static SCManager open() {
 		return open("");

@@ -55,7 +55,6 @@ public abstract class DbReader<T> implements Closeable, Openable<OutputStream> {
 		} catch (Exception e) {
 			throw new StreamInitException("Failed to create statement.",e);
 		}
-//		st.getFetchSize();
 		
 		return target;
 	}
