@@ -27,9 +27,9 @@
 	</issueManagement>
 
 	<scm>
-		<connection>scm:git:http://gitub.com/USGS-CIDA/cdat.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com/USGS-CIDA/cdat.git</developerConnection>
-		<url>https://github.com/USGS-CIDA/cdat</url>
+		<connection>scm:git:http://gitub.com/USGS-CIDA/cDAT.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/USGS-CIDA/cDAT.git</developerConnection>
+		<url>https://github.com/USGS-CIDA/cDAT</url>
 		<tag>HEAD</tag>
 	</scm>
 
