@@ -24,7 +24,7 @@ public class TransformStreamContainer extends StreamContainer<TransformOutputStr
 	}
 
 	@Override
-	protected String getName() {
+	public String getName() {
 		return getClass().getName();
 	}
 }

@@ -41,7 +41,8 @@ public class HttpResponseContainer extends StreamContainer<OutputStream> {
 	}
 
 	@Override
-	protected final String getName() {
+	public
+	final String getName() {
 		return getClass().getName();
 	}
 }

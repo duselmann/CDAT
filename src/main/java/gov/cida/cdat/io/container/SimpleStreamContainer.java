@@ -19,7 +19,7 @@ public final class SimpleStreamContainer<S extends Closeable> extends StreamCont
 	}
 
 	@Override
-	protected String getName() {
+	public String getName() {
 		return getClass().getName();
 	}
 }

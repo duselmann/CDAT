@@ -71,7 +71,7 @@ public class SCManagerControlStopTest {
 					}
 				};
 				@Override
-				protected String getName() {
+				public String getName() {
 					return "TestingProducerContainer";
 				}
 				@Override

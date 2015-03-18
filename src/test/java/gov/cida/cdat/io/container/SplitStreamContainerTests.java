@@ -37,7 +37,7 @@ public class SplitStreamContainerTests {
 					return wrappedStream;
 				}
 				@Override
-				protected String getName() {
+				public String getName() {
 					return "test spliting stream";
 				}
 			};

@@ -18,7 +18,7 @@ public abstract class SplittingContainer extends StreamContainer<SplitOutputStre
 	}
 	
 	@Override
-	protected String getName() {
+	public String getName() {
 		return getClass().getName();
 	}
 

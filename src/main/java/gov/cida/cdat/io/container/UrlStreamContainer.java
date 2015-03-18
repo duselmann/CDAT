@@ -29,7 +29,7 @@ public class UrlStreamContainer extends StreamContainer<InputStream> {
 	}
 	
 	@Override
-	protected String getName() {
+	public String getName() {
 		return getClass().getName();
 	}
 }
