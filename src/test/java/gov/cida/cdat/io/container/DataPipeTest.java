@@ -97,7 +97,7 @@ public class DataPipeTest {
 		// consumer
 		StreamContainer<OutputStream> consumer = new StreamContainer<OutputStream>(){
 			@Override
-			protected String getName() {
+			public String getName() {
 				return "test stream container";
 			}
 			@Override
@@ -114,7 +114,7 @@ public class DataPipeTest {
 		// producer
 		StreamContainer<InputStream> producer = new StreamContainer<InputStream>(){
 			@Override
-			protected String getName() {
+			public String getName() {
 				return "test stream container";
 			}
 			@Override
@@ -158,7 +158,7 @@ public class DataPipeTest {
 		// consumer
 		StreamContainer<OutputStream> consumer = new StreamContainer<OutputStream>(){
 			@Override
-			protected String getName() {
+			public String getName() {
 				return "test stream container";
 			}
 			@Override
@@ -175,7 +175,7 @@ public class DataPipeTest {
 		// producer
 		StreamContainer<InputStream> producer = new StreamContainer<InputStream>(){
 			@Override
-			protected String getName() {
+			public String getName() {
 				return "test stream container";
 			}
 			@Override
@@ -218,7 +218,7 @@ public class DataPipeTest {
 		// consumer
 		StreamContainer<OutputStream> consumer = new StreamContainer<OutputStream>(){
 			@Override
-			protected String getName() {
+			public String getName() {
 				return "test stream container";
 			}
 			@Override
@@ -235,7 +235,7 @@ public class DataPipeTest {
 		// producer
 		StreamContainer<InputStream> producer = new StreamContainer<InputStream>(){
 			@Override
-			protected String getName() {
+			public String getName() {
 				return "test stream container";
 			}
 			@Override
@@ -275,7 +275,7 @@ public class DataPipeTest {
 		// consumer
 		StreamContainer<OutputStream> consumer = new StreamContainer<OutputStream>(){
 			@Override
-			protected String getName() {
+			public String getName() {
 				return "test stream container";
 			}
 			@Override
@@ -291,7 +291,7 @@ public class DataPipeTest {
 		// producer
 		StreamContainer<InputStream> producer = new StreamContainer<InputStream>(){
 			@Override
-			protected String getName() {
+			public String getName() {
 				return "test stream container";
 			}
 			@Override

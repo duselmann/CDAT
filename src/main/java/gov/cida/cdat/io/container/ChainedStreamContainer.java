@@ -15,7 +15,7 @@ public abstract class ChainedStreamContainer<S extends OutputStream> extends Str
 	}
 	
 	@Override
-	protected String getName() {
+	public String getName() {
 		return getClass().getName();
 	}
 

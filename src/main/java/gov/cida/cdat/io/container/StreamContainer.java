@@ -60,7 +60,7 @@ public abstract class StreamContainer<S extends Closeable> implements Closeable,
 	 * This is used to identify the subclass in logging
 	 * @return String name of the implementing subclass
 	 */
-	abstract protected String getName();
+	public abstract String getName();
 	
 	
 	/**

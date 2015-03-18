@@ -78,7 +78,7 @@ public class StatusStreamTest {
 				}
 			};
 			@Override
-			protected String getName() {
+			public String getName() {
 				return "TestingProducerContainer";
 			}
 			@Override
