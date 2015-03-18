@@ -1,6 +1,6 @@
 package gov.cida.cdat;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 import java.lang.reflect.Field;
 
@@ -20,16 +20,17 @@ public class TestUtils {
 	}
 	
 	
+	
 	public static Object reflectValue(Class<?> classToReflect, String fieldNameValueToFetch) {
 		// reflection access is a bit wonky - this is way many of my classes are package access
 		// cannot do it this time because the PipeWorker is a subclass of Worker which does not have a pipe member variable
 		try {
-			Field pipeField     = classToReflect.getDeclaredField(fieldNameValueToFetch);
-			pipeField.setAccessible(true);
-			Object reflectValue = pipeField.get(classToReflect);
+			Field reflectField  = reflectField(classToReflect, fieldNameValueToFetch);
+			reflectField.setAccessible(true);
+			Object reflectValue = reflectField.get(classToReflect);
 			return reflectValue;
 		} catch (Exception e) {
-			assertFalse("Failed to reflect "+fieldNameValueToFetch, true);
+			fail("Failed to reflect "+fieldNameValueToFetch);
 		}
 		return null;
 	}
@@ -37,14 +38,44 @@ public class TestUtils {
 		// reflection access is a bit wonky - this is way many of my classes are package access
 		// cannot do it this time because the PipeWorker is a subclass of Worker which does not have a pipe member variable
 		try {
-			Field pipeField     = objToReflect.getClass().getDeclaredField(fieldNameValueToFetch);
-			pipeField.setAccessible(true);
-			Object reflectValue = pipeField.get(objToReflect);
+			Field reflectField  = reflectField(objToReflect.getClass(), fieldNameValueToFetch);
+			Object reflectValue = reflectField.get(objToReflect);
 			return reflectValue;
 		} catch (Exception e) {
-			assertFalse("Failed to reflect "+fieldNameValueToFetch, true);
+			fail("Failed to reflect "+fieldNameValueToFetch);
 		}
 		return null;
+	}
+	public static Field reflectField(Class<?> classToReflect, String fieldNameValueToFetch) {
+		// reflection access is a bit wonky - this is way many of my classes are package access
+		// cannot do it this time because the PipeWorker is a subclass of Worker which does not have a pipe member variable
+		try {
+			Field reflectField = null;
+			Class<?> classForReflect = classToReflect;
+			do {
+				try {
+					reflectField = classForReflect.getDeclaredField(fieldNameValueToFetch);
+				} catch (NoSuchFieldException e) {
+					classForReflect = classForReflect.getSuperclass();
+				}
+			} while (reflectField==null || classForReflect==null);
+			reflectField.setAccessible(true);
+			return reflectField;
+		} catch (Exception e) {
+			fail("Failed to reflect "+fieldNameValueToFetch +" from "+ classToReflect);
+		}
+		return null;
+	}
+	
+	public static void refectSetValue(Object objToReflect, String fieldNameToSet, Object valueToSet) {
+		// reflection access is a bit wonky - this is way many of my classes are package access
+		// cannot do it this time because the PipeWorker is a subclass of Worker which does not have a pipe member variable
+		try {
+			Field reflectField  = reflectField(objToReflect.getClass(), fieldNameToSet);
+			reflectField.set(objToReflect, valueToSet);
+		} catch (Exception e) {
+			fail("Failed to reflectively set "+ fieldNameToSet +"="+ valueToSet);
+		}
 	}
 	
 	
