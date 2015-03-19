@@ -1,12 +1,14 @@
 package gov.cida.cdat.exception.producer;
 
+import gov.cida.cdat.exception.StreamInitException;
+
 
 /**
  * General Producer Connection base Exception
  * 
  * @author duselmann
  */
-public class ConnectionException extends ProducerException {
+public class ConnectionException extends StreamInitException {
 
 	private static final long serialVersionUID = 1L;
 
