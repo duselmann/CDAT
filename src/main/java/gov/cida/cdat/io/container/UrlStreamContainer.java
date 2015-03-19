@@ -1,10 +1,13 @@
 package gov.cida.cdat.io.container;
 
 import gov.cida.cdat.exception.StreamInitException;
+import gov.cida.cdat.exception.producer.ConnectionException;
+import gov.cida.cdat.exception.producer.FileNotFoundException;
 import gov.cida.cdat.exception.producer.SourceNotFoundException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 public class UrlStreamContainer extends StreamContainer<InputStream> {
@@ -20,11 +23,13 @@ public class UrlStreamContainer extends StreamContainer<InputStream> {
 		try {
 			return url.openStream();
 		} catch (java.net.UnknownHostException e) {
-			// TODO change init sig to handle SourceNotFound
-			throw new  StreamInitException("Failed to open URL stream", 
-					new SourceNotFoundException("Failed to open URL stream", e) );
+			throw new SourceNotFoundException("Failed to open URL stream", e);
+		} catch (java.io.FileNotFoundException e) {
+			throw new FileNotFoundException("The URL returned with a 404, File Not Found.", e);
+		} catch (MalformedURLException e) {
+			throw new ConnectionException("Invalid URL",e);
 		} catch (IOException e) {
-			throw new  StreamInitException("Failed to open URL stream", e);
+			throw new StreamInitException("Failed to open URL stream", e);
 		}
 	}
 	
