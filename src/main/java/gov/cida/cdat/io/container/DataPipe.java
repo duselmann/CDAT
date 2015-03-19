@@ -39,21 +39,19 @@ public class DataPipe implements Openable<InputStream>, Closeable {
 		try {
 			producer.open();
 		} catch (StreamInitException e) {
-			Closer.close(producer);
+			closePipe();
 			throw e;
 		} catch (Exception e) {
-			Closer.close(producer);
+			closePipe();
 			throw new  StreamInitException("Failed open producer to pipe streams", e);
 		}
 		try {
 			consumer.open();
 		} catch (StreamInitException e) {
-			Closer.close(producer);
-			Closer.close(consumer);
+			closePipe();
 			throw e;
 		} catch (Exception e) {
-			Closer.close(producer);
-			Closer.close(consumer);
+			closePipe();
 			throw new  StreamInitException("Failed open consumer to pipe streams", e);
 		}
 		return producer.getStream(); // TODO this might not be useful or necessary
@@ -96,9 +94,17 @@ public class DataPipe implements Openable<InputStream>, Closeable {
 	@Override
 	public void close() {
 		isComplete = true;
+		closePipe();
+	}
+	/**
+	 * Helper method so close() and exceptions on open() can clean up
+	 * TODO should process call this on exception also?
+	 */
+	protected void closePipe() {
 		Closer.close(producer);
 		Closer.close(consumer);
 	}
+	
 	
 	public boolean isComplete() {
 		return isComplete;
