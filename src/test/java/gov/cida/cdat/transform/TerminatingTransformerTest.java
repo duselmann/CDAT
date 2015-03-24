@@ -59,9 +59,9 @@ public class TerminatingTransformerTest {
 		
 		assertTrue( (boolean) TestUtils.reflectValue(trans, "transforming") );
 		
-		trans.checkForTerminator("\n".getBytes(), 0, 1);
+		int len = trans.checkForTerminator("\n".getBytes(), 0, 1);
 		
-		assertFalse( (boolean) TestUtils.reflectValue(trans, "transforming") );
+		assertEquals(0,len);
 
 		byte[] cache = (byte[]) TestUtils.reflectValue(trans, "cache");
 		assertEquals(null, cache);
@@ -73,9 +73,9 @@ public class TerminatingTransformerTest {
 		
 		assertTrue( (boolean) TestUtils.reflectValue(trans, "transforming") );
 		
-		trans.checkForTerminator("a\na".getBytes(), 0, 3);
+		int len = trans.checkForTerminator("a\na".getBytes(), 0, 3);
 		
-		assertFalse( (boolean) TestUtils.reflectValue(trans, "transforming") );
+		assertEquals(1,len);
 
 		byte[] cache = (byte[]) TestUtils.reflectValue(trans, "cache");
 		assertEquals(null, cache);
@@ -87,9 +87,9 @@ public class TerminatingTransformerTest {
 		
 		assertTrue( (boolean) TestUtils.reflectValue(trans, "transforming") );
 		
-		trans.checkForTerminator("asdf\n".getBytes(), 0, 5);
-		
-		assertFalse( (boolean) TestUtils.reflectValue(trans, "transforming") );
+		int len = trans.checkForTerminator("asdf\n".getBytes(), 0, 5);
+		 
+		assertEquals(4,len);
 
 		byte[] cache = (byte[]) TestUtils.reflectValue(trans, "cache");
 		assertEquals(null, cache);
@@ -136,9 +136,9 @@ public class TerminatingTransformerTest {
 		assertTrue( (boolean) TestUtils.reflectValue(trans, "transforming") );
 		
 		byte[] in1 = "\r".getBytes();
-		trans.checkForTerminator(in1, 0, 1);
+		int len = trans.checkForTerminator(in1, 0, 1);
 		
-		assertTrue( (boolean) TestUtils.reflectValue(trans, "transforming") );
+		assertEquals(1,len);
 		
 		byte[] cache1 = (byte[]) TestUtils.reflectValue(trans, "cache");
 		assertNotNull(cache1);
@@ -147,9 +147,9 @@ public class TerminatingTransformerTest {
 		assertEquals(in1[0], cache1[0]);
 
 		byte[] in2 = "\n".getBytes();
-		trans.checkForTerminator(in2, 0, 1);
+		len = trans.checkForTerminator(in2, 0, 1);
 		
-		assertFalse( (boolean) TestUtils.reflectValue(trans, "transforming") );
+		assertEquals(0,len);
 		
 		byte[] cache2 = (byte[]) TestUtils.reflectValue(trans, "cache");
 		assertEquals(null, cache2);
@@ -163,9 +163,9 @@ public class TerminatingTransformerTest {
 		assertTrue( (boolean) TestUtils.reflectValue(trans, "transforming") );
 		
 		byte[] in1 = "\t".getBytes();
-		trans.checkForTerminator(in1, 0, 1);
+		int len = trans.checkForTerminator(in1, 0, 1);
 		
-		assertTrue( (boolean) TestUtils.reflectValue(trans, "transforming") );
+		assertEquals(1,len);
 		
 		byte[] cache1 = (byte[]) TestUtils.reflectValue(trans, "cache");
 		assertNotNull(cache1);
@@ -174,9 +174,9 @@ public class TerminatingTransformerTest {
 		assertEquals(in1[0], cache1[0]);
 		
 		byte[] in2 = "\r".getBytes();
-		trans.checkForTerminator(in2, 0, 1);
+		len = trans.checkForTerminator(in2, 0, 1);
 		
-		assertTrue( (boolean) TestUtils.reflectValue(trans, "transforming") );
+		assertEquals(1,len);
 		
 		byte[] cache2 = (byte[]) TestUtils.reflectValue(trans, "cache");
 		assertNotNull(cache2);
@@ -185,12 +185,48 @@ public class TerminatingTransformerTest {
 		assertEquals(in2[0], cache2[1]);
 
 		byte[] in3 = "\n".getBytes();
-		trans.checkForTerminator(in3, 0, 1);
+		len = trans.checkForTerminator(in3, 0, 1);
 		
-		assertFalse( (boolean) TestUtils.reflectValue(trans, "transforming") );
+		assertEquals(0,len);
 		
 		byte[] cache3 = (byte[]) TestUtils.reflectValue(trans, "cache");
 		assertEquals(null, cache3);
 	}
+	
+	
+	@Test
+	public void testTransformLocal_transforming() {
+		
+		final byte[] expected = new byte[]{1,2,3};
+		
+		Transformer transform = new Transformer(){
+			@Override
+			public byte[] transform(byte[] bytes, int off, int len) {
+				return expected;
+			}
+		};
+		byte[] actual = new TerminatingTransformer("s".getBytes(), transform).transformLocal("qwerty".getBytes(), 0, 6);
+		
+		assertEquals(expected, actual);
+	}
+
+	@Test
+	public void testTransformLocal_notTransforming() {
+		
+		Transformer transform = new Transformer(){
+			@Override
+			public byte[] transform(byte[] bytes, int off, int len) {
+				throw new RuntimeException("should not be called");
+			}
+		};
+		TerminatingTransformer term = new TerminatingTransformer("s".getBytes(), transform);
+		TestUtils.refectSetValue(term, "transforming", false);
+		
+		byte[] expect = "qwerty".getBytes();
+		byte[] actual = term.transformLocal(expect, 0, 6);
+		
+		assertArrayEquals(expect, actual);
+	}
+
 	
 }

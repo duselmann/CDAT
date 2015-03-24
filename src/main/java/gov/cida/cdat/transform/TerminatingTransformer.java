@@ -15,8 +15,22 @@ public class TerminatingTransformer extends Transformer {
 	
 	@Override
 	public byte[] transform(byte[] bytes, int off, int len) {
-		checkForTerminator(bytes, off, len);
-		return transformLocal(bytes, off, len);
+		int terminationLength = checkForTerminator(bytes, off, len);
+		// if transforming we need to know the location of the terminator
+		// if terminator has been found then we need to know the full buffer length
+		if (terminationLength < 0 || terminationLength >= len ) {
+			return transformLocal(bytes, off, len);
+		}
+		
+		byte[] transformed = transformLocal(bytes, off, terminationLength);
+		transforming = false;
+		byte[] remainder   = transformLocal(bytes, terminationLength, len-terminationLength);
+		
+		byte[] mixedBytes = new byte[transformed.length+remainder.length];
+		System.arraycopy(transformed, 0, mixedBytes, 0, transformed.length);
+		System.arraycopy(remainder, 0, mixedBytes, transformed.length, remainder.length);
+		
+		return mixedBytes;
 	}
 
 	protected byte[] transformLocal(byte[] bytes, int off, int len) {
@@ -31,35 +45,60 @@ public class TerminatingTransformer extends Transformer {
 		return raw;
 	}
 	
-	protected void checkForTerminator(byte[] bytes, int off, int len) {
-		if (!transforming) {
-			return;
-		}
+	/**
+	 * Checks the given bytes for the termination pattern. If the termination pattern is found
+	 * it will return the location where it was found. If not found it will return the given length
+	 * of the byte array, indicating that the termination will be beyond the current buffer. However,
+	 * if the termination has already been encountered it will be set to -1, indicating the termination
+	 * has already been encountered.
+	 * 
+	 * @param bytes the buffer to check for the termination byte pattern
+	 * @param off   the index to commence checking
+	 * @param len   the number of bytes to consider
+	 * @return the location of the termination. -1 for already encountered, the len arg if not found, and
+	 * any other number in between for the location it was found.
+	 */
+	protected int checkForTerminator(byte[] bytes, int off, int len) {
 		
+		if (!transforming) {
+			return -1;
+		}
+		int terminationLength=len;
+		
+		// presume we will use the given byte array
 		byte[] toCheck = bytes;
+		int offset = off;
+		int length = len;
+		
+		// if there are cached bytes then we must check them
 		if (cache != null) {
 			toCheck = new byte[cache.length + len];
 			System.arraycopy(cache, 0, toCheck, 0, cache.length);
 			System.arraycopy(bytes, off, toCheck, cache.length, len);
+			offset = 0;
+			length = toCheck.length;
 		}
 		
-		int length = len + ( (cache==null) ?0 :cache.length );
+		// if the current bytes are less than the terminator - caching them for the next segment
 		if (length < terminator.length) {
+			// TODO if the matchBytes method could use a off/len combo for both arrays then this could be optimized
 			cache = new byte[length];
-			System.arraycopy(toCheck, off, cache, 0, length);
-			return;
+			System.arraycopy(toCheck, offset, cache, 0, length);
+			return terminationLength;
 		} else {
 			cache = null;
 		}
-				
+		
 		boolean match = false;
-		for (int bite=off; bite<=length-terminator.length; bite++) {
+		for (int bite=offset; bite<=length-terminator.length; bite++) {
 			match = matchBytes(terminator, toCheck, bite);
 			if (match) {
-				transforming = false;
+				terminationLength =  bite - offset;
+//				transforming = false;
 				break;
 			}
 		}
+		return terminationLength;
 	}
 
 	/**
