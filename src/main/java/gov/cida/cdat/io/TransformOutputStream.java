@@ -32,6 +32,12 @@ public class TransformOutputStream extends OutputStream {
 	}
 	
 	@Override
+	public void flush() throws IOException {
+		target.write( transform.getRemaining() );
+		super.flush();
+	}
+	
+	@Override
 	public void close() throws IOException {
 		Closer.close(target);
 		super.close();

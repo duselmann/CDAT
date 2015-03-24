@@ -8,30 +8,6 @@ import org.junit.Test;
 public class TerminatingTransformerTest {
 
 	@Test
-	public void testMatchBytes() {
-		assertTrue( TerminatingTransformer.matchBytes("\n".getBytes(), "\n".getBytes(), 0) );
-		assertTrue( TerminatingTransformer.matchBytes("\r\n".getBytes(), "\r\n".getBytes(), 0) );
-		assertTrue( TerminatingTransformer.matchBytes("\n".getBytes(), "a\n".getBytes(), 1) );
-		assertTrue( TerminatingTransformer.matchBytes("\r\n".getBytes(), "a\r\n".getBytes(), 1) );
-
-		assertFalse( TerminatingTransformer.matchBytes("\n".getBytes(), "a".getBytes(), 0) );
-		assertFalse( TerminatingTransformer.matchBytes("asdf".getBytes(), "a".getBytes(), 0) );
-		assertFalse( TerminatingTransformer.matchBytes("\n".getBytes(), "\na".getBytes(), 1) );
-		assertFalse( TerminatingTransformer.matchBytes("\n".getBytes(), "\na\n".getBytes(), 1) );
-	}
-	
-	@Test
-	public void testMatchBytes_bounds() {
-		assertFalse( TerminatingTransformer.matchBytes(null, "a".getBytes(), 0) );
-		assertFalse( TerminatingTransformer.matchBytes("".getBytes(), "a".getBytes(), 0) );
-		assertFalse( TerminatingTransformer.matchBytes("a".getBytes(), null, 0) );
-		assertFalse( TerminatingTransformer.matchBytes("a".getBytes(), "a".getBytes(), 1) );
-		assertFalse( TerminatingTransformer.matchBytes("a".getBytes(), "aasda".getBytes(), 5) );
-		assertFalse( TerminatingTransformer.matchBytes("asdf".getBytes(), "asdfasdf".getBytes(), 5) );
-	}
-	
-	
-	@Test
 	public void testCheckForTerminator_stillTransforming() {
 		TerminatingTransformer trans = new TerminatingTransformer("\n".getBytes(), null);
 		
@@ -228,5 +204,67 @@ public class TerminatingTransformerTest {
 		assertArrayEquals(expect, actual);
 	}
 
+
+	@Test
+	public void testTransform_noTerminator() {
+		Transformer transform = new RegexTransformer("asdf", "qwerty");
+		TerminatingTransformer term = new TerminatingTransformer("\n".getBytes(), transform);
+		
+		byte[] original    = "<asdf></asdf>".getBytes();
+		byte[] transformed = term.transform(original, 0, original.length);
+		byte[] remainder   = term.getRemaining();
+		transformed        = Transformer.merge(transformed, remainder);
+		
+		TestUtils.log(new String(transformed));
+		assertArrayEquals("<qwerty></qwerty>".getBytes(), transformed);
+	}
 	
+
+	@Test
+	public void testTransform_withTerminator() {
+		Transformer transform = new RegexTransformer("asdf", "qwerty");
+		TerminatingTransformer term = new TerminatingTransformer("\n".getBytes(), transform);
+		
+		term.transform("\n".getBytes(), 0, 1);
+
+		byte[] original = "<asdf></asdf>".getBytes();
+		byte[] transformed = term.transform(original, 0, original.length);
+
+		assertArrayEquals(original, transformed);
+		TestUtils.log(new String(transformed));
+	}
+	
+
+	@Test
+	public void testTransform_withTerminatorInLine() {
+		Transformer transform = new RegexTransformer("asdf", "qwerty");
+		TerminatingTransformer term = new TerminatingTransformer("\n".getBytes(), transform);
+		
+		byte[] original = "<asdf></asdf>\n<asdf></asdf>".getBytes();
+		byte[] transformed = term.transform(original, 0, original.length);
+
+		byte[] expected = "<qwerty></qwerty>\n<asdf></asdf>".getBytes();
+		assertArrayEquals(expected, transformed);
+		TestUtils.log(new String(transformed));
+	}
+	
+	
+	@Test
+	public void testTransform_trickleBytes() {
+		Transformer transform = new RegexTransformer("asdf", "qwerty");
+		TerminatingTransformer term = new TerminatingTransformer("\n".getBytes(), transform);
+		
+		byte[] original = "<asdf></asdf>\n<asdf></asdf>".getBytes();
+		StringBuilder transformed = new StringBuilder();
+		for (int b=0; b<original.length; b++) {
+			byte[] trans = term.transform(original, b, 1);
+			if (trans.length>0) {
+				transformed.append( new String(trans) );
+			}
+		}
+//		transformed.append( new String(term.getRemaining()) );
+		TestUtils.log(new String(transformed));
+		String expected = "<qwerty></qwerty>\n<asdf></asdf>";
+		assertEquals(expected, transformed.toString());
+	}
 }
