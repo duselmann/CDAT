@@ -128,7 +128,7 @@ public class TerminatingTransformerTest {
 		assertEquals(in[0], cache[0]);
 	}
 	
-/*	
+	
 	@Test
 	public void testCheckForTerminator_cacheAccumulation() {
 		TerminatingTransformer trans = new TerminatingTransformer("\r\n".getBytes(), null);
@@ -154,5 +154,43 @@ public class TerminatingTransformerTest {
 		byte[] cache2 = (byte[]) TestUtils.reflectValue(trans, "cache");
 		assertEquals(null, cache2);
 	}
-	*/
+	
+	
+	@Test
+	public void testCheckForTerminator_cacheAccumulations() {
+		TerminatingTransformer trans = new TerminatingTransformer("\t\r\n".getBytes(), null);
+		
+		assertTrue( (boolean) TestUtils.reflectValue(trans, "transforming") );
+		
+		byte[] in1 = "\t".getBytes();
+		trans.checkForTerminator(in1, 0, 1);
+		
+		assertTrue( (boolean) TestUtils.reflectValue(trans, "transforming") );
+		
+		byte[] cache1 = (byte[]) TestUtils.reflectValue(trans, "cache");
+		assertNotNull(cache1);
+		assertEquals(1, cache1.length);
+		assertFalse( in1 == cache1 );
+		assertEquals(in1[0], cache1[0]);
+		
+		byte[] in2 = "\r".getBytes();
+		trans.checkForTerminator(in2, 0, 1);
+		
+		assertTrue( (boolean) TestUtils.reflectValue(trans, "transforming") );
+		
+		byte[] cache2 = (byte[]) TestUtils.reflectValue(trans, "cache");
+		assertNotNull(cache2);
+		assertEquals(2, cache2.length);
+		assertEquals(in1[0], cache2[0]);
+		assertEquals(in2[0], cache2[1]);
+
+		byte[] in3 = "\n".getBytes();
+		trans.checkForTerminator(in3, 0, 1);
+		
+		assertFalse( (boolean) TestUtils.reflectValue(trans, "transforming") );
+		
+		byte[] cache3 = (byte[]) TestUtils.reflectValue(trans, "cache");
+		assertEquals(null, cache3);
+	}
+	
 }

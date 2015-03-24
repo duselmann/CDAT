@@ -23,8 +23,11 @@ public class TerminatingTransformer extends Transformer {
 		if (transforming) {
 			return transform.transform(bytes, off, len);
 		}
+		// it is a bit unfortunate that we cannot just pass through if no transform needed because of off/len args
+		// TODO look into a no-op bypass
 		byte[] raw = new byte[len];
 		System.arraycopy(bytes, off, raw, 0, len);
+		
 		return raw;
 	}
 	
@@ -32,14 +35,26 @@ public class TerminatingTransformer extends Transformer {
 		if (!transforming) {
 			return;
 		}
-		if (len < terminator.length) {
-			cache = new byte[len];
-			System.arraycopy(bytes, off, cache, 0, len);
-			return;
+		
+		byte[] toCheck = bytes;
+		if (cache != null) {
+			toCheck = new byte[cache.length + len];
+			System.arraycopy(cache, 0, toCheck, 0, cache.length);
+			System.arraycopy(bytes, off, toCheck, cache.length, len);
 		}
+		
+		int length = len + ( (cache==null) ?0 :cache.length );
+		if (length < terminator.length) {
+			cache = new byte[length];
+			System.arraycopy(toCheck, off, cache, 0, length);
+			return;
+		} else {
+			cache = null;
+		}
+				
 		boolean match = false;
-		for (int bite=off; bite<=len-terminator.length; bite++) {
-			match = matchBytes(terminator, bytes, bite);
+		for (int bite=off; bite<=length-terminator.length; bite++) {
+			match = matchBytes(terminator, toCheck, bite);
 			if (match) {
 				transforming = false;
 				break;
