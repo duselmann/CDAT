@@ -23,9 +23,6 @@ public class RegexTransformer extends Transformer {
 		int    length  = len;
 		
 		if (cache != null) {
-//			toTrans = new byte[cache.length + len];
-//			System.arraycopy(cache, 0, toTrans, 0, cache.length);
-//			System.arraycopy(bytes, off, toTrans, cache.length, len);
 			toTrans = merge(cache, 0, cache.length, bytes, off, len);
 			offset  = 0;
 			length  = toTrans.length;

@@ -17,23 +17,19 @@ public class TerminatingTransformer extends Transformer {
 	
 	@Override
 	public byte[] transform(byte[] bytes, int off, int len) {
-//		if (transforming) {
-			int terminationLength = checkForTerminator(bytes, off, len);
-			// if transforming we need to know the location of the terminator
-			// if terminator has been found then we need to know the full buffer length
-			if (terminationLength < 0 || terminationLength >= len ) {
-				return transformLocal(bytes, off, len);
-			}
-			
-			byte[] transformed = transformLocal(bytes, off, terminationLength);
-			byte[] remainder1  = transform.getRemaining();
-			transforming = false;
-			byte[] remainder2  = transformLocal(bytes, off+terminationLength, len-terminationLength);
-			
-			return merge(transformed, remainder1, remainder2);
-//		}
+		int terminationLength = checkForTerminator(bytes, off, len);
+		// if transforming we need to know the location of the terminator
+		// if terminator has been found then we need to know the full buffer length
+		if (terminationLength < 0 || terminationLength >= len ) {
+			return transformLocal(bytes, off, len);
+		}
 		
-//		return transformLocal(bytes, off, len);
+		byte[] transformed = transformLocal(bytes, off, terminationLength);
+		byte[] remainder1  = transform.getRemaining();
+		transforming = false;
+		byte[] remainder2  = transformLocal(bytes, off+terminationLength, len-terminationLength);
+		
+		return merge(transformed, remainder1, remainder2);
 	}
 
 	protected byte[] transformLocal(byte[] bytes, int off, int len) {
@@ -75,9 +71,6 @@ public class TerminatingTransformer extends Transformer {
 		
 		// if there are cached bytes then we must check them
 		if (cache != null) {
-//			toCheck = new byte[cache.length + len];
-//			System.arraycopy(cache, 0, toCheck, 0, cache.length);
-//			System.arraycopy(bytes, off, toCheck, cache.length, len);
 			toCheck = merge(cache, 0, cache.length, bytes, off, len);
 
 			offset = 0;
@@ -94,7 +87,6 @@ public class TerminatingTransformer extends Transformer {
 			match = matchBytes(terminator, toCheck, bite);
 			if (match) {
 				terminationLength =  bite - offset;
-//				transforming = false;
 				break;
 			}
 		}
@@ -105,13 +97,5 @@ public class TerminatingTransformer extends Transformer {
 	public byte[] getRemaining() {
 		return transform.getRemaining(); // TODO need testing on this
 	}
-	
-//	@Override
-//	public byte[] transform(Object obj) {
-//		if (transforming) {
-//			return transform.transform(obj);
-//		}
-//		return super.transform(obj);
-//	}
 	
 }
