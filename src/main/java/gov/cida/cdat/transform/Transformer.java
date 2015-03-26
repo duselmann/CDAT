@@ -3,6 +3,7 @@ package gov.cida.cdat.transform;
 public abstract class Transformer {
 
 	protected byte[] cache;
+	protected int cacheLength;
 	
 	
 	public byte[] transform(byte[] bytes, int off, int len) {
@@ -18,6 +19,39 @@ public abstract class Transformer {
 		cache = null;
 		return theCache;
 	}
+	
+	void setCacheLength(int cacheLength) {
+		this.cacheLength = cacheLength;
+	}
+	
+	void setCache(byte[] cache) {
+		this.cache = cache;
+	}
+	
+	void manageCache(byte[] results, int offset, int length) {
+		if (length < cacheLength) {
+			// TODO if the matchBytes method could use a off/len combo for both arrays then this could be optimized
+			cache = new byte[length];
+			System.arraycopy(results, offset, cache, 0, length);
+		} else {
+			cache = null;
+		}
+	}
+	byte[] updateCache(byte[] results) {
+		int length = cacheLength-1;
+		if (length > results.length) {
+			cache = results;
+			return new byte[0];
+		}
+		cache = new byte[cacheLength-1];
+		System.arraycopy(results, results.length-cache.length, cache, 0, cache.length);
+		
+		byte[] result = new byte[results.length-cache.length];
+		System.arraycopy(results, 0, result, 0, results.length-cache.length);
+		
+		return result;
+	}
+	
 	
 	/**
 	 * find an array bytes at the given offset

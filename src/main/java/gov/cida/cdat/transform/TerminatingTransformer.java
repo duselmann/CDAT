@@ -2,14 +2,17 @@ package gov.cida.cdat.transform;
 
 public class TerminatingTransformer extends Transformer {
 
-	private byte[] terminator;
-	private Transformer transform;
+	private final byte[] terminator;
+	private final Transformer transform;
+	
 	private boolean transforming;
 
 	public TerminatingTransformer(byte[] terminator, Transformer transform) {
 		this.transforming = true;
 		this.terminator = terminator;
 		this.transform  = transform;
+		
+		cacheLength = terminator.length;
 	}
 	
 	@Override
@@ -81,14 +84,9 @@ public class TerminatingTransformer extends Transformer {
 			length = toCheck.length;
 		}
 		
-		// if the current bytes are less than the terminator - caching them for the next segment
-		if (length < terminator.length) {
-			// TODO if the matchBytes method could use a off/len combo for both arrays then this could be optimized
-			cache = new byte[length];
-			System.arraycopy(toCheck, offset, cache, 0, length);
+		manageCache(toCheck, offset, length);
+		if (cache!=null) {
 			return terminationLength;
-		} else {
-			cache = null;
 		}
 		
 		boolean match = false;

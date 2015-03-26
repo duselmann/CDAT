@@ -3,17 +3,15 @@ package gov.cida.cdat.transform;
 
 public class RegexTransformer extends Transformer {
 
-	String pattern;
-	String replace;
-	int buffsize;
+	private String pattern;
+	private String replace;
 	
 	
 	public RegexTransformer(String pattern, String replace) {
 		this.pattern = pattern;
 		this.replace = replace;
-		buffsize = pattern.length();
+		cacheLength  = pattern.length();
 	}
-	
 	
 	@Override
 	public byte[] transform(byte[] bytes, int off, int len) {
@@ -33,24 +31,16 @@ public class RegexTransformer extends Transformer {
 			length  = toTrans.length;
 		}
 		
-		if (length < buffsize) {
-			// TODO if the matchBytes method could use a off/len combo for both arrays then this could be optimized
-			cache = new byte[length];
-			System.arraycopy(toTrans, offset, cache, 0, length);
+		manageCache(toTrans, offset, length);
+		if (cache!=null) {
 			return new byte[0];
-		} else {
-			cache = null;
 		}
 		
 		String buff = new String(toTrans, offset, length);
 		byte[] tran = buff.replaceAll(pattern, replace).getBytes();
-		
-		cache = new byte[pattern.length()-1];
-		System.arraycopy(tran, tran.length-cache.length, cache, 0, cache.length);
-		
-		byte[] finished = new byte[tran.length-cache.length];
-		System.arraycopy(tran, 0, finished, 0, tran.length-cache.length);
 
+		byte[] finished = updateCache(tran);
+		
 		return finished;
 	}
 
