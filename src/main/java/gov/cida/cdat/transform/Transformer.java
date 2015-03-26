@@ -24,10 +24,6 @@ public abstract class Transformer {
 		this.cacheLength = cacheLength;
 	}
 	
-	void setCache(byte[] cache) {
-		this.cache = cache;
-	}
-	
 	void manageCache(byte[] results, int offset, int length) {
 		if (length < cacheLength) {
 			// TODO if the matchBytes method could use a off/len combo for both arrays then this could be optimized

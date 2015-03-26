@@ -13,6 +13,18 @@ import org.junit.Test;
 public class ManyPatternTransformerTest {
 
 	@Test
+	public void testNoPatternWithFullBuffer() {
+		ManyPatternTransformer trans = new ManyPatternTransformer();
+		
+		byte[] bytes  = "ALPHA,BETA,GAMMA,DELTA,EPSILON,IOTA".getBytes(); 
+		String expect = "ALPHA,BETA,GAMMA,DELTA,EPSILON,IOTA";
+		
+		String actual = new String( trans.transform(bytes, 0, bytes.length ) );
+		
+		assertEquals(expect, actual);
+	}
+
+	@Test
 	public void testSinglePatternWithFullBuffer() {
 		ManyPatternTransformer trans = new ManyPatternTransformer();
 		trans.addMapping("ALPHA", "OMEGA");
