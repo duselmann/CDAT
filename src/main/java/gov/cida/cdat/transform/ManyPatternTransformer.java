@@ -9,10 +9,51 @@ public class ManyPatternTransformer extends Transformer {
 	private LinkedList<RegexTransformer> transformers = new LinkedList<RegexTransformer>();
 	
 	public void addMapping(String pattern, String replace) {
-		transformers.add(new RegexTransformer(pattern, replace));
+		validate(pattern, replace);
+		
+		int index = findInsertIndex(pattern);
+		transformers.add(index, new RegexTransformer(pattern, replace));
+		
 		if (pattern.length()>cacheLength) {
 			setCacheLength(pattern.length());
 		}
+	}
+
+	protected void validate(String pattern, String replace) {
+		if (pattern == null || pattern.length()==0) {
+			throw new RuntimeException("Pattern may not be null or empty. Replace string is " + replace);
+		}
+		if (replace == null) {
+			throw new RuntimeException("Replace may not be null but may be empty. Pattern string is " + pattern);
+		}
+		if (pattern.equals(replace)) {
+			throw new RuntimeException("Not action will take place if pattern==replace. Pattern string is" + pattern);
+		}
+		for (RegexTransformer rt : transformers) {
+			if (rt.getPattern().equals(pattern)) {
+				throw new RuntimeException("Duplicate patterns are not acceptable. Pattern string is " + pattern);
+			}
+			if (rt.getReplace().equals(pattern)) {
+				throw new RuntimeException("This pattern will be subsequently replaced by another. I.E. A=>B B=>C The two pattern strings are "
+						+ pattern + " and " + rt.getPattern());
+			}
+			if (rt.getPattern().equals(replace)) {
+				throw new RuntimeException("This pattern will be subsequently replaced by another. I.E. A=>B B=>C The two pattern strings are "
+						+ pattern + " and " + rt.getPattern());
+			}
+		}
+	}
+
+	protected int findInsertIndex(String pattern) {
+		int index = 0;
+		for (RegexTransformer rt : transformers) {
+			if (pattern.length() < rt.getPattern().length()) {
+				index++;
+			} else {
+				break;
+			}
+		}
+		return index;
 	}
 
 	@Override

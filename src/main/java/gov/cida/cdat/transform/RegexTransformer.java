@@ -3,8 +3,8 @@ package gov.cida.cdat.transform;
 
 public class RegexTransformer extends Transformer {
 
-	private String pattern;
-	private String replace;
+	private final String pattern;
+	private final String replace;
 	
 	
 	public RegexTransformer(String pattern, String replace) {
@@ -41,4 +41,11 @@ public class RegexTransformer extends Transformer {
 		return finished;
 	}
 
+	
+	public String getPattern() {
+		return pattern;
+	}
+	public String getReplace() {
+		return replace;
+	}
 }
