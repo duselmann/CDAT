@@ -418,10 +418,24 @@ public class Service {
 		send(workerName, msg);
 	}
 	public Message request(String workerName, Message msg) {
+		return request(workerName, msg, Time.SECOND); // TODO make configure
+	}
+	public Message request(String workerName, Message msg, Time maxWait) {
 		Future<Object> future = sendWithFuture(workerName, msg);
 		Object result = null;
 		try {
-			result = Await.result(future, Time.SECOND.duration); // TODO make configure
+			result = Await.result(future, maxWait.duration);
+		} catch (Exception e) {
+			result = Message.create("error",e.getMessage());
+		}
+		return (Message)result;
+	}
+	public Message request(String workerName, Message msg, Time maxWait, Callback callback) {
+		Future<Object> future = sendWithFuture(workerName, msg);
+		wrapCallback(future, workerPool.dispatcher(), callback);
+		Object result = null;
+		try {
+			result = Await.result(future, maxWait.duration);
 		} catch (Exception e) {
 			result = Message.create("error",e.getMessage());
 		}
@@ -605,6 +619,17 @@ public class Service {
 		long duration = Time.duration(start);
 		logger.trace("waited {}ms for {} to complete", duration, workerName);
 		return duration;
+	}
+	
+	public Message waitForComplete(String workerName, Message msg) {
+		Future<Object> future = sendWithFuture(workerName, msg);
+		Object result = null;
+		try {
+			result = Await.result(future, Time.SECOND.duration); // TODO make configure
+		} catch (Exception e) {
+			result = Message.create("error",e.getMessage());
+		}
+		return (Message)result;
 	}
 	
 	

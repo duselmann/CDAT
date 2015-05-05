@@ -1,8 +1,17 @@
 package gov.cida.cdat.control;
 
+import gov.cida.cdat.io.QuietClose;
 import gov.cida.cdat.service.Service;
 
-public class SCManager {
+
+/**
+ * This hides the AKKA library calls.
+ * This delegate simple exists because eclipse will detect the underlying implementation.
+ * 
+ * @author duselmann
+ *
+ */
+public class SCManager implements QuietClose {
 	public final static String SESSION = Service.SESSION;
 
 	private static final Service   scm;
@@ -65,6 +74,14 @@ public class SCManager {
 		return scm.request(workerName, msg);
 	}
 
+	public Message request(String workerName, Message msg, Time maxWait) {
+		return scm.request(workerName, msg, maxWait);
+	}
+	
+	public Message request(String workerName, Message msg, Time maxWait, Callback callback) {
+		return scm.request(workerName, msg, maxWait, callback);
+	}
+
 	public void send(String workerName, Control ctrl, Callback callback) {
 		scm.send(workerName, ctrl, callback);
 	}
@@ -89,8 +106,7 @@ public class SCManager {
 		return scm.waitForComplete(workerName, waitTime);
 	}
 
-	public long waitForComplete(String workerName, long initialWait,
-			long subsequentWait) {
+	public long waitForComplete(String workerName, long initialWait, long subsequentWait) {
 		return scm.waitForComplete(workerName, initialWait, subsequentWait);
 	}
 
