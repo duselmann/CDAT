@@ -11,7 +11,10 @@ public class TransformStreamContainer extends StreamContainer<TransformOutputStr
 	private StreamContainer<? extends OutputStream> downstream;
 	private Transformer transform;
 	
-	public TransformStreamContainer(Transformer transform, StreamContainer<? extends OutputStream> target) {
+	public TransformStreamContainer(OutputStream target, Transformer transform) {
+		this(new SimpleStreamContainer<OutputStream>(target), transform);
+	}
+	public TransformStreamContainer(StreamContainer<? extends OutputStream> target, Transformer transform) {
 		super(target);
 		this.downstream = target;
 		this.transform  = transform;

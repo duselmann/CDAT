@@ -2,13 +2,18 @@ package gov.cida.cdat.io;
 
 import gov.cida.cdat.transform.Transformer;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+
 
 public class TransformOutputStream extends OutputStream {
 
-	private OutputStream target;
-	private Transformer transform;
+	protected final OutputStream target;
+	protected final Transformer transform;
 	
 	public TransformOutputStream(OutputStream target, Transformer transform) {
 		this.target = target;
@@ -41,5 +46,33 @@ public class TransformOutputStream extends OutputStream {
 	public void close() throws IOException {
 		Closer.close(target);
 		super.close();
+	}
+	
+	
+	public static Object extractObject(byte[] bytes) {
+		return extractObject(bytes, 0, bytes.length);
+	}
+	public static Object extractObject(byte[] bytes, int off, int len) {
+		try {
+			ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes,off,len));
+			return ois.readObject();
+		} catch (ClassNotFoundException cause) {
+			throw new RuntimeException("Failed to find matching class during object exrtaction", cause);
+		} catch (Exception cause) {
+			throw new RuntimeException("should not exception because it is a closed system", cause);
+		}
+	}
+	public static byte[] objectByteArray(Object obj) {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream oos = new ObjectOutputStream(baos);
+			oos.writeObject(obj);
+			oos.flush();
+			byte[] bytes = baos.toByteArray();
+			return bytes;
+		} catch (IOException cause) {
+			// this should really not throw an exception
+			throw new RuntimeException("should not exception because it is a closed system", cause);
+		}
 	}
 }

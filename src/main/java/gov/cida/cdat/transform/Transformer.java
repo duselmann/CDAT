@@ -10,7 +10,7 @@ public abstract class Transformer {
 		return null;
 	}
 	
-	public byte[] transform(Object obj) {
+	public <T> byte[] transform(T obj) {
 		return null;
 	}
 	
@@ -20,10 +20,34 @@ public abstract class Transformer {
 		return theCache;
 	}
 	
+	/**
+	 * The buffer cached must be the length of the search pattern less on char.
+	 * When used in the ManyPatternTransforms it will be set to the largest search pattern.
+	 * 
+	 * @param cacheLength
+	 */
 	void setCacheLength(int cacheLength) {
 		this.cacheLength = cacheLength;
 	}
 	
+	/**
+	 * This manages the transform buffer which is called cache because it persists between writes to ensure that 
+	 * partial writes are accumulated before transforming.
+	 * 
+	 * Suppose we have "The minor Lubowsky" and "minor" is to be transformed to "GREATE". Then if the write was performed in the
+	 * following manner. 
+	 * 
+	 * write("The min");
+	 * write("or Lubowsky");
+	 * 
+	 * Notice that the "min" in the first write is not "minor" but is a portion.
+	 * The cache will persist " min" so that when the "or Lubowsky" is written it can work with " minor Lubowsky".
+	 * The result will be a write of "The" followed by a write of the transformed into " GREATE Lubowsky"
+	 * 
+	 * @param results
+	 * @param offset
+	 * @param length
+	 */
 	void manageCache(byte[] results, int offset, int length) {
 		if (length < cacheLength) {
 			// TODO if the matchBytes method could use a off/len combo for both arrays then this could be optimized
@@ -33,6 +57,27 @@ public abstract class Transformer {
 			cache = null;
 		}
 	}
+	/**
+	 * Replace or append to the cache buffer.
+	 * 
+	 * With the Lubowsky example above, see the examples below.
+	 * 
+	 * write("The");
+	 * write(" ");
+	 * write("minor");
+	 * write(" Lubowsky");
+	 * 
+	 * The first string is cached entirely because it is less than the replacement "minor".
+	 * Upon writing the second string the cache will be extended to "the " which is 1 less than the search string length.
+	 * The third write will target "The minor" for replace because the cache buffer is prepended to the following write.
+	 * Then the replace will occur to make it "The GREATE" and "EATE" will replace the cache for possible replace next write.
+	 * (There could be some optimization here but when performing a ManyPatterTransform it is more complicated and makes
+	 * initial sense to leave it as is.) Finally, the last write leave us with "wsky" because the transforming stream does
+	 * not know when it is the last write occurs. A flush during close will write the last cache. 
+	 * 
+	 * @param results
+	 * @return
+	 */
 	byte[] updateCache(byte[] results) {
 		int length = cacheLength-1;
 		if (length > results.length) {
@@ -101,6 +146,10 @@ public abstract class Transformer {
 		System.arraycopy(bbytes, boff, merged, alen, blen);
 				
 		return merged;
+	}
+	
+	public String encode(String value) {
+		return value;
 	}
 		
 //	/**

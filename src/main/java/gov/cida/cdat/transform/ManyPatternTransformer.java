@@ -2,11 +2,21 @@ package gov.cida.cdat.transform;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 
 
 public class ManyPatternTransformer extends Transformer {
 
 	private LinkedList<RegexTransformer> transformers = new LinkedList<RegexTransformer>();
+
+	public ManyPatternTransformer() {
+	}
+	
+	public ManyPatternTransformer(Map<String,String> mappings) {
+		for (Map.Entry<String, String> mapping : mappings.entrySet()) {
+			addMapping(mapping.getKey(), mapping.getValue());
+		}
+	}
 	
 	public void addMapping(String pattern, String replace) {
 		transformers.add(new RegexTransformer(pattern, replace));

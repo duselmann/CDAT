@@ -1,12 +1,19 @@
 package gov.cida.cdat.transform;
 
+
+/**
+ * Transforms line endings for the most part.
+ * 
+ * @author duselmann
+ *
+ */
 public class TerminatingTransformer extends Transformer {
 
 	private final byte[] terminator;
 	private final Transformer transform;
 	
 	private boolean transforming;
-
+	
 	public TerminatingTransformer(byte[] terminator, Transformer transform) {
 		this.transforming = true;
 		this.terminator = terminator;
