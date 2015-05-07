@@ -120,7 +120,7 @@ public class SCManagerControlStopTest {
 			Assert.assertTrue("Expect close to be called on output", closeCalled[0]);
 
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 }

@@ -9,6 +9,7 @@ import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
+import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.message.AddWorkerMessage;
@@ -106,7 +107,7 @@ public class ServiceTests {
 			assertEquals("Session instances should be equivilent", instance1, instance2);
 			assertTrue("Session instances should be equivilent references", instance1 == instance2);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
     }
 	
@@ -132,7 +133,7 @@ public class ServiceTests {
 	
 			assertFalse("Session instances should be different across threads", instance1 == instance2);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
     }
 
@@ -190,7 +191,7 @@ public class ServiceTests {
 			// test that the data was pumped from producer to consumer
 			assertEquals("Expected output: " + TEST_STRING, TEST_STRING, testPipe.results() );
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
     }
 		
@@ -248,7 +249,7 @@ public class ServiceTests {
 			// now test that the consumer remains empty
 			assertEquals("Expect that the disposed worker does not execute", "", testPipe.results() );
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
     }
 	
@@ -289,7 +290,7 @@ public class ServiceTests {
 	    	// this send the message that this worker is no longer needed
 			session.send(workerName, Control.Stop);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
     }
 	
@@ -307,7 +308,7 @@ public class ServiceTests {
 			
 			assertEquals("we expect that a label spaces are transposed to underscores '_'", EXPECT, result);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 	
@@ -326,7 +327,7 @@ public class ServiceTests {
 			
 			assertEquals("we expect that a label is ensured unique with a suffix", EXPECT, result);
 		} finally {
-			session.close(); // asdf not closed
+			Closer.close(session);
 		}
 	}
 	
@@ -349,7 +350,7 @@ public class ServiceTests {
 			assertEquals(EXPECT1, result1);
 			assertEquals("we expect that each new label has its own suffix count", EXPECT2, result2);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 	
@@ -375,7 +376,7 @@ public class ServiceTests {
 			assertEquals("we expect that each subsequent name request for the same label has an incremented suffix - should be '-3' ",
 					EXPECT3, result3);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 	
@@ -402,7 +403,7 @@ public class ServiceTests {
 			
 			assertEquals("we expect that an Add Worker Message pipe be the given pipe", pipe, workerPipe);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 	
@@ -480,7 +481,7 @@ public class ServiceTests {
 			// this tests that the Callback instance has been wrapped
 			assertTrue("OnComplete should HAVE been called", onCompleteCalled_callback[0]);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 	

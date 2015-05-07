@@ -135,7 +135,7 @@ public class DBTesting {
 			
 			Time.waitForResponse(result,100);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 
 		String csv = result[0];

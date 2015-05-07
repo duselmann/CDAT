@@ -6,6 +6,7 @@ import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Status;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
+import gov.cida.cdat.io.QuietClose;
 import gov.cida.cdat.message.AddWorkerMessage;
 
 import java.util.HashMap;
@@ -48,7 +49,7 @@ import akka.util.Timeout;
  * 
  * @author duselman
  */
-public class Service {
+public class Service implements QuietClose {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
 	/**
@@ -101,7 +102,7 @@ public class Service {
 	 *		String name = session.addWorker("HelloWorld", helloWorld);
 	 *		session.send(name, Control.Start);
 	 *	} finally {
-	 *		session.close();
+	 *		Closer.close(session);
 	 *	}		
 	 * </pre>
 	 * @return the current SC manager instance
@@ -455,7 +456,10 @@ public class Service {
 	 * @return a future containing a return message as to how the action executed
 	 */
 	public void send(String workerName, Control ctrl, final Callback callback) {
-		send(workerName, Message.create(ctrl), callback);
+		send(workerName, Message.create(ctrl), Time.MINUTE, callback);
+	}
+	public void send(String workerName, Control ctrl, Time waitTime, final Callback callback) {
+		send(workerName, Message.create(ctrl), waitTime, callback);
 	}
 	/**
 	 * <p>Enumerated status message (blocking of a limited time)</p>
@@ -485,11 +489,11 @@ public class Service {
 	 * @param callback the method to call when the status is processed
 	 * @see SCManager.send(String workerName, Message message)
 	 */
-	public void send(String workerName, Status status, final Callback callback) {
-		send(workerName, Message.create(status), callback);
+	public void send(String workerName, Status status, Callback callback) {
+		send(workerName, Message.create(status), Time.SECOND, callback);
 	}
-	public void send(String workerName, Message msg, final Callback callback) {
-		Future<Object> future = sendWithFuture(workerName, msg);
+	public void send(String workerName, Message msg, Time waitTime, Callback callback) {
+		Future<Object> future = send(workerName, msg, waitTime);
 		wrapCallback(future, workerPool.dispatcher(), callback);
 	}
 	

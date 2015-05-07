@@ -1,11 +1,12 @@
 package gov.cida.cdat.service;
 
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
+import gov.cida.cdat.io.Closer;
 
 import org.junit.Test;
 
@@ -40,7 +41,7 @@ public class DelegatorAutoStartTest {
 			session.send(workerName, Control.Stop);
 			
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 }

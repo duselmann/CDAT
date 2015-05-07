@@ -9,6 +9,7 @@ import gov.cida.cdat.control.Status;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
+import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.service.PipeWorker;
 import static org.junit.Assert.*;
 
@@ -138,7 +139,7 @@ public class DelegatorStatusTests {
 					response.get(Status.isDisposed).equals("true"));
 		
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 	
@@ -168,7 +169,7 @@ public class DelegatorStatusTests {
 			
 			session.send(workerName, Control.Stop);
 		} finally {
-			session.close(); // SESSION-19 failed to close and received null on session(string) call
+			Closer.close(session); // SESSION-19 failed to close and received null on session(string) call
 		}
 	}
 	
@@ -202,7 +203,7 @@ public class DelegatorStatusTests {
 			session.send(workerName, Control.Stop);
 			
 		} finally {
-			session.close(); // this resets the autoStart
+			Closer.close(session); // this resets the autoStart
 		}
 	}
 }

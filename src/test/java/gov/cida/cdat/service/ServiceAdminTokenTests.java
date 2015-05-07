@@ -7,6 +7,7 @@ import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
+import gov.cida.cdat.io.Closer;
 
 import java.net.MalformedURLException;
 import java.util.HashSet;
@@ -66,7 +67,7 @@ public class ServiceAdminTokenTests {
 		} finally {
 //			System.out.println("shuttdown submitted");
 //			manager.shutdown();
-			sessions[0].close();
+			Closer.close(sessions[0]);
 		}
 	}
 
@@ -106,7 +107,7 @@ public class ServiceAdminTokenTests {
 		// nothing is running and the admin session will be starting a job
 		// we do not want to close the session but I have this here to show
 		// that is has not been forgotten
-		//session.close();
+		//Closer.close(session);
 	}
 
 /*	
@@ -146,7 +147,7 @@ public class ServiceAdminTokenTests {
 //			assertEquals("Expect info on workerB to be "+Status.isNew,
 //					Status.isNew.toString(), message[0].get(nameB));
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 */

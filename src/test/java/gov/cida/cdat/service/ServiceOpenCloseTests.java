@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotEquals;
 import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
+import gov.cida.cdat.io.Closer;
 
 import org.junit.Test;
 
@@ -22,7 +23,7 @@ public class ServiceOpenCloseTests {
 			assertEquals("expect worker A to run", workerLabel, response[0]);
 			
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 		
 		session = Service.open();
@@ -34,7 +35,7 @@ public class ServiceOpenCloseTests {
 			assertEquals("expect worker B to run", workerLabel, response[0]);
 			
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 		
 		assertNotEquals("expect new session after session close", firstSession, secondSession);
@@ -52,7 +53,7 @@ public class ServiceOpenCloseTests {
 		session.send(name, Control.Start);
 
 		Time.waitForResponse(response,100);
-		// this is not necessary if session.close() is called so near by
+		// sending Stop is not required if session.close() or Closer.close(session) is called so near by
 		session.send(name, Control.Stop);
 		
 		return response;

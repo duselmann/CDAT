@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import gov.cida.cdat.TestUtils;
+import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.service.PipeWorker;
@@ -76,7 +77,7 @@ public class SCManagerControlSuccessTest {
 			});
 			
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 	

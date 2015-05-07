@@ -9,6 +9,7 @@ import gov.cida.cdat.control.Status;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
+import gov.cida.cdat.io.Closer;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -32,14 +33,14 @@ public class SessionWorkerHistoryTests {
 	private Message[] getWorkerHistory(Service session, String nameA, String nameB) {
 		final Message[] messages = new Message[2];
 		Message getHistoryA = Message.create(Control.history, nameA);
-		session.send(nameA, getHistoryA, new Callback() {
+		session.send(nameA, getHistoryA, Time.MINUTE, new Callback() {
 			@Override
 			public void onComplete(Throwable t, Message response) {
 				messages[0] = response;
 			}
 		});
 		Message getHistoryB = Message.create(Control.history, nameB);
-		session.send(nameB, getHistoryB, new Callback() {
+		session.send(nameB, getHistoryB, Time.MINUTE, new Callback() {
 			@Override
 			public void onComplete(Throwable t, Message response) {
 				messages[1] = response;
@@ -78,7 +79,7 @@ public class SessionWorkerHistoryTests {
 			assertTrue("Expect workerB history contain only "+Status.isNew,
 					 history[1].get(Status.isNew) != null);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 		
@@ -120,7 +121,7 @@ public class SessionWorkerHistoryTests {
 			assertTrue("Expect workerB history contain only "+Status.isNew,
 					 history[1].get(Status.isNew) != null);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 	
@@ -162,6 +163,7 @@ public class SessionWorkerHistoryTests {
 			assertTrue("Expect workerB history contain only "+Status.isNew,
 					 history[1].get(Status.isNew) != null);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
-	}}
+	}
+}

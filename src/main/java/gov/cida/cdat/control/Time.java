@@ -78,6 +78,22 @@ public enum Time {
 		
 		return count;
 	}
+	public static long waitForResponse(Object response[], Time interval, Time duration) {
+		logger.trace("waiting for {} responses", response.length);
+		
+		long waitTime=0;
+		for (int r=0; r<response.length; r++) {
+			while (null==response[r] && waitTime < duration.asMS()) {
+				try {
+					logger.trace("Sleeping for interval {} of duration {}",interval.asMS(), duration.asMS());
+					Thread.sleep(interval.asMS());
+				} catch (InterruptedException e) {}
+			}
+		}
+		logger.trace("waited a total of {}ms for response", waitTime);
+		
+		return waitTime;
+	}
 	
 	public static void slumber(long milliseconds) {
 		long later = later(milliseconds);

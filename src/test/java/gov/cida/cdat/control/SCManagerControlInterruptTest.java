@@ -4,6 +4,7 @@ package gov.cida.cdat.control;
 import gov.cida.cdat.TestUtils;
 import gov.cida.cdat.exception.CdatException;
 import gov.cida.cdat.exception.StreamInitException;
+import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.io.container.StreamContainer;
@@ -107,7 +108,7 @@ public class SCManagerControlInterruptTest {
 			Assert.assertTrue("Expect the consumer to be closed.", closeCalled[0]);
 			Assert.assertTrue("Expect the producer to be closed.", closeCalled[1]);
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 }

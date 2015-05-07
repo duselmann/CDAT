@@ -9,6 +9,7 @@ import gov.cida.cdat.control.Status;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
 import gov.cida.cdat.exception.CdatException;
+import gov.cida.cdat.io.Closer;
 
 import org.junit.Test;
 
@@ -27,7 +28,7 @@ public class SessionInfoTests {
 			
 			final Message[] message = new Message[1];
 			Message getInfo = Message.create(Control.info, Service.SESSION);
-			session.send(Service.SESSION, getInfo, new Callback() {
+			session.send(Service.SESSION, getInfo, Time.MINUTE, new Callback() {
 				@Override
 				public void onComplete(Throwable t, Message response) {
 					message[0] = response;
@@ -46,7 +47,7 @@ public class SessionInfoTests {
 			assertEquals("Expect info on workerB to be "+Status.isNew,
 					Status.isNew.toString(), message[0].get(prefix+nameB));
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 
@@ -69,7 +70,7 @@ public class SessionInfoTests {
 			
 			Thread.sleep(100);
 			
-			session.send(Service.SESSION, getInfo, new Callback() {
+			session.send(Service.SESSION, getInfo, Time.MINUTE, new Callback() {
 				@Override
 				public void onComplete(Throwable t, Message response) {
 					message[0] = response;
@@ -88,7 +89,7 @@ public class SessionInfoTests {
 			assertEquals("Expect info on workerB to be "+Status.isDisposed,
 					Status.isDisposed.toString(), message[0].get(prefix+nameB));
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 	
@@ -130,7 +131,7 @@ public class SessionInfoTests {
 			Message getInfo = Message.create(Control.info, Service.SESSION);
 			
 			
-			session.send(Service.SESSION, getInfo, new Callback() {
+			session.send(Service.SESSION, getInfo, Time.MINUTE, new Callback() {
 				@Override
 				public void onComplete(Throwable t, Message response) {
 					message[0] = response;
@@ -149,6 +150,7 @@ public class SessionInfoTests {
 			assertEquals("Expect info on workerB to be "+Status.isStarted,
 					Status.isStarted.toString(), message[0].get(prefix+nameB));
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
-	}}
+	}
+}

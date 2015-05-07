@@ -17,7 +17,7 @@ public abstract class Transformer {
 	public byte[] getRemaining() {
 		byte[] theCache = cache;
 		cache = null;
-		return theCache;
+		return theCache==null ?new byte[0] :theCache;
 	}
 	
 	/**

@@ -85,6 +85,9 @@ public class SCManager implements QuietClose {
 	public void send(String workerName, Control ctrl, Callback callback) {
 		scm.send(workerName, ctrl, callback);
 	}
+	public void send(String workerName, Control ctrl, Time waitTime, Callback callback) {
+		scm.send(workerName, ctrl, waitTime, callback);
+	}
 
 	public Message send(String workerName, Status status) {
 		return scm.send(workerName, status);
@@ -94,12 +97,13 @@ public class SCManager implements QuietClose {
 		scm.send(workerName, status, callback);
 	}
 
-	public void send(String workerName, Message msg, Callback callback) {
-		scm.send(workerName, msg, callback);
+	public void send(String workerName, Message msg, Time waitTime, Callback callback) {
+		scm.send(workerName, msg, waitTime, callback);
 	}
 
-	public Service setAutoStart(boolean value) {
-		return scm.setAutoStart(value);
+	public SCManager setAutoStart(boolean value) {
+		scm.setAutoStart(value);
+		return this;
 	}
 
 	public long waitForComplete(String workerName, long waitTime) {

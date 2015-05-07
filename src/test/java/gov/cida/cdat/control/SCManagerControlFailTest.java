@@ -2,6 +2,7 @@ package gov.cida.cdat.control;
 
 
 import gov.cida.cdat.TestUtils;
+import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 import gov.cida.cdat.service.PipeWorker;
@@ -59,7 +60,7 @@ public class SCManagerControlFailTest {
 			
 			Assert.assertTrue("", message[0].toString().contains("Error reading from producer stream"));
 		} finally {
-			session.close();
+			Closer.close(session);
 		}
 	}
 	

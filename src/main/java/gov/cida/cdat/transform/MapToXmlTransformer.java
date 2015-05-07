@@ -48,6 +48,7 @@ public class MapToXmlTransformer extends Transformer {
 	String prefix() {
 		if (first) {
 			nodes.push(fieldMapping.getRoot());
+			first = false;
 			return header;
 		}
 		return "";
@@ -62,13 +63,16 @@ public class MapToXmlTransformer extends Transformer {
 		StringBuilder sb = new StringBuilder(prefix());
 		
 		for (String key : fieldMapping.getHardBreak().keySet()) {
-			String val = encode(map.get(key).toString());
-			if ( ! val.equalsIgnoreCase(groupings.get(key)) ) {
-				if (nodes.contains(fieldMapping.getHardBreak().get(key))) {
-					closeNodes(sb, fieldMapping.getHardBreak().get(key));
+			Object value = map.get(key);
+			if (value != null) {
+				String encode = encode(value.toString());
+				if ( ! encode.equalsIgnoreCase(groupings.get(key)) ) {
+					if (nodes.contains(fieldMapping.getHardBreak().get(key))) {
+						closeNodes(sb, fieldMapping.getHardBreak().get(key));
+					}
+					doGrouping(map, sb, key);
+					groupings.put(key, encode);
 				}
-				doGrouping(map, sb, key);
-				groupings.put(key, val);
 			}
 		}
 		
@@ -97,7 +101,11 @@ public class MapToXmlTransformer extends Transformer {
 		Iterator<String> i = cols.iterator();
 		while (i.hasNext()) {
 			String col = i.next();
-			String val = encode(map.get(col).toString());
+			Object obj = map.get(col);
+			if (obj==null) {
+				continue;
+			}
+			String val = encode(obj.toString());
 			doNode(sb, col, val);
 		}
 	}
@@ -107,7 +115,7 @@ public class MapToXmlTransformer extends Transformer {
 		String lNode = "Provider"; // TODO asdf refactor to constructor param
 		List<String> pos = fieldMapping.getStructure().get(key);
 		for (String node : pos) {
-			log.trace("writeData - positionNode:" + node + " lastNode:" + lNode);
+			log.trace("node - positionNode:" + node + " lastNode:" + lNode);
 			if ( ! nodes.contains(node) ) {
 				if ( ! lNode.equalsIgnoreCase(nodes.peek()) ) {
 					closeNodes(sb, lNode);

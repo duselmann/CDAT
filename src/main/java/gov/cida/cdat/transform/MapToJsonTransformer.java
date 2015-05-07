@@ -10,24 +10,22 @@ import com.google.gson.Gson;
 
 public class MapToJsonTransformer extends Transformer {
 
-	
 	private Gson gson = new Gson();
 
 	private final String header;
 	private final String footer;
-	
-	
-	public MapToJsonTransformer(String header, String footer) {
-		this.header = header;
-		this.footer = footer;
-	}
-	
 	
 	/** 
 	 * Has the first record written to the stream
 	 */
 	private boolean wroteFirst;
 
+	
+	public MapToJsonTransformer(String header, String footer) {
+		this.header = header;
+		this.footer = footer;
+	}
+		
 	
 	@Override
 	public <T> byte[] transform(T map) {

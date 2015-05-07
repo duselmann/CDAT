@@ -7,6 +7,7 @@ import gov.cida.cdat.control.Control;
 import gov.cida.cdat.control.Message;
 import gov.cida.cdat.control.Time;
 import gov.cida.cdat.control.Worker;
+import gov.cida.cdat.io.Closer;
 import gov.cida.cdat.io.container.DataPipe;
 import gov.cida.cdat.io.container.SimpleStreamContainer;
 
@@ -136,7 +137,7 @@ public class ServiceControlThreadedTest {
 //            session.send(workerName, Control.Stop);
 			
 		} finally {
-			session.close(); // SESSION-20,SESSION-21,SESSION-22,SESSION-23
+			Closer.close(session);  // SESSION-20,SESSION-21,SESSION-22,SESSION-23
 		}
 	}
 	
