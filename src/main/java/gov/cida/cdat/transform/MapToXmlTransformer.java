@@ -25,6 +25,7 @@ public class MapToXmlTransformer extends Transformer {
 	private Map<String, String> groupings;
 	
 	private final String header;
+	private final String entryNodeName;
 	
 	/** 
 	 * Is this the first write to the stream.
@@ -32,9 +33,10 @@ public class MapToXmlTransformer extends Transformer {
 	private boolean first = true;
 
 	
-	public MapToXmlTransformer(IXmlMapping fieldMapping, String header) {
+	public MapToXmlTransformer(IXmlMapping fieldMapping, String header, String entryNodeName) {
 		this.fieldMapping = fieldMapping;
 		this.header  = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"+header;
+		this.entryNodeName = entryNodeName;
 		
 		groupings = new HashMap<>();
 		for (String key : fieldMapping.getHardBreak().keySet()) {
@@ -112,7 +114,7 @@ public class MapToXmlTransformer extends Transformer {
 	
 	
 	void doNode(StringBuilder sb, String key, String val) {
-		String lNode = "Provider"; // TODO asdf refactor to constructor param
+		String lNode = entryNodeName;
 		List<String> pos = fieldMapping.getStructure().get(key);
 		for (String node : pos) {
 			log.trace("node - positionNode:" + node + " lastNode:" + lNode);
