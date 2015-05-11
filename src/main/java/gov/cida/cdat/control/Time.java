@@ -13,14 +13,22 @@ public enum Time {
 	HALF_MINUTE( 30, "seconds"),
 	MINUTE(  1, "minute"),
 	HOUR(  1, "hour"),
-	DAY(  1, "day");
-		
+	DAY(  1, "day"),
+	CUSTOM( 1, "hour");
+	
+	
 	private static final Logger logger = LoggerFactory.getLogger(Time.class);
 	
-	public final FiniteDuration duration;
+	public FiniteDuration duration;
 	
 	Time(long amount, String unit) {
 		duration =  Duration.create(amount, unit);
+	}
+	
+	public void setDuration(long amount, String unit) {
+		if ("CUSTOM".equals(this.toString())) {
+			duration =  Duration.create(amount, unit);
+		}
 	}
 	
 	public long asMS() {
