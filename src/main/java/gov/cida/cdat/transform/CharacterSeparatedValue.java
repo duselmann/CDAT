@@ -1,6 +1,7 @@
 package gov.cida.cdat.transform;
 
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -18,13 +19,12 @@ public class CharacterSeparatedValue extends Transformer {
 	public static final String  NEW_LINE = "\n";
 	public static final String  NEW_LINE_CR = "\r\n";
 	
-	public static final CharacterSeparatedValue CSV = new CharacterSeparatedValue(COMMA);
-	public static final CharacterSeparatedValue TSV = new CharacterSeparatedValue(TAB);
-
 	private final String valueSeparator;
 	private final String entrySeparator;
 
 	boolean doHeader = true;
+	
+	Map<String,String> fieldMappings;
 	
 	public CharacterSeparatedValue() {
 		this(COMMA, NEW_LINE);
@@ -43,6 +43,12 @@ public class CharacterSeparatedValue extends Transformer {
 		}
 		this.valueSeparator = valueSeparator;
 		this.entrySeparator = entrySeparator;
+		this.fieldMappings  = new HashMap<String, String>(); // default is no mappings
+	}
+	
+	
+	public void setFieldMappings(Map<String, String> fieldMappings) {
+		this.fieldMappings = fieldMappings;
 	}
 	
 	
@@ -87,7 +93,9 @@ public class CharacterSeparatedValue extends Transformer {
 		// this makes the Java DRY
 		Map<String,	Object> headerMap = new LinkedHashMap<String, Object>();
 		for (Map.Entry<String,Object> column : headerEntry.entrySet()) {
-			headerMap.put(column.getKey(), column.getKey());
+			String originalColumnName = column.getKey();
+			String newColumnName = fieldMappings.get(originalColumnName);
+			headerMap.put(originalColumnName, newColumnName);
 		}
 		return transform(headerMap);
 	}
